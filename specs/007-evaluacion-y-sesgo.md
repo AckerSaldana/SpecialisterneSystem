@@ -2,8 +2,8 @@
 
 # 007 · Evaluación con casos sintéticos y prueba de sesgo
 
-- Estado: Borrador · Versión 3 · 2026-10-29
-- Fuentes: D-003, D-008 (propuesta), D-010, D-015, D-016, D-021, D-034 (propuesta, bloque de actualización del 29 oct), F-005 (13:12, 45:53), F-017, F-018, F-019, handoff del 29 oct (se propone registrar como F-030), CONTEXTO §3, §5, §6, §7, §8, §11 (pendientes 3, 9 y 13; preguntas para el partner), REGLAS §2.4, §3, §5, §6, §7; constitución C-01, C-02, C-03, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-13, C-15, C-17, C-18
+- Estado: Borrador · Versión 4 · 2026-10-30
+- Fuentes: D-003, D-008 (propuesta), D-010, D-015, D-016, D-021, D-034 (propuesta en CONTEXTO §9), F-005 (13:12, 45:53), F-017, F-018, F-019, F-030 (handoff del 29 oct), CONTEXTO §3, §5, §6, §7, §8, §11 (pendientes 3, 9 y 13; preguntas para el partner), REGLAS §2.4, §3, §5, §6, §7; constitución C-01, C-02, C-03, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-13, C-15, C-17, C-18
 - Depende de: 001 (pipeline de perfil, ya construido), 002 (alta: campos de verificación, consentimiento vigente y seed), 003 (plan, fichas y transiciones de etapa), 004 (seguimiento), 005 (recomendaciones), 006 (cierre)
 
 ## Problema y para quién
@@ -421,6 +421,10 @@ La etapa queda lista cuando:
 9. ¿Tienen un perfil en blanco o inventado que nos puedan compartir? Nos sirve para que los casos y el caso de demo tengan la forma de sus perfiles.
 
 ## Cambios
+
+Versión 4 · 2026-10-30 · registro en CONTEXTO
+
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
 
 Versión 3 · 2026-10-29 · ajustes de consistencia
 

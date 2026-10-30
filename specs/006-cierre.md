@@ -2,8 +2,8 @@
 
 # 006 · Cierre
 
-- Estado: Borrador · Versión 3 · 2026-10-29
-- Fuentes: F-005 (CONTEXTO §4), F-026 (secundaria), CONTEXTO §6 (flujo del demo, What's next, arquitectura, privacidad), D-015, D-021 y D-022 (propuestas en CONTEXTO §9), D-029 (decidida por los tres según Acker, pendiente de registrar en CONTEXTO §9), D-033, D-034 y D-035 (propuestas del bloque de actualización del 29 oct, todavía no están en CONTEXTO), REGLAS §4, §6 y §7, C-01, C-02, C-03, C-04, C-05, C-08, C-09, C-10, C-11, C-13, C-14, C-16, C-17, C-18
+- Estado: Borrador · Versión 4 · 2026-10-30
+- Fuentes: F-005 (CONTEXTO §4), F-026 (secundaria), CONTEXTO §6 (flujo del demo, What's next, arquitectura, privacidad), D-015, D-021 y D-022 (propuestas en CONTEXTO §9), D-058 (decidida por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9), D-033, D-034 y D-035 (propuestas en CONTEXTO §9), REGLAS §4, §6 y §7, C-01, C-02, C-03, C-04, C-05, C-08, C-09, C-10, C-11, C-13, C-14, C-16, C-17, C-18
 - Depende de: 002 (consentimiento vigente con `private.app_has_consent`, aviso de privacidad, bloqueo al retirar el consentimiento, lista de escrituras de la persona, `private.app_mi_acompanamiento()`, `scripts/rls-check.ts`), 003 (plan aprobado, versiones del plan, tabla de transiciones de etapa, banderas de R-003.30, rutas y políticas del plan), 004 (seguimiento, señales activas y `signal_states`, tablas y rutas que se bloquean en cierre), 005 (vista de la persona, ciclo de "Esto no me representa" y cierre de comentarios de cierre, rutas y tablas de recursos y módulo), 007 (caso sintético de cierre)
 
 Spec de requisitos, sin tareas. Es la última en el orden de construcción de `specs/README.md`, y sus migraciones corren después de las de 002 a 005. Casi todo lo que define el cierre solo lo sabe Specialisterne, así que esta spec fija los límites y deja el contenido en preguntas.
@@ -12,7 +12,7 @@ Spec de requisitos, sin tareas. Es la última en el orden de construcción de `s
 
 En los proyectos de inclusión, Specialisterne da coaching durante 6 meses: 1 h por semana con la persona y 30 min cada dos semanas con la red de apoyo (líder y mentor), y manda reportes a la empresa (F-005, CONTEXTO §4). CONTEXTO no dice cómo termina ese coaching, qué llevan los reportes ni cuánto dura Workplace Support.
 
-El enum `engagement_stage` de `lib/db/schema.ts` ya tiene la etapa `cierre`, y `lib/engagements/config.ts` la pone al final de los dos tipos de engagement, como pide D-029 (bloque de actualización del 29 oct: un pipeline por tipo de engagement). Hoy no hay ruta, tabla ni pantalla para esa etapa.
+El enum `engagement_stage` de `lib/db/schema.ts` ya tiene la etapa `cierre`, y `lib/engagements/config.ts` la pone al final de los dos tipos de engagement, como pide D-058 (CONTEXTO §9: un pipeline por tipo de acompañamiento). Hoy no hay ruta, tabla ni pantalla para esa etapa.
 
 Para quién, como interpretación del equipo:
 
@@ -208,6 +208,11 @@ El prompt incluye la regla C-13: ser callada o reservada no es un área de apoyo
 
 ## Cambios
 
+Versión 4 · 2026-10-30 · numeración de decisiones
+
+- Solo cambia la numeración: la decisión de la plataforma para los dos servicios se citaba aquí como D-029, y en CONTEXTO v5 esa decisión es D-058, porque D-029 ya era el reparto de negocio de Rodrigo. El cambio incluye las notas de versiones anteriores de esta sección.
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
+
 Versión 3 · 2026-10-29 · ajustes de consistencia
 
 - C-09 en los textos para la persona: R-006.6 suma `TERMINOS_CONDICION` de 003 y el recálculo al guardar. R-006.13 pasa de marcar a bloquear la aprobación (400) cuando `fortalezas` o `apoyos` traen `termino_no_permitido`, `mencion_condicion` o `termino_interno`, igual que R-003.30; en `para_el_coach` las banderas solo avisan. Cambian CA-006.6 y CA-006.13, los avisos de banderas y el error de aprobación. Nueva decisión abierta 8 con las alternativas.
@@ -229,4 +234,4 @@ Versión 2 · 2026-10-29 · consolidación entre specs
 - R-006.12 y CA-006.12 remiten al aviso de 002.
 - Nuevos R-006.14 a R-006.17 y CA-006.14 a CA-006.17: lo que lee la persona, bloqueo al retirar el consentimiento, versión del aviso, escrituras de la persona y UPDATE directo sobre `engagements`.
 - El prompt pasa a `AAAA-MM-DD_resumen-de-cierre.md`; el caso de cierre vive en 007; las pruebas RLS van a `scripts/rls-check.ts`; las migraciones de 006 corren al final.
-- D-029 figura como decidida por los tres según Acker, pendiente de registrar.
+- D-058 figura como decidida por los tres según Acker, pendiente de registrar.

@@ -2,8 +2,8 @@
 
 # 005 · Vista de la persona y recursos
 
-- Estado: Borrador · Versión 3 · 2026-10-29
-- Fuentes: CONTEXTO §4 (F-005), §5, §6 (paso 5, Valor, Arquitectura), §7, §11; D-015, D-017 y D-021 (propuestas en CONTEXTO §9); D-031 a D-035 (bloque de actualización del 29 oct, propuesta); REGLAS §2.5, §3, §6 y §7; C-01, C-02, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-14, C-16, C-17, C-18
+- Estado: Borrador · Versión 4 · 2026-10-30
+- Fuentes: CONTEXTO §4 (F-005), §5, §6 (paso 5, Valor, Arquitectura), §7, §11; D-015, D-017 y D-021 (propuestas en CONTEXTO §9); D-031 a D-035 (propuestas en CONTEXTO §9); REGLAS §2.5, §3, §6 y §7; C-01, C-02, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-14, C-16, C-17, C-18
 - Depende de: 001 (perfil aprobado y `persona_profiles`), 002 (consentimiento vigente, bloqueo al retirarlo, lista de lo que escribe la persona, aviso de privacidad, `private.app_mi_acompanamiento()` y `scripts/rls-check.ts`), 003 (plan vigente, `persona_plans` con `itemsAnteriores`, `origen_item_id`, `TERMINOS_CONDICION` y la regla de bloqueo de R-003.30), 006 (qué se bloquea en la etapa `cierre`). Sus migraciones van después de las de 003.
 
 ## Problema y para quién
@@ -290,6 +290,10 @@ No aplica: esta spec es de requisitos. Las tareas se escriben cuando pase a "rev
 - ¿Tienen un perfil en blanco o inventado que nos puedan compartir?
 
 ## Cambios
+
+Versión 4 · 2026-10-30 · registro en CONTEXTO
+
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
 
 Versión 3 · 2026-10-29 · ajustes de consistencia
 

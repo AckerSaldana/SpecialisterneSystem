@@ -10,9 +10,9 @@ Estas reglas no se negocian dentro de una spec. Si una etapa necesita romper una
 
 Varias decisiones de CONTEXTO que aquí se citan siguen en estado **propuesta** (D-015 a D-022). Mientras los tres no las aprueben, esta constitución las toma como regla de trabajo, porque REGLAS §6 ya dice lo mismo o algo más estricto.
 
-Las decisiones D-029 a D-035 vienen del bloque "Actualización para CONTEXTO.md" del 29 oct y todavía no están registradas en CONTEXTO. D-029 (dirección) y D-030 (stack) están **decididas por los tres, según Acker**. D-031 a D-035 son **propuestas** de Claude; decide Acker.
+Las decisiones D-030 a D-035 y D-058 están registradas en CONTEXTO §9 desde la versión 5. D-058 (dirección) y D-030 (stack) están **decididas por los tres, según Acker**; falta que David y Rodrigo lo confirmen en CONTEXTO §9. D-031 a D-035 son **propuestas** de Claude; decide Acker.
 
-"Handoff del 29 oct" es el documento "Caja MEX · Handoff para Claude Code" que Acker pegó al inicio de la sesión del 29 oct. Se propone registrarlo como F-030 en CONTEXTO §10.
+"Handoff del 29 oct" es el documento "Caja MEX · Handoff para Claude Code" que Acker pegó al inicio de la sesión del 29 oct. Está registrado como F-030 en CONTEXTO §10.
 
 ## Principios
 

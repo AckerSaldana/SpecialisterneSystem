@@ -63,7 +63,7 @@ Estas bloquean lo que se construye antes, 002 y 003, o tienen fecha cercana. Con
 |---|---|---|---|---|---|
 | P-21 | ¿Qué consideran una alerta fuerte en el seguimiento, quién del equipo la atiende hoy y por qué canal se la pasa el coach? | 004 dec. 1 y 2, R-004.15, R-004.16, R-004.42, texto "{responsable}" del diálogo; 002 R-002.42 (el aviso dice cómo se escalan) | 004 | No | No |
 | P-22 | ¿Tienen un protocolo para riesgo inmediato? Necesitamos el texto exacto que mostramos junto al botón de alerta. | 004 R-004.19 | 004 | No | No |
-| P-23 | En Workplace Support, ¿cuánto dura el acompañamiento? ¿También es una hora por semana con la persona y 30 minutos cada dos semanas con la red de apoyo? | 004 R-004.4, dec. 10 (lectura de D-029); 006 (duración y cierre); 007 R-007.58 (caso de demo de Workplace Support) | 004, 006 | No | No |
+| P-23 | En Workplace Support, ¿cuánto dura el acompañamiento? ¿También es una hora por semana con la persona y 30 minutos cada dos semanas con la red de apoyo? | 004 R-004.4, dec. 10 (lectura de D-058); 006 (duración y cierre); 007 R-007.58 (caso de demo de Workplace Support) | 004, 006 | No | No |
 | P-24 | En la sesión de 30 minutos con la red de apoyo, ¿qué anotan? ¿El líder y el mentor saben que se registra? | 004 R-004.1, R-004.5, R-004.49 | 004 | No | No |
 | P-25 | Los detalles personales que anotan para la siguiente sesión, ¿la persona sabe que se anotan? ¿Los guardan junto con el resto de las notas? | 004 dec. 7, R-004.20, R-004.21 | 004 | No | No |
 | P-26 | ¿Cómo notan hoy que una persona quiere renunciar o que el puesto ya no le acomoda, y con cuánto tiempo de anticipación? | 004 R-004.11 (señales `intencion_de_renunciar` y `desajuste_con_rol`), R-004.14; 007 R-007.57 (casos de seguimiento) | 004 | No | No |

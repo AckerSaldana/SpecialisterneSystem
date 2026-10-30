@@ -2,11 +2,11 @@
 
 # 004 · Sesiones de seguimiento y señales
 
-- Estado: Borrador · Versión 3 · 2026-10-29
-- Fuentes: F-005 (23:31, 45:53, 13:12), F-012, F-018, D-015, D-016, D-021, D-029, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3 y §6, CONTEXTO §4, §5 y §6 (roles y pasos 4 y 5). Reglas de la constitución: C-01, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-12, C-13, C-14, C-16, C-17, C-18
+- Estado: Borrador · Versión 4 · 2026-10-30
+- Fuentes: F-005 (23:31, 45:53, 13:12), F-012, F-018, D-015, D-016, D-021, D-058, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3 y §6, CONTEXTO §4, §5 y §6 (roles y pasos 4 y 5). Reglas de la constitución: C-01, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-12, C-13, C-14, C-16, C-17, C-18
 - Depende de: 001 (pipeline nota → propuesta → aprobación y sus huecos H-1, H-3, H-5, H-9 y H-11), 002 (consentimiento vigente, bloqueo por retiro, aviso de privacidad, lista de lo que escribe la persona y `scripts/rls-check.ts`), 003 (plan aprobado con sus ítems, `origen_item_id` entre versiones, fichas verificadas y la tabla de transiciones que pasa el acompañamiento a `seguimiento`), 005 ("esto no me representa"). Sus migraciones corren después de las de 002 y 003.
 
-Esta spec es de requisitos y no trae tareas. D-015, D-016 y D-021 están en estado propuesta en CONTEXTO §9. D-029 y D-030 están decididas por los tres según Acker y falta registrarlas en CONTEXTO §9. D-031 a D-035 son propuestas del bloque de actualización del 29 oct; las decide Acker. Lo que esta versión toma de la consolidación entre specs se marca "Propuesta (Claude), decide Acker".
+Esta spec es de requisitos y no trae tareas. D-015, D-016 y D-021 están en estado propuesta en CONTEXTO §9. D-058 y D-030 están decididas por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9. D-031 a D-035 son propuestas en CONTEXTO §9; las decide Acker. Lo que esta versión toma de la consolidación entre specs se marca "Propuesta (Claude), decide Acker".
 
 ## Problema y para quién
 
@@ -56,7 +56,7 @@ Entra:
 | R-004.1 | Cuando el coach abre una sesión nueva en un acompañamiento con `stage = 'seguimiento'`, el sistema debe pedirle el tipo de sesión (con la persona o con la red de apoyo) y la fecha en que ocurrió, con la fecha de hoy como valor inicial. La ruta rechaza con 400 una fecha posterior a hoy. | CONTEXTO §4 (F-005); la fecha editable y el límite son interpretación del equipo |
 | R-004.2 | Cuando el acompañamiento no tiene consentimiento vigente (002), es decir, cuando `private.app_has_consent(engagement_id)` devuelve `false`, el sistema responde 409, no guarda la nota y no llama al modelo. Usa el mismo chequeo compartido que define 002 y no lee `engagements.consentimiento_en`. | C-10, D-035 (propuesta), R-002.28 y R-002.31 de 002 |
 | R-004.3 | La etapa `seguimiento` solo se alcanza al aprobar el primer plan (003), así que siempre debería haber un plan con `status = 'aprobado'`. Si la ruta no lo encuentra (dato inconsistente o seed incompleto), guarda la sesión, no manda ítems del plan al modelo y muestra al coach el aviso de "Sin plan aprobado". | Interpretación del equipo; transiciones de etapa: 003 |
-| R-004.4 | El seguimiento debe funcionar para los dos valores de `engagement_type` (`inclusion` y `workplace_support`) con la misma ruta y el mismo esquema de salida; lo que cambia por tipo vive en la configuración del prompt, como hoy hace `ENGAGEMENT_CONFIG` en `lib/prompts.ts`. | D-029 (decidida por los tres según Acker, pendiente de registrar en CONTEXTO §9); esta lectura de D-029 es interpretación del equipo, ver decisión abierta 10 |
+| R-004.4 | El seguimiento debe funcionar para los dos valores de `engagement_type` (`inclusion` y `workplace_support`) con la misma ruta y el mismo esquema de salida; lo que cambia por tipo vive en la configuración del prompt, como hoy hace `ENGAGEMENT_CONFIG` en `lib/prompts.ts`. | D-058 (decidida por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9); esta lectura de D-058 es interpretación del equipo, ver decisión abierta 10 |
 | R-004.5 | Cuando el tipo de sesión es "red de apoyo", el sistema trata la nota igual que las demás (solo la lee el coach del acompañamiento) y no tiene campos aparte para nombres, correos ni puestos del líder o del mentor. | REGLAS §6 (datos de terceros), C-07, C-09; interpretación del equipo |
 | R-004.38 | Esta etapa no cambia `engagements.stage` ni escribe en `app.engagements`. El paso a `seguimiento` es de 003 y el paso a `cierre` es de 006, cada uno con su función `security definer` en el esquema `private`. Esta spec no agrega ninguna política de UPDATE sobre `app.engagements`. | Propuesta (Claude), decide Acker; 003 es dueña de la tabla de transiciones |
 | R-004.39 | La persona no escribe nada nuevo en esta etapa. Lo que puede escribir es la lista única de 002. 005 no le agrega escrituras (R-005.40) y esta spec tampoco. | C-09; lista de escrituras de la persona: 002 |
@@ -301,7 +301,7 @@ Archivo nuevo con fecha en `prompts/`, `AAAA-MM-DD_seguimiento.md`, con su propi
 | 7 | ¿Se guardan detalles personales como contexto? | A) Sí, solo con cita y aprobados por el coach. Pro: es lo que hace hoy la coach (F-005, CONTEXTO §4); contra: pueden incluir datos de familiares. B) Solo como preguntas, sin el detalle. Pro: menos datos; contra: pierde parte del vínculo. | A, solo con datos sintéticos en el demo, y preguntar al partner. | Acker, con respuesta del partner |
 | 8 | ¿El coach ve un aviso si pasa mucho tiempo sin sesión? | A) No. Pro: nada de alarmas; contra: se puede perder una semana. B) Sí, solo para el coach, con un plazo que fije el partner. Pro: ayuda al seguimiento semanal; contra: hay que definir el plazo. | B sin plazo inventado; hasta que el partner conteste, solo se muestra la fecha de la última sesión. | Acker |
 | 9 | ¿La persona ve que su "esto no me representa" fue revisado? | Pasa a 005, dueña del ciclo de vida de "esto no me representa". | Ver 005. | Ver 005 |
-| 10 | ¿Cómo se lee D-029 ("dos servicios, un pipeline por tipo de engagement")? | A) Un solo pipeline con configuración por tipo, como hoy `ENGAGEMENT_CONFIG`. Pro: no duplica código; contra: si los servicios se separan más, la configuración crece. B) Un pipeline distinto por tipo. Pro: cada servicio evoluciona solo; contra: dos rutas y dos prompts que mantener. | A, porque así está el código del sprint 1. D-029 está decidida por los tres según Acker; falta confirmar esta lectura con quien la redactó. | Acker; los tres si cambia D-029 |
+| 10 | ¿Cómo se lee D-058 ("dos servicios, un pipeline por tipo de engagement")? | A) Un solo pipeline con configuración por tipo, como hoy `ENGAGEMENT_CONFIG`. Pro: no duplica código; contra: si los servicios se separan más, la configuración crece. B) Un pipeline distinto por tipo. Pro: cada servicio evoluciona solo; contra: dos rutas y dos prompts que mantener. | A, porque así está el código del sprint 1. D-058 está decidida por los tres según Acker; falta confirmar esta lectura con quien la redactó. | Acker; los tres si cambia D-058 |
 | 11 | ¿Las alertas fuertes abiertas se ocultan al coach si la persona retira su consentimiento? | A) Sí, como todo lo demás (regla general de 002). Pro: una sola regla y un aviso más simple; contra: el coach deja de ver dentro de la app una alerta que quizá no ha pasado. B) La lista sigue mostrando solo tipo de señal, estado y fecha. Pro: no se pierde una alerta abierta; contra: es una excepción a la regla de 002 que el aviso tiene que explicar. | Propuesta (Claude), decide Acker: A. | Acker, junto con la decisión (b) de 002 |
 
 ## Tareas
@@ -329,6 +329,11 @@ No aplica: esta spec es de requisitos. Las tareas se escriben cuando suba a deta
 
 ## Cambios
 
+Versión 4 · 2026-10-30 · numeración de decisiones
+
+- Solo cambia la numeración: la decisión de la plataforma para los dos servicios se citaba aquí como D-029, y en CONTEXTO v5 esa decisión es D-058, porque D-029 ya era el reparto de negocio de Rodrigo. El cambio incluye las notas de versiones anteriores de esta sección.
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
+
 Versión 3 · 2026-10-29 · ajustes de consistencia
 
 - Señales activas: nuevo R-004.52 y CA-004.51. Las señales cerradas en `signal_states` se descuentan en todo lector (prompt de 001, prompt de seguimiento, página del coach, panel "Antes de esta sesión" y entrada del cierre), no solo en el prompt de seguimiento. Datos, Reglas fijas y Verificación lo citan.
@@ -350,5 +355,5 @@ Versión 2 · 2026-10-29 · consolidación entre specs
 - Retiro de consentimiento, aviso de privacidad y RLS versionada: nuevos R-004.48, R-004.49 y R-004.50, y decisión abierta 11.
 - Eval: nuevo R-004.51; los CA de eval remiten al formato de 007. R-004.24 aclara que una ficha sin verificar no llega al prompt.
 - Nombres: `accion = 'propose_followup_update'` queda fijo en R-004.35; el prompt de 001 conserva su nombre.
-- D-029 se cita como decidida por los tres según Acker, pendiente de registrar.
+- D-058 se cita como decidida por los tres según Acker, pendiente de registrar.
 - Voz con Whisper queda en "What's next", igual que en 001. El caso de demo de punta a punta de 007 se usa en Verificación.

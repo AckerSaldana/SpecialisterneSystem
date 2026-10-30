@@ -2,11 +2,11 @@
 
 # 003 · Plan de acompañamiento
 
-- Estado: Implementada · Versión 5 · 2026-10-29 (código pendiente de revisión de Acker)
-- Fuentes: F-005 (13:12, 23:31, 32:01, 45:53), F-009, F-017, F-022, F-023, D-015, D-016, D-021, D-031 a D-035 (bloque de actualización del 29 oct, propuesta), CONTEXTO §4, §5 (objetivos del equipo; dimensión 15, ajustes razonables), §6 (flujo del demo, paso 3; Valor; arquitectura), §11 (preguntas para el partner), REGLAS §2.5, §3, §4, §5, §6, §7; constitución C-01 a C-11, C-13 a C-18
+- Estado: Implementada · Versión 6 · 2026-10-30 (código pendiente de revisión de Acker)
+- Fuentes: F-005 (13:12, 23:31, 32:01, 45:53), F-009, F-017, F-022, F-023, D-015, D-016, D-021, D-031 a D-035 (propuestas en CONTEXTO §9), CONTEXTO §4, §5 (objetivos del equipo; dimensión 15, ajustes razonables), §6 (flujo del demo, paso 3; Valor; arquitectura), §11 (preguntas para el partner), REGLAS §2.5, §3, §4, §5, §6, §7; constitución C-01 a C-11, C-13 a C-18
 - Depende de: 001 (perfil aprobado en `profile_snapshots`), 002 (consentimiento vigente según `private.app_has_consent`, R-002.28; bloqueo al retirar el consentimiento, R-002.44; lista de lo que escribe la persona, R-002.45; aviso de privacidad, R-002.42 y R-002.43; paso `alta` → `evaluacion_inicial` y regla de etapas, R-002.25 y R-002.41; script `scripts/rls-check.ts`, R-002.46), 007 (formato de los casos del eval)
 
-D-015, D-016 y D-021 siguen en estado propuesta en CONTEXTO §9. D-031 a D-035 vienen del bloque de actualización del 29 oct y también son propuestas; decide Acker. Esta spec las usa como regla de trabajo igual que la constitución.
+D-015, D-016 y D-021 siguen en estado propuesta en CONTEXTO §9. D-031 a D-035 también son propuestas en CONTEXTO §9; decide Acker. Esta spec las usa como regla de trabajo igual que la constitución.
 
 ## Problema y para quién
 
@@ -517,3 +517,7 @@ Versión 5 · 2026-10-29 · implementación
   - CA-003.1, .3, .12, .13, .21, .22 y .33 en el navegador.
   - Fichas verificadas (decisión 1, los tres).
   - Revisión del código por Acker.
+
+Versión 6 · 2026-10-30 · registro en CONTEXTO
+
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.

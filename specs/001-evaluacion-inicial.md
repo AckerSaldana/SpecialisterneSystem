@@ -2,8 +2,8 @@
 
 # 001 · Evaluación inicial (as-built)
 
-- Estado: Borrador · Versión 3 · 2026-10-29
-- Fuentes: F-005, F-017, F-030 (propuesta: handoff del 29 oct), D-015, D-016, D-017, D-021, D-029, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3, §5, §6, §7, CONTEXTO §4, §5, §6, §11; constitución C-01, C-02, C-03, C-04, C-05, C-07, C-08, C-09, C-10, C-11, C-13, C-14, C-15, C-16, C-17, C-18
+- Estado: Borrador · Versión 4 · 2026-10-30
+- Fuentes: F-005, F-017, F-030 (handoff del 29 oct), D-015, D-016, D-017, D-021, D-058, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3, §5, §6, §7, CONTEXTO §4, §5, §6, §11; constitución C-01, C-02, C-03, C-04, C-05, C-07, C-08, C-09, C-10, C-11, C-13, C-14, C-15, C-16, C-17, C-18
 - Depende de: 000 y 002. El consentimiento vigente, la verificación y la lista de lo que escribe la persona los define 002; hoy el consentimiento y la verificación los pone `scripts/seed.sql`. Los cambios de etapa los define 003. Qué cuenta como señal activa una vez que se pueden cerrar señales lo define 004.
 
 Esta spec describe lo que ya existe en el código del sprint 1, revisado el 29 oct. No pide código nuevo. Lo que falta o funciona distinto a lo esperado está en "Huecos conocidos" y pasa a la spec que se indica en cada uno.
@@ -11,8 +11,8 @@ Esta spec describe lo que ya existe en el código del sprint 1, revisado el 29 o
 Estado de las decisiones que se citan:
 
 - D-015, D-016, D-017 y D-021 están en estado propuesta en CONTEXTO §9; falta la aprobación de los tres (CONTEXTO §6). La aprobación de D-021 se lleva como decisión abierta en 002, junto con D-020 y D-022.
-- D-029 y D-031 a D-035 vienen del bloque de actualización del 29 oct y todavía no están en CONTEXTO §9. D-029 está decidida por los tres, según Acker, y falta registrarla. D-031 a D-035 son propuestas; las decide Acker.
-- "Handoff del 29 oct" es el documento que describe 000; se propone registrarlo como F-030 en CONTEXTO §10.
+- D-058 y D-031 a D-035 están en CONTEXTO §9 desde la versión 5. D-058 está decidida por los tres, según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9. D-031 a D-035 son propuestas; las decide Acker.
+- "Handoff del 29 oct" es el documento que describe 000; está registrado como F-030 en CONTEXTO §10.
 
 ## Problema y para quién
 
@@ -228,7 +228,7 @@ Persona (`/persona`)
 | 2 | ¿En qué persona gramatical lee la persona su perfil? (H-4) | (a) Tercera persona para el coach y una segunda versión en segunda persona para la persona: más claro para ella, pero es otra salida del modelo que el coach tiene que aprobar. (b) Una sola versión en segunda persona: cambia el estilo que describe CONTEXTO §5. (c) Dejar tercera persona: sigue el estilo del partner, pero la persona lee sobre sí misma como si fuera otra. | Pasa a la decisión abierta 1 de 005, que propone para el demo la opción (c) con las etiquetas de dimensión reescritas en segunda persona solo en la vista de la persona, y una versión en segunda persona escrita por la IA, cercana a (a), después de preguntar al partner. | Acker, en 005, con la respuesta del partner |
 | 3 | ¿Qué hacer con una preferencia que el modelo marca como fortaleza? (H-5) | (a) Ajustar el prompt con criterios para `contexto`: barato, pero no garantiza nada. (b) Agregar al caso de eval un `tipoNoPermitido` para esa dimensión: lo detecta, no lo corrige. (c) Las dos. | (c). Que el coach pueda cambiar el tipo antes de aprobar es requisito de 004. | Acker |
 | 4 | ¿Las 5 dimensiones extra del eval son un problema? (H-6) | (a) Revisarlas a mano y, si tienen evidencia, sumarlas a `esperado`. (b) Pedir en el prompt menos dimensiones: puede perder información real. | (a) antes de tocar el prompt | Acker; si cambia el caso, con David Betancourth (Beta), que según el handoff del 29 oct (F-030, propuesta) lleva los casos sintéticos para evaluación. En CONTEXTO §11 el pendiente 9 sigue con responsable por definir. |
-| 5 | ¿La primera nota se trata distinto a las de seguimiento? | (a) Igual que hoy, un solo pipeline: simple y ya probado. (b) Prompt o pantalla distinta para la evaluación inicial: más cerca de la "evaluación corta" de Workplace Support (CONTEXTO §4), pero más trabajo. Cualquiera de las dos respeta D-029 (decidida por los tres según Acker, falta registrarla) si se configura por tipo de acompañamiento. | (a) en el MVP; revisar en 004 | Acker |
+| 5 | ¿La primera nota se trata distinto a las de seguimiento? | (a) Igual que hoy, un solo pipeline: simple y ya probado. (b) Prompt o pantalla distinta para la evaluación inicial: más cerca de la "evaluación corta" de Workplace Support (CONTEXTO §4), pero más trabajo. Cualquiera de las dos respeta D-058 (decidida por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9) si se configura por tipo de acompañamiento. | (a) en el MVP; revisar en 004 | Acker |
 | 6 | ¿La persona puede leer en la base todas las columnas de su fila en `engagements`, incluida la cédula? (H-12) | (a) Dejarlo: es su propio dato y la app no lo muestra. (b) Quitar con permisos por columna `cedula_profesional` y `diagnostico_verificado_por` para la persona: más cerrado, pero el permiso de SELECT es por rol y coach y persona comparten `authenticated`, así que pide una vista o una función. | Pasa a 002. Propuesta (Claude), decide Acker: la persona no lee `cedula_profesional` ni las columnas de verificación; 002 añade la función `security definer` `private.app_mi_acompanamiento()` (R-002.40), que le da solo `id`, `type` y `stage`, y mientras tanto rige la regla fija en código (las páginas de la persona solo seleccionan columnas permitidas). | Acker, en 002 |
 
 ## Tareas
@@ -285,6 +285,11 @@ Todos pasan a 004 salvo que se indique otra cosa.
 
 ## Cambios
 
+Versión 4 · 2026-10-30 · numeración de decisiones
+
+- Solo cambia la numeración: la decisión de la plataforma para los dos servicios se citaba aquí como D-029, y en CONTEXTO v5 esa decisión es D-058, porque D-029 ya era el reparto de negocio de Rodrigo. El cambio incluye las notas de versiones anteriores de esta sección.
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
+
 Versión 3 · 2026-10-29 · ajustes de consistencia
 
 - Señales activas: R-001.4 y R-001.23 dicen que hoy leen el snapshot directo y que 004 define las activas como el snapshot menos las cerradas en `signal_states`. Hueco nuevo H-15, que pasa a 004. "Depende de" lo anota.
@@ -304,4 +309,4 @@ Versión 2 · 2026-10-29 · consolidación entre specs
 - Fuera de alcance: voz a "What's next"; objetivos del equipo y ajustes razonables en el plan de 003; ciclo de vida de "Esto no me representa" en 005; formato de casos en 007.
 - Datos: bloqueo por retiro de consentimiento (002), lista única de lo que escribe la persona (002) y enums que se conservan.
 - Prompts: se explica por qué se conserva el nombre `2026-10-29_profile-update` y se nombra la acción de `audit_log`.
-- Estado de D-029 (decidida por los tres según Acker) y F-030 propuesta; la decisión abierta 4 nombra a David Betancourth (Beta) para los casos sintéticos.
+- Estado de D-058 (decidida por los tres según Acker) y F-030 propuesta; la decisión abierta 4 nombra a David Betancourth (Beta) para los casos sintéticos.

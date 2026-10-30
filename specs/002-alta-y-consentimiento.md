@@ -2,8 +2,8 @@
 
 # 002 · Alta y consentimiento
 
-- Estado: Implementada · Versión 6 · 2026-10-29 (código pendiente de revisión de Acker)
-- Fuentes: F-005 (00:00–12:36), F-026 (secundaria), F-027 (secundaria). D-001 y D-003 (decididas en CONTEXTO §9). D-008, D-015, D-020, D-021 y D-022 (propuestas en CONTEXTO §9; su aprobación es la decisión abierta h). D-029 y D-030 (decididas por los tres según Acker, pendientes de registrar en CONTEXTO §9). D-032 y D-035 (propuestas, bloque de actualización del 29 oct). Decisiones de Acker para esta fase (29 oct, ver "Alcance"). REGLAS §2.5, §3, §4, §6 y §7. CONTEXTO §2, §4, §6 y §11. Reglas de la constitución: C-01, C-02, C-03, C-07, C-08, C-09, C-10, C-11, C-12, C-14, C-16, C-17, C-19.
+- Estado: Implementada · Versión 7 · 2026-10-30 (código pendiente de revisión de Acker)
+- Fuentes: F-005 (00:00–12:36), F-026 (secundaria), F-027 (secundaria). D-001 y D-003 (decididas en CONTEXTO §9). D-008, D-015, D-020, D-021 y D-022 (propuestas en CONTEXTO §9; su aprobación es la decisión abierta h). D-058 y D-030 (decididas por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9). D-032 y D-035 (propuestas en CONTEXTO §9). Decisiones de Acker para esta fase (29 oct, ver "Alcance"). REGLAS §2.5, §3, §4, §6 y §7. CONTEXTO §2, §4, §6 y §11. Reglas de la constitución: C-01, C-02, C-03, C-07, C-08, C-09, C-10, C-11, C-12, C-14, C-16, C-17, C-19.
 - Depende de: 000. Toca código de 001 que hoy lee `consentimiento_en`: `app/api/engagements/[id]/sessions/route.ts`, `app/coach/engagements/[id]/page.tsx` y `app/coach/engagements/[id]/sessions/new/page.tsx`. Recibe de 001 los huecos H-7 (solo el paso de `alta` a `evaluacion_inicial`; el resto de las etapas es de 003), H-8 y H-12.
 - La usan: 003, 004, 005 y 006 (consentimiento vigente, bloqueo al retirar, lista de lo que escribe la persona, aviso de privacidad y `scripts/rls-check.ts`). Orden de migraciones: 002 antes que 003, 003 antes que 004 y 005, 006 al final.
 
@@ -69,7 +69,7 @@ R-002.37 a R-002.39 se agregaron en la revisión del 29 oct y van junto a los re
 
 | ID | Requisito | Fuente |
 |---|---|---|
-| R-002.1 | Cuando el coach crea un acompañamiento, el sistema debe pedir solo tres datos: tipo (`inclusion` o `workplace_support`), nombre de pila de la persona y correo de la persona. No pide apellidos, teléfono, fecha de nacimiento ni datos de salud. | Decisión de Acker (2), D-029 (decidida por los tres según Acker, pendiente de registrar); minimización: interpretación del equipo a partir de REGLAS §6 |
+| R-002.1 | Cuando el coach crea un acompañamiento, el sistema debe pedir solo tres datos: tipo (`inclusion` o `workplace_support`), nombre de pila de la persona y correo de la persona. No pide apellidos, teléfono, fecha de nacimiento ni datos de salud. | Decisión de Acker (2), D-058 (decidida por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9); minimización: interpretación del equipo a partir de REGLAS §6 |
 | R-002.2 | Al crear el acompañamiento, el sistema debe crear en una sola operación lógica la cuenta de Supabase Auth de la persona (sin contraseña utilizable todavía), su fila en `app.users` con rol `persona` en la organización del coach, y el registro en `app.engagements` con etapa `alta` y `coach_id` igual al coach. Si falla la parte de la base, el sistema debe borrar la cuenta de Auth que acaba de crear y mostrar el error. | Interpretación del equipo |
 | R-002.3 | Mientras el prototipo use solo datos sintéticos, el sistema debe rechazar cualquier correo que no termine en `.test`. | C-07, D-003 (decidida) |
 | R-002.4 | Si el correo ya tiene cuenta, el sistema no debe crear nada y debe mostrar el mensaje de la sección "Pantallas y textos". La base debe rechazar un segundo acompañamiento con el mismo `persona_id`. Este requisito sustituye R-001.27 y CA-001.19: con un solo acompañamiento por persona, la página y la ruta de la persona no tienen que elegir entre varios. | Interpretación del equipo |
@@ -85,7 +85,7 @@ R-002.37 a R-002.39 se agregaron en la revisión del 29 oct y van junto a los re
 | R-002.9 | La base debe rechazar cualquier fila de `engagements` con `diagnostico_verificado = true` y alguno de `cedula_profesional`, `diagnostico_verificado_por` o `diagnostico_verificado_en` en nulo. | Decisión de Acker (1) |
 | R-002.10 | Solo el coach del acompañamiento puede registrar o corregir la verificación, y solo mientras la etapa sea `alta`. | C-02, interpretación del equipo |
 | R-002.11 | La verificación (sí o no, cédula, quién y cuándo) solo se muestra en pantallas del coach. Las páginas y rutas de la persona no deben seleccionar esas columnas, ningún prompt las recibe y ninguna salida hacia la empresa las incluye. | C-02, C-03, C-11, D-021 (propuesta) |
-| R-002.12 | `lib/engagements/config.ts` debe tener un campo `requiereDiagnostico` por tipo de acompañamiento. Vale `true` para `inclusion` y para `workplace_support` hasta que el partner responda si Workplace Support también lo pide. | CONTEXTO §11 (pregunta abierta al partner), D-020 (propuesta), D-029 (decidida por los tres según Acker, pendiente de registrar) |
+| R-002.12 | `lib/engagements/config.ts` debe tener un campo `requiereDiagnostico` por tipo de acompañamiento. Vale `true` para `inclusion` y para `workplace_support` hasta que el partner responda si Workplace Support también lo pide. | CONTEXTO §11 (pregunta abierta al partner), D-020 (propuesta), D-058 (decidida por los tres según Acker; falta que David y Rodrigo lo confirmen en CONTEXTO §9) |
 | R-002.40 | La persona no debe poder leer en la base `diagnostico_verificado`, `cedula_profesional`, `diagnostico_verificado_por` ni `diagnostico_verificado_en` (hueco H-12 de 001). Propuesta (Claude), decide Acker: la persona deja de tener SELECT directo sobre `app.engagements` y lee lo que necesita de su acompañamiento con la función `private.app_mi_acompanamiento()`, que solo devuelve `id`, `type` y `stage`. Mientras la función no exista, vale la regla fija en código de R-002.11. Las alternativas están en la decisión abierta (e). | C-02, C-09, C-16; interpretación del equipo a partir de H-12 (001) |
 
 ### Invitación
@@ -584,7 +584,7 @@ Versión 2 · 2026-10-29 · consolidación entre specs
 - Nuevo R-002.45: lista única de lo que escribe la persona.
 - Nuevo R-002.46: `scripts/rls-check.ts` compartido, con los casos de CA-001.8 (H-8 de 001).
 - R-002.4 sustituye R-001.27 y CA-001.19. Nueva función `private.app_alta_verificada` para R-002.37.
-- D-029 y D-030 pasan a "decididas por los tres según Acker, pendientes de registrar". Nuevas decisiones (h) sobre D-020 a D-022 e (i) sobre el nombre del proyecto. Nueva pregunta al partner sobre tipo o nivel en el documento.
+- D-058 y D-030 pasan a "decididas por los tres según Acker, pendientes de registrar". Nuevas decisiones (h) sobre D-020 a D-022 e (i) sobre el nombre del proyecto. Nueva pregunta al partner sobre tipo o nivel en el documento.
 - Nuevos CA-002.33 a CA-002.39; tareas 1, 3, 4, 5, 7, 13 y 17 actualizadas.
 
 Versión 4 · 2026-10-29 · decisiones de Acker
@@ -630,3 +630,8 @@ Versión 6 · 2026-10-29 · implementación
   - Recorrido con teclado y en modo Alto contraste (CA-002.28).
   - CA-002.3 (correo repetido), CA-002.30 (fallo forzado de la base), CA-002.32 (dos pestañas) y CA-002.36 (revisión de PR).
   - Revisión del código por Acker.
+
+Versión 7 · 2026-10-30 · numeración de decisiones
+
+- Solo cambia la numeración: la decisión de la plataforma para los dos servicios se citaba aquí como D-029, y en CONTEXTO v5 esa decisión es D-058, porque D-029 ya era el reparto de negocio de Rodrigo. El cambio incluye las notas de versiones anteriores de esta sección.
+- Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
