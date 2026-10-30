@@ -19,17 +19,27 @@ export const ETAPAS: { id: EngagementStage; etiqueta: string }[] = [
 
 export const ENGAGEMENT_CONFIG: Record<
   EngagementType,
-  { etiqueta: string; descripcion: string; etapas: EngagementStage[] }
+  {
+    etiqueta: string;
+    descripcion: string;
+    etapas: EngagementStage[];
+    // Spec 002 (R-002.12): si el alta exige el diagnóstico verificado. true en los dos tipos hasta que
+    // el partner responda si Workplace Support también lo pide (decisión abierta c). Si cambia, también
+    // cambia la política consent_events_insert_persona (R-002.37).
+    requiereDiagnostico: boolean;
+  }
 > = {
   inclusion: {
     etiqueta: "Proyecto de inclusión",
     descripcion: "Acompañamiento de 6 meses después de la contratación, con la red de apoyo (líder y mentor).",
     etapas: ["alta", "evaluacion_inicial", "perfil", "plan", "seguimiento", "cierre"],
+    requiereDiagnostico: true,
   },
   workplace_support: {
     etiqueta: "Workplace Support",
     descripcion: "Coaching para una persona que ya trabaja. Evaluación corta, luego objetivos y estrategias.",
     etapas: ["alta", "evaluacion_inicial", "perfil", "plan", "seguimiento", "cierre"],
+    requiereDiagnostico: true,
   },
 };
 

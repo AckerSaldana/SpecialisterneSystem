@@ -8,12 +8,16 @@
 -- Cuentas de prueba (valores de prueba, solo para este prototipo):
 --   coach    coach@caja-mex.test    / caja-mex-coach-demo
 --   persona  persona@caja-mex.test  / caja-mex-persona-demo
+--   persona-alta@caja-mex.test: sin contraseña utilizable; entra con el código que genera el coach
+--   (spec 002). Su acompañamiento está en etapa alta, sin verificación ni consentimiento.
 --
 -- UUIDs fijos:
 --   organización  11111111-1111-4111-8111-111111111111
 --   coach         22222222-2222-4222-8222-222222222222
 --   persona       33333333-3333-4333-8333-333333333333
 --   engagement    44444444-4444-4444-8444-444444444444
+--   persona-alta  35353535-3535-4535-8535-353535353535
+--   engagement 2  46464646-4646-4646-8646-464646464646  (etapa alta)
 
 begin;
 
@@ -106,7 +110,7 @@ on conflict do nothing;
 -- ---------------------------------------------------------------------------
 
 insert into app.engagements (
-  id, org_id, type, stage, coach_id, persona_id, consentimiento_en,
+  id, org_id, type, stage, coach_id, persona_id,
   diagnostico_verificado, cedula_profesional, diagnostico_verificado_por, diagnostico_verificado_en
 )
 values (
@@ -116,11 +120,73 @@ values (
   'evaluacion_inicial',
   '22222222-2222-4222-8222-222222222222',
   '33333333-3333-4333-8333-333333333333',
-  now(),
   true,
-  '0000000 (sintética)',
+  '0000000', -- cédula sintética
   '22222222-2222-4222-8222-222222222222',
   now()
+)
+on conflict do nothing;
+
+-- Consentimiento del acompañamiento de demo, con la versión del aviso (R-002.34).
+-- "where not exists" lo mantiene idempotente: el seed se puede correr varias veces.
+insert into app.consent_events (engagement_id, user_id, tipo, version_aviso)
+select '44444444-4444-4444-8444-444444444444', '33333333-3333-4333-8333-333333333333', 'otorgado', '2026-10-29'
+where not exists (
+  select 1 from app.consent_events
+  where engagement_id = '44444444-4444-4444-8444-444444444444' and version_aviso = '2026-10-29'
+);
+
+-- ---------------------------------------------------------------------------
+-- Segundo acompañamiento, en etapa alta, para las pruebas RLS y el recorrido de 002.
+-- La cuenta no tiene contraseña utilizable: la pone el coach al generar el código.
+-- ---------------------------------------------------------------------------
+
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+  raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, recovery_token, email_change_token_new, email_change
+)
+values (
+  '00000000-0000-0000-0000-000000000000',
+  '35353535-3535-4535-8535-353535353535',
+  'authenticated', 'authenticated',
+  'persona-alta@caja-mex.test',
+  '',
+  now(),
+  '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
+  '', '', '', ''
+)
+on conflict do nothing;
+
+insert into auth.identities (
+  id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at
+)
+values (
+  '65656565-6565-4565-8565-656565656565',
+  '35353535-3535-4535-8535-353535353535',
+  '35353535-3535-4535-8535-353535353535',
+  'email',
+  jsonb_build_object(
+    'sub', '35353535-3535-4535-8535-353535353535',
+    'email', 'persona-alta@caja-mex.test',
+    'email_verified', true
+  ),
+  null, now(), now()
+)
+on conflict do nothing;
+
+insert into app.users (id, org_id, role, nombre_pila)
+values ('35353535-3535-4535-8535-353535353535', '11111111-1111-4111-8111-111111111111', 'persona', 'Sam')
+on conflict do nothing;
+
+insert into app.engagements (id, org_id, type, stage, coach_id, persona_id)
+values (
+  '46464646-4646-4646-8646-464646464646',
+  '11111111-1111-4111-8111-111111111111',
+  'inclusion',
+  'alta',
+  '22222222-2222-4222-8222-222222222222',
+  '35353535-3535-4535-8535-353535353535'
 )
 on conflict do nothing;
 

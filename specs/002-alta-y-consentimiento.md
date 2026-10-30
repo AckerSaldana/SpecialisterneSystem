@@ -2,7 +2,7 @@
 
 # 002 · Alta y consentimiento
 
-- Estado: Revisada por Acker · Versión 5 · 2026-10-29
+- Estado: Implementada · Versión 6 · 2026-10-29 (código pendiente de revisión de Acker)
 - Fuentes: F-005 (00:00–12:36), F-026 (secundaria), F-027 (secundaria). D-001 y D-003 (decididas en CONTEXTO §9). D-008, D-015, D-020, D-021 y D-022 (propuestas en CONTEXTO §9; su aprobación es la decisión abierta h). D-029 y D-030 (decididas por los tres según Acker, pendientes de registrar en CONTEXTO §9). D-032 y D-035 (propuestas, bloque de actualización del 29 oct). Decisiones de Acker para esta fase (29 oct, ver "Alcance"). REGLAS §2.5, §3, §4, §6 y §7. CONTEXTO §2, §4, §6 y §11. Reglas de la constitución: C-01, C-02, C-03, C-07, C-08, C-09, C-10, C-11, C-12, C-14, C-16, C-17, C-19.
 - Depende de: 000. Toca código de 001 que hoy lee `consentimiento_en`: `app/api/engagements/[id]/sessions/route.ts`, `app/coach/engagements/[id]/page.tsx` y `app/coach/engagements/[id]/sessions/new/page.tsx`. Recibe de 001 los huecos H-7 (solo el paso de `alta` a `evaluacion_inicial`; el resto de las etapas es de 003), H-8 y H-12.
 - La usan: 003, 004, 005 y 006 (consentimiento vigente, bloqueo al retirar, lista de lo que escribe la persona, aviso de privacidad y `scripts/rls-check.ts`). Orden de migraciones: 002 antes que 003, 003 antes que 004 y 005, 006 al final.
@@ -600,3 +600,33 @@ Versión 5 · 2026-10-29 · ajustes de Acker antes de programar
 - R-002.14: el código mide 8 caracteres y vence en 7 días.
 - Texto del aviso: la sección "Cuánto tiempo guardamos tus datos" dice los 6 meses tras el retiro.
 - Estado: Revisada por Acker.
+
+Versión 6 · 2026-10-29 · implementación
+
+- Implementadas las tareas 1 a 18b. Migraciones `drizzle/0003` a `0006` aplicadas con `npm run db:migrate`; seed actualizado.
+- Verificado:
+  - `npm run rls-check` pasa 20 de 20 casos: CA-001.8, CA-002.4, .7, .8, .9, .20, .22 (base), .24, .31, .33, .34, .37, .38 y .39.
+  - `npm run purge-retirados -- --test` pasa CA-002.42.
+  - 12 pruebas sin red: código, correo, cédula, aviso (CA-002.35, CA-002.43) y la regresión de inserts.
+  - El advisor de Supabase no marca funciones (CA-002.41).
+  - Typecheck, lint y build pasan.
+- Recorrido en el navegador del 29 oct:
+  - Alta con correo inválido y con correo válido (CA-002.1, CA-002.2).
+  - Verificación con errores y guardada, sin campo de archivo (CA-002.5, CA-002.6).
+  - Código mostrado una sola vez y ausente del HTML, de los logs, de `invitations` y de `audit_log` (CA-002.12, CA-002.40).
+  - Código reemplazado rechazado (CA-002.13).
+  - Contraseña y puerta (CA-002.16, CA-002.17).
+  - Aviso sin casilla y "No por ahora" (CA-002.18, CA-002.21).
+  - Consentimiento y paso a `evaluacion_inicial` (CA-002.19).
+  - Retiro: el coach ya no ve lo guardado y la ruta responde 409 sin crear filas (CA-002.22, CA-002.24, CA-002.25).
+  - Consentimiento otra vez (CA-002.23).
+  - Código vencido por `/login` (CA-002.15).
+- Cambios durante la implementación:
+  - Los inserts a `users`, `engagements`, `consent_events` e `invitations` van por `lib/db/insertar.ts` con columnas explícitas. Drizzle pone DEFAULT en todas las columnas y Postgres pide permiso sobre cada una.
+  - `logging.serverFunctions: false` en `next.config.ts`. Además, las actions del código y del alta no reciben el estado anterior, que traía el código o el correo, y Next lo registraba en desarrollo.
+  - Una sesión revocada por un código nuevo se trata como código vencido.
+  - La cédula acepta de 1 a 20 dígitos.
+- Pendiente:
+  - Recorrido con teclado y en modo Alto contraste (CA-002.28).
+  - CA-002.3 (correo repetido), CA-002.30 (fallo forzado de la base), CA-002.32 (dos pestañas) y CA-002.36 (revisión de PR).
+  - Revisión del código por Acker.

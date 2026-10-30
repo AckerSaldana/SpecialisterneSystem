@@ -4,12 +4,14 @@
 // Guarda un profile_event tipo "no_me_representa" en estado "proposed" para que
 // el coach lo revise con la persona. No cambia el perfil.
 // La política RLS profile_events_insert_persona_feedback exige justo estos valores.
-import { desc, eq } from "drizzle-orm";
+// El acompañamiento se lee con miAcompanamiento (spec 002, R-002.40): la persona no tiene
+// SELECT sobre app.engagements.
 import { FeedbackRequest, FeedbackResponse, type ApiError } from "@/lib/api/contracts";
 import { getUserWithRole } from "@/lib/auth";
 import { withRls } from "@/lib/db/rls";
 import { logError } from "@/lib/log";
-import { engagements, profileEvents } from "@/lib/db/schema";
+import { profileEvents } from "@/lib/db/schema";
+import { miAcompanamiento } from "@/lib/engagements/persona";
 import { PayloadNoMeRepresenta } from "@/lib/profile/schema";
 
 function error(mensaje: string, status: number) {
@@ -31,13 +33,8 @@ export async function POST(request: Request) {
 
   try {
     const eventId = await withRls(user.claims, async (tx) => {
-      // Mismo criterio que /persona: el acompañamiento más reciente de esta persona.
-      const [engagement] = await tx
-        .select({ id: engagements.id })
-        .from(engagements)
-        .where(eq(engagements.personaId, user.id))
-        .orderBy(desc(engagements.createdAt))
-        .limit(1);
+      // Mismo criterio que /persona: su único acompañamiento (R-002.4).
+      const engagement = await miAcompanamiento(tx);
       if (!engagement) return null;
 
       const payload = PayloadNoMeRepresenta.parse({

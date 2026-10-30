@@ -10,8 +10,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-// Rutas que exigen sesión. /, /login y /preferencias quedan públicas.
-const RUTAS_PRIVADAS = ["/coach", "/persona"];
+// Rutas que exigen sesión. /, /login, /preferencias e /invitacion (entrada con código,
+// spec 002) quedan públicas. /bienvenida son los pasos de la persona antes de su página.
+const RUTAS_PRIVADAS = ["/coach", "/persona", "/bienvenida"];
 
 function esPrivada(pathname: string) {
   return RUTAS_PRIVADAS.some((ruta) => pathname === ruta || pathname.startsWith(`${ruta}/`));

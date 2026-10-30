@@ -22,6 +22,34 @@
       "when": 1793305363770,
       "tag": "0002_permisos",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1793328565860,
+      "tag": "0003_funciones_alta",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793328586399,
+      "tag": "0004_alta_y_consentimiento",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793328588239,
+      "tag": "0005_persona_sin_select_engagements",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793328605939,
+      "tag": "0006_triggers_y_permisos_alta",
+      "breakpoints": true
     }
   ]
 }

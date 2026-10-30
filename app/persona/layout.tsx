@@ -1,10 +1,13 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado por Acker el 29 oct 2026
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente (cambió el 29 oct, spec 002)
 //
-// Layout de todas las pantallas de la persona participante. requireRole verifica la sesión
-// y el rol en el servidor (proxy.ts solo hace una revisión optimista).
+// Layout de todas las pantallas de la persona participante. La puerta (lib/persona/puerta.ts)
+// verifica sesión y rol en el servidor (proxy.ts solo hace una revisión optimista) y además
+// manda a la persona al paso que le falta: código vencido, contraseña o aviso (spec 002,
+// R-002.18, R-002.19, R-002.39). Cada página vuelve a llamar la puerta, porque un layout no se
+// vuelve a ejecutar al navegar entre sus páginas; la lectura se hace una vez por petición.
 import { AppHeader, type NavLink } from "@/components/app-header";
 import { SiteFooter } from "@/components/site-footer";
-import { requireRole } from "@/lib/auth";
+import { puertaPersona } from "@/lib/persona/puerta";
 
 const links: NavLink[] = [
   { href: "/persona", label: "Mi perfil" },
@@ -12,7 +15,7 @@ const links: NavLink[] = [
 ];
 
 export default async function PersonaLayout({ children }: LayoutProps<"/persona">) {
-  const user = await requireRole("persona");
+  const { user } = await puertaPersona("persona");
 
   return (
     <>

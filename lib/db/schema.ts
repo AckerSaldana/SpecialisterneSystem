@@ -15,6 +15,7 @@ import { sql } from "drizzle-orm";
 import {
   bigserial,
   boolean,
+  check,
   integer,
   jsonb,
   pgPolicy,
@@ -55,6 +56,7 @@ export const knowledgeCardType = app.enum("knowledge_card_type", ["estrategia_fe
 export const catalogFormat = app.enum("catalog_format", ["lectura", "video", "audio", "ejercicio", "interactivo"]);
 export const cognitiveLoad = app.enum("cognitive_load", ["baja", "media", "alta"]);
 export const recommendationStatus = app.enum("recommendation_status", ["propuesta", "aprobada", "descartada"]);
+export const consentEventType = app.enum("consent_event_type", ["otorgado", "retirado"]);
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -62,7 +64,8 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 const isCoach = sql`(select private.app_role()) = 'coach'`;
 const coachOf = (col: unknown) => sql`(select private.app_is_coach_of(${col}))`;
 const personaOf = (col: unknown) => sql`(select private.app_is_persona_of(${col}))`;
-// Sin consentimiento registrado no se guardan notas (y por lo tanto no se mandan a la IA).
+// Consentimiento vigente (spec 002, R-002.28): el último evento de app.consent_events es "otorgado".
+// Sin él no se guardan notas ni se manda nada a la IA, y lo que ya existe deja de verse (decisión b).
 const hasConsent = (col: unknown) => sql`(select private.app_has_consent(${col}))`;
 
 // ---------------------------------------------------------------------------
@@ -106,6 +109,12 @@ export const users = app.table(
       to: authenticatedRole,
       using: sql`${t.id} = ${authUid} or (${isCoach} and ${t.orgId} = (select private.app_org_id()))`,
     }),
+    // Spec 002 (R-002.2): el coach da de alta a la persona en su propia organización.
+    pgPolicy("users_insert_coach_persona", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${isCoach} and ${t.orgId} = (select private.app_org_id()) and ${t.role} = 'persona'`,
+    }),
   ],
 );
 
@@ -128,7 +137,6 @@ export const engagements = app.table(
     personaId: uuid("persona_id")
       .notNull()
       .references(() => users.id),
-    consentimientoEn: timestamp("consentimiento_en", { withTimezone: true }),
     diagnosticoVerificado: boolean("diagnostico_verificado").notNull().default(false),
     cedulaProfesional: text("cedula_profesional"),
     diagnosticoVerificadoPor: uuid("diagnostico_verificado_por").references(() => users.id),
@@ -136,12 +144,35 @@ export const engagements = app.table(
     createdAt: createdAt(),
   },
   (t) => [
-    pgPolicy("engagements_select_participants", {
+    // Una persona, un acompañamiento (R-002.4).
+    unique("engagements_persona_unica").on(t.personaId),
+    // Verificado implica cédula, quién y cuándo (R-002.9). El trigger private.app_on_verificacion
+    // llena quién y cuándo; el check lo garantiza aunque alguien escriba como owner.
+    check(
+      "engagements_verificacion_completa",
+      sql`not ${t.diagnosticoVerificado} or (${t.cedulaProfesional} is not null and ${t.diagnosticoVerificadoPor} is not null and ${t.diagnosticoVerificadoEn} is not null)`,
+    ),
+    // Solo el coach lee la fila completa. La persona lee id, tipo y etapa con
+    // private.app_mi_acompanamiento(), sin la verificación del diagnóstico (R-002.40, decisión e).
+    pgPolicy("engagements_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${t.coachId} = ${authUid} or ${t.personaId} = ${authUid}`,
+      using: sql`${t.coachId} = ${authUid}`,
     }),
-    // Sin política de UPDATE: la app no modifica engagements y nadie puede cambiarlos con su sesión.
+    // El coach crea el acompañamiento en etapa alta, sin verificar, con una persona de su organización (R-002.5).
+    pgPolicy("engagements_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${isCoach} and ${t.coachId} = ${authUid} and ${t.orgId} = (select private.app_org_id()) and ${t.stage} = 'alta' and not ${t.diagnosticoVerificado} and exists (select 1 from app.users u where u.id = ${t.personaId} and u.role = 'persona' and u.org_id = (select private.app_org_id()))`,
+    }),
+    // Única política de UPDATE (R-002.41, decisión g): solo en etapa alta. Los permisos por columna
+    // solo dejan escribir diagnostico_verificado y cedula_profesional; la etapa la cambian funciones de private.
+    pgPolicy("engagements_update_coach_alta", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${t.coachId} = ${authUid} and ${t.stage} = 'alta'`,
+      withCheck: sql`${t.coachId} = ${authUid} and ${t.stage} = 'alta'`,
+    }),
   ],
 );
 
@@ -168,7 +199,7 @@ export const sessions = app.table(
     pgPolicy("sessions_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: coachOf(t.engagementId),
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("sessions_insert_coach", {
       for: "insert",
@@ -208,24 +239,24 @@ export const profileEvents = app.table(
     pgPolicy("profile_events_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: coachOf(t.engagementId),
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("profile_events_insert_coach", {
       for: "insert",
       to: authenticatedRole,
-      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'propuesta_ia'`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'propuesta_ia' and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("profile_events_update_coach", {
       for: "update",
       to: authenticatedRole,
-      using: coachOf(t.engagementId),
-      withCheck: coachOf(t.engagementId),
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
     // La persona solo ve y crea sus propios "esto no me representa"; nunca las propuestas de la IA.
     pgPolicy("profile_events_select_persona_own", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${personaOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'no_me_representa'`,
+      using: sql`${personaOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'no_me_representa' and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("profile_events_insert_persona_feedback", {
       for: "insert",
@@ -258,12 +289,12 @@ export const profileSnapshots = app.table(
     pgPolicy("profile_snapshots_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: coachOf(t.engagementId),
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("profile_snapshots_insert_coach", {
       for: "insert",
       to: authenticatedRole,
-      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${hasConsent(t.engagementId)}`,
     }),
   ],
 );
@@ -287,12 +318,12 @@ export const personaProfiles = app.table(
     pgPolicy("persona_profiles_select_participants", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}`,
+      using: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("persona_profiles_insert_coach", {
       for: "insert",
       to: authenticatedRole,
-      withCheck: coachOf(t.engagementId),
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
   ],
 );
@@ -423,13 +454,99 @@ export const recommendations = app.table(
     pgPolicy("recommendations_all_coach", {
       for: "all",
       to: authenticatedRole,
-      using: coachOf(t.engagementId),
-      withCheck: coachOf(t.engagementId),
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
     pgPolicy("recommendations_select_persona_approved", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${personaOf(t.engagementId)} and ${t.status} = 'aprobada'`,
+      using: sql`${personaOf(t.engagementId)} and ${t.status} = 'aprobada' and ${hasConsent(t.engagementId)}`,
+    }),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Alta: consentimiento e invitaciones (spec 002)
+// ---------------------------------------------------------------------------
+
+// Historial de consentimiento. Vigente = el evento con el id más alto es "otorgado" (R-002.28).
+// Nadie edita ni borra eventos: no hay permiso de update ni delete para authenticated.
+export const consentEvents = app.table(
+  "consent_events",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    tipo: consentEventType("tipo").notNull(),
+    // Fecha del archivo del aviso vigente (lib/legal/aviso.ts, AVISO_VERSION).
+    versionAviso: text("version_aviso").notNull(),
+    // La pone la base; authenticated no tiene permiso de escribirla.
+    fecha: timestamp("fecha", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    pgPolicy("consent_events_select_participants", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} or (${personaOf(t.engagementId)} and ${t.userId} = ${authUid})`,
+    }),
+    // Solo la persona registra o retira su consentimiento (R-002.24). Otorgar exige el alta
+    // verificada (R-002.37); retirar siempre se puede.
+    pgPolicy("consent_events_insert_persona", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${personaOf(t.engagementId)} and ${t.userId} = ${authUid} and (${t.tipo} = 'retirado' or (select private.app_alta_verificada(${t.engagementId})))`,
+    }),
+  ],
+);
+
+// Invitaciones con código de un solo uso (decisión a). No hay columna para el código: solo
+// existe como contraseña temporal en Supabase Auth, que la guarda con hash (R-002.47).
+// Pendiente = la más reciente con usada_en y reemplazada_en nulos; vencida si expira_en ya pasó.
+export const invitations = app.table(
+  "invitations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    personaId: uuid("persona_id")
+      .notNull()
+      .references(() => users.id),
+    creadaPor: uuid("creada_por")
+      .notNull()
+      .references(() => users.id),
+    expiraEn: timestamp("expira_en", { withTimezone: true }).notNull(),
+    usadaEn: timestamp("usada_en", { withTimezone: true }),
+    reemplazadaEn: timestamp("reemplazada_en", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    pgPolicy("invitations_select_participants", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} or ${t.personaId} = ${authUid}`,
+    }),
+    // Con una invitación ya usada no se generan más: cambiaría la contraseña de la persona (R-002.38).
+    pgPolicy("invitations_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.creadaPor} = ${authUid} and ${t.expiraEn} > now() and ${t.personaId} = (select e.persona_id from app.engagements e where e.id = ${t.engagementId}) and not (select private.app_invitacion_usada(${t.engagementId}))`,
+    }),
+    pgPolicy("invitations_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${t.usadaEn} is null and ${t.reemplazadaEn} is null`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.usadaEn} is null`,
+    }),
+    pgPolicy("invitations_update_persona", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${t.personaId} = ${authUid} and ${t.usadaEn} is null and ${t.reemplazadaEn} is null and ${t.expiraEn} > now()`,
+      withCheck: sql`${t.personaId} = ${authUid} and ${t.reemplazadaEn} is null`,
     }),
   ],
 );

@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { withRls } from "@/lib/db/rls";
 import { engagements, users } from "@/lib/db/schema";
 import { ENGAGEMENT_CONFIG, etiquetaEtapa } from "@/lib/engagements/config";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export const metadata: Metadata = { title: "Tus acompañamientos" };
@@ -34,6 +35,12 @@ export default async function CoachHomePage() {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-semibold">Tus acompañamientos</h1>
+      {/* Spec 002 (R-002.1): el coach arranca el alta. */}
+      <div>
+        <Button asChild size="lg">
+          <Link href="/coach/engagements/nuevo">Nuevo acompañamiento</Link>
+        </Button>
+      </div>
 
       {filas.length === 0 ? (
         <p className="prose-measure">Todavía no tienes acompañamientos asignados.</p>

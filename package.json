@@ -12,7 +12,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "seed": "tsx scripts/seed.ts",
-    "eval": "tsx --conditions=react-server eval/compare.ts"
+    "eval": "tsx --conditions=react-server eval/compare.ts",
+    "rls-check": "tsx scripts/rls-check.ts",
+    "purge-retirados": "tsx scripts/purge-retirados.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.92",

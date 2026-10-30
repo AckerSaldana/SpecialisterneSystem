@@ -1,14 +1,19 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado por Acker el 29 oct 2026
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente (cambió el 29 oct, spec 002)
 //
-// /persona: el perfil de la persona en lenguaje claro y sus recursos aprobados.
+// /persona: el perfil de la persona en lenguaje claro, sus recursos aprobados y la sección
+// "Tus datos y tu consentimiento" (spec 002, R-002.27).
+// El acompañamiento sale de la puerta (miAcompanamiento, R-002.40): esta página no selecciona
+// columnas de app.engagements. La puerta también garantiza que hay consentimiento vigente.
 // Privacidad: aquí NO se muestran citas (vienen de las notas privadas del coach),
 // ni señales de riesgo, ni nombres de funciones ejecutivas. La página lee
 // persona_profiles, que solo trae resumen y tipo por dimensión.
 import type { Metadata } from "next";
 import { asc, desc, eq, and } from "drizzle-orm";
-import { requireRole } from "@/lib/auth";
 import { withRls } from "@/lib/db/rls";
-import { catalogUnits, engagements, personaProfiles, recommendations } from "@/lib/db/schema";
+import { catalogUnits, personaProfiles, recommendations } from "@/lib/db/schema";
+import { puertaPersona } from "@/lib/persona/puerta";
+import { formatFecha } from "@/components/coach/labels";
+import { ConsentimientoPersona } from "@/components/persona/consentimiento";
 import { DIMENSIONES, etiquetaDimension, type TipoHallazgo } from "@/lib/profile/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { NotMeButton } from "@/components/persona/not-me-button";
@@ -32,45 +37,41 @@ const ESFUERZO = { baja: "bajo", media: "medio", alta: "alto" } as const;
 
 export const metadata: Metadata = { title: "Tu perfil" };
 
-export default async function PersonaPage() {
-  const user = await requireRole("persona");
+export default async function PersonaPage({ searchParams }: PageProps<"/persona">) {
+  const { user, acompanamiento: engagement, consentimiento } = await puertaPersona("persona");
+  // ?listo=1 lo pone la action del aviso al registrar el consentimiento. No lleva datos: la
+  // fecha se lee de la base.
+  const { listo } = await searchParams;
 
-  const datos = await withRls(user.claims, async (tx) => {
-    // Si hubiera más de un acompañamiento, se usa el más reciente
-    // (el endpoint de feedback usa la misma regla).
-    const [engagement] = await tx
-      .select({ id: engagements.id })
-      .from(engagements)
-      .where(eq(engagements.personaId, user.id))
-      .orderBy(desc(engagements.createdAt))
-      .limit(1);
-    if (!engagement) return null;
+  const datos = !engagement
+    ? null
+    : await withRls(user.claims, async (tx) => {
+        // persona_profiles: la versión sin citas ni señales. RLS no deja leer profile_snapshots.
+        const [snapshot] = await tx
+          .select({ perfil: personaProfiles.contenido })
+          .from(personaProfiles)
+          .where(eq(personaProfiles.engagementId, engagement.id))
+          .orderBy(desc(personaProfiles.version))
+          .limit(1);
 
-    // persona_profiles: la versión sin citas ni señales. RLS no deja leer profile_snapshots.
-    const [snapshot] = await tx
-      .select({ perfil: personaProfiles.contenido })
-      .from(personaProfiles)
-      .where(eq(personaProfiles.engagementId, engagement.id))
-      .orderBy(desc(personaProfiles.version))
-      .limit(1);
+        // RLS ya limita a las recomendaciones aprobadas; el filtro lo deja explícito.
+        const recursos = await tx
+          .select({
+            id: recommendations.id,
+            titulo: catalogUnits.titulo,
+            formato: catalogUnits.formato,
+            duracionMin: catalogUnits.duracionMin,
+            cargaCognitiva: catalogUnits.cargaCognitiva,
+            url: catalogUnits.url,
+          })
+          .from(recommendations)
+          .innerJoin(catalogUnits, eq(catalogUnits.id, recommendations.catalogUnitId))
+          .where(and(eq(recommendations.engagementId, engagement.id), eq(recommendations.status, "aprobada")))
+          .orderBy(asc(recommendations.createdAt));
 
-    // RLS ya limita a las recomendaciones aprobadas; el filtro lo deja explícito.
-    const recursos = await tx
-      .select({
-        id: recommendations.id,
-        titulo: catalogUnits.titulo,
-        formato: catalogUnits.formato,
-        duracionMin: catalogUnits.duracionMin,
-        cargaCognitiva: catalogUnits.cargaCognitiva,
-        url: catalogUnits.url,
-      })
-      .from(recommendations)
-      .innerJoin(catalogUnits, eq(catalogUnits.id, recommendations.catalogUnitId))
-      .where(and(eq(recommendations.engagementId, engagement.id), eq(recommendations.status, "aprobada")))
-      .orderBy(asc(recommendations.createdAt));
-
-    return { snapshot, recursos };
-  });
+        return { snapshot, recursos };
+      });
+  const vigente = consentimiento?.estado === "vigente" ? consentimiento : null;
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,6 +79,12 @@ export default async function PersonaPage() {
         <h1 className="text-2xl font-semibold">Tu perfil</h1>
         <p className="prose-measure">Hola, {user.nombrePila}.</p>
       </header>
+
+      {listo === "1" && vigente ? (
+        <p role="status" className="prose-measure rounded-lg border border-primary p-3 font-medium">
+          Listo. Registramos tu consentimiento el {formatFecha(vigente.fecha)}.
+        </p>
+      ) : null}
 
       {!datos ? (
         <p className="prose-measure">Todavía no tienes un acompañamiento activo. Tu coach te avisa cuando empiece.</p>
@@ -174,6 +181,10 @@ export default async function PersonaPage() {
             </ul>
           )}
         </section>
+      ) : null}
+
+      {vigente ? (
+        <ConsentimientoPersona estado="vigente" fecha={formatFecha(vigente.fecha)} hrefAviso="/persona/aviso" />
       ) : null}
     </div>
   );

@@ -3,8 +3,9 @@
 // POST /api/engagements/[id]/sessions
 // El coach envía su nota. Pasos:
 //   1. tx1 (con RLS): lee el engagement, el nombre de pila de la persona y el último perfil;
-//      guarda la sesión con la nota original. Si el engagement no tiene consentimiento
-//      registrado, responde 409 sin guardar la nota ni llamar al modelo.
+//      guarda la sesión con la nota original. Sin consentimiento vigente (spec 002,
+//      exigirConsentimiento sobre private.app_has_consent) responde 409 sin guardar la nota
+//      ni llamar al modelo (R-002.31, C-10).
 //   2. Fuera de cualquier transacción: llama al modelo (puede tardar varios segundos y no
 //      queremos una conexión de base abierta mientras tanto).
 //   3. tx2 (con RLS): limpia la propuesta (sanitizeUpdate), guarda el profile_event con
@@ -17,6 +18,7 @@ import { MODEL_ID } from "@/lib/ai/model";
 import { proposeProfileUpdate } from "@/lib/ai/propose-profile-update";
 import { ProposeRequest, type ApiError, type ProposeResponse } from "@/lib/api/contracts";
 import { getUserWithRole } from "@/lib/auth";
+import { exigirConsentimiento } from "@/lib/consent";
 import { logError, resumirError } from "@/lib/log";
 import { withRls } from "@/lib/db/rls";
 import { engagements, profileEvents, profileSnapshots, sessions, users } from "@/lib/db/schema";
@@ -54,14 +56,14 @@ export async function POST(req: Request, ctx: RouteContext<"/api/engagements/[id
           id: engagements.id,
           type: engagements.type,
           personaId: engagements.personaId,
-          consentimientoEn: engagements.consentimientoEn,
         })
         .from(engagements)
         .where(eq(engagements.id, engagementId))
         .limit(1);
       if (!engagement) return null;
-      // Sin consentimiento no se guarda la nota ni se manda a la IA.
-      if (!engagement.consentimientoEn) return SIN_CONSENTIMIENTO;
+      // Sin consentimiento vigente no se guarda la nota ni se manda a la IA. Es el mismo chequeo
+      // que la política sessions_insert_coach (R-002.31): ninguna otra columna decide.
+      if (!(await exigirConsentimiento(tx, engagementId))) return SIN_CONSENTIMIENTO;
 
       const [persona] = await tx
         .select({ nombrePila: users.nombrePila })
@@ -95,7 +97,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/engagements/[id
   }
   if (!contexto) return error(404, "No encontramos este acompañamiento.");
   if (contexto === SIN_CONSENTIMIENTO) {
-    return error(409, "Falta registrar el consentimiento de la persona. No se guardó la nota ni se envió a la IA.");
+    return error(409, "La persona no tiene consentimiento vigente. No se guardó la nota ni se envió a la IA.");
   }
 
   // --- 2. Llamada al modelo, fuera de la transacción -------------------------

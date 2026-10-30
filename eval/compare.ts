@@ -2,17 +2,21 @@
 //
 // Eval del pipeline de propuesta de perfil.
 //   npm run eval              → pruebas sin red + todos los casos de eval/cases con el modelo
-//   npm run eval -- --offline → solo las pruebas sin red (sanitizeUpdate y applyApproval)
+//   npm run eval -- --offline → solo las pruebas sin red (sanitizeUpdate, applyApproval y las del
+//                               alta de la spec 002: código de invitación, validadores y aviso)
 //
 // Sale con código 1 si algo crítico falla: una prueba sin red, la llamada o validación del
 // modelo, banderas de términos no permitidos o una señal prohibida. Lo demás (dimensiones
 // faltantes, citas descartadas) se reporta como advertencia.
 import assert from "node:assert/strict";
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { config } from "dotenv";
 import { z } from "zod";
+import { ALFABETO, formatearCodigo, generarCodigo, LONGITUD_CODIGO, normalizarCodigo, VIGENCIA_DIAS, venceEn } from "@/lib/invitations/code";
+import { AVISO_VERSION } from "@/lib/legal/aviso";
 import { applyApproval, validarIndices } from "@/lib/profile/merge";
+import { Cedula, CorreoPrueba, Verificacion } from "@/lib/validators/alta";
 import {
   DimensionId,
   DominioFE,
@@ -221,6 +225,138 @@ const PRUEBAS: { nombre: string; correr: () => void }[] = [
       // Índice fuera de rango → error.
       assert.throws(() => applyApproval(previo, update, { cambios: [5], senales: [] }, ctx));
       assert.throws(() => applyApproval(previo, update, { cambios: [], senales: [1] }, ctx));
+    },
+  },
+
+  // ----- Spec 002: alta y consentimiento (tarea 17) -----
+  {
+    nombre: "002 · generarCodigo: 8 caracteres del alfabeto, sin 0 O 1 I L, 200 muestras distintas (R-002.14)",
+    correr: () => {
+      assert.equal(LONGITUD_CODIGO, 8);
+      assert.doesNotMatch(ALFABETO, /[0O1IL]/, "el alfabeto tiene caracteres que se confunden");
+      const muestras = Array.from({ length: 200 }, () => generarCodigo());
+      for (const c of muestras) {
+        assert.equal(c.length, 8, `longitud de ${c.length}`);
+        assert.ok([...c].every((ch) => ALFABETO.includes(ch)), "un carácter fuera del alfabeto");
+        assert.doesNotMatch(c, /[0O1IL]/);
+      }
+      assert.equal(new Set(muestras).size, 200, "hay códigos repetidos en 200 muestras");
+      // Vence a los 7 días (R-002.14).
+      assert.equal(VIGENCIA_DIAS, 7);
+      const desde = new Date("2026-10-29T12:00:00.000Z");
+      assert.equal(venceEn(desde).toISOString(), "2026-11-05T12:00:00.000Z");
+    },
+  },
+  {
+    nombre: "002 · formatearCodigo y normalizarCodigo: ida y vuelta, con minúsculas, guiones y espacios",
+    correr: () => {
+      for (let i = 0; i < 50; i++) {
+        const c = generarCodigo();
+        const mostrado = formatearCodigo(c);
+        assert.match(mostrado, /^.{4}-.{4}$/);
+        assert.equal(normalizarCodigo(mostrado), c);
+        assert.equal(normalizarCodigo(mostrado.toLowerCase()), c);
+      }
+      assert.equal(formatearCodigo("K7MP3QXR"), "K7MP-3QXR");
+      assert.equal(normalizarCodigo(" k7mp - 3qxr "), "K7MP3QXR");
+      assert.equal(normalizarCodigo("k7-mp-3q-xr"), "K7MP3QXR");
+    },
+  },
+  {
+    nombre: "002 · CorreoPrueba acepta .test y rechaza otros dominios (R-002.3)",
+    correr: () => {
+      assert.equal(CorreoPrueba.parse("persona-nueva@caja-mex.test"), "persona-nueva@caja-mex.test");
+      assert.equal(CorreoPrueba.parse("  Persona@Caja-Mex.TEST "), "persona@caja-mex.test");
+      const mensaje = "En este prototipo solo se aceptan correos que terminan en .test.";
+      for (const malo of ["persona@gmail.com", "persona@caja-mex.test.com", "persona.test", ""]) {
+        const r = CorreoPrueba.safeParse(malo);
+        assert.equal(r.success, false, `aceptó "${malo}"`);
+        assert.equal(r.error?.issues[0]?.message, mensaje);
+      }
+    },
+  },
+  {
+    nombre: "002 · Cedula acepta solo dígitos y Verificacion pide las dos casillas (R-002.7)",
+    correr: () => {
+      assert.equal(Cedula.parse("1234567"), "1234567");
+      assert.equal(Cedula.parse("  1234567 "), "1234567", "quita los espacios al inicio y al final");
+      const mensaje = "Escribe la cédula profesional. Solo números.";
+      for (const mala of ["12A4567", "ABCDEFG", "123 4567", "1234567-8", ""]) {
+        const r = Cedula.safeParse(mala);
+        assert.equal(r.success, false, `aceptó "${mala}"`);
+        assert.equal(r.error?.issues[0]?.message, mensaje);
+      }
+      assert.ok(Verificacion.safeParse({ revisoDocumento: true, consultoSep: true, cedula: "1234567" }).success);
+      const sinCasilla = Verificacion.safeParse({ revisoDocumento: true, consultoSep: false, cedula: "1234567" });
+      assert.equal(sinCasilla.success, false);
+      assert.equal(sinCasilla.error?.issues[0]?.message, "Marca las dos casillas para guardar la verificación.");
+    },
+  },
+  {
+    // Regresión del 29 oct: Drizzle arma el INSERT con todas las columnas (DEFAULT en las que no
+    // se pasan) y Postgres rechaza las que no tienen permiso. Estas tablas se insertan con
+    // lib/db/insertar.ts, que lista solo las columnas permitidas.
+    nombre: "002 · nadie usa tx.insert sobre tablas con permisos por columna (users, engagements, consentEvents, invitations)",
+    correr: () => {
+      const prohibido = /\.insert\(\s*(users|engagements|consentEvents|invitations)\s*\)/;
+      const revisar = (dir: string): string[] =>
+        readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+          const ruta = path.join(dir, e.name);
+          if (e.isDirectory()) return revisar(ruta);
+          if (!/\.(ts|tsx)$/.test(e.name)) return [];
+          return prohibido.test(readFileSync(ruta, "utf8")) ? [ruta] : [];
+        });
+      const encontrados = ["app", "lib", "components"].flatMap((d) => revisar(path.join(process.cwd(), d)));
+      assert.deepEqual(encontrados, [], `usar lib/db/insertar.ts en: ${encontrados.join(", ")}`);
+    },
+  },
+  {
+    nombre: "002 · el aviso tiene la marca de borrador y las secciones de R-002.20, R-002.42 y R-002.49 (CA-002.35, CA-002.43)",
+    correr: () => {
+      const relativo = path.join("legal", `${AVISO_VERSION}_aviso-privacidad.md`);
+      const archivo = path.join(process.cwd(), relativo);
+      assert.ok(
+        existsSync(archivo),
+        `No existe ${relativo}. Lo crea la tarea 1 de la spec 002 con el texto de "Texto del aviso"; esta prueba no puede pasar sin él.`,
+      );
+      // Sin el comentario de atribución, como lo muestra lib/legal/aviso.ts.
+      const texto = readFileSync(archivo, "utf8").replace(/^<!--[\s\S]*?-->\s*/, "");
+      const primeraLinea = texto.split(/\r?\n/).find((l) => l.trim()) ?? "";
+      assert.match(primeraLinea, /^Borrador sin revisión legal\./, `la primera línea visible es "${primeraLinea}"`);
+      assert.ok(primeraLinea.includes(`Versión ${AVISO_VERSION}`), "la primera línea no dice la versión de AVISO_VERSION");
+
+      // Secciones "## Título" → contenido.
+      const secciones = new Map<string, string>();
+      for (const bloque of texto.split(/^## /m).slice(1)) {
+        const [titulo, ...resto] = bloque.split(/\r?\n/);
+        secciones.set(titulo.trim(), resto.join("\n"));
+      }
+      const seccion = (titulo: string) => {
+        const s = secciones.get(titulo);
+        assert.ok(s !== undefined, `falta la sección "${titulo}" (hay: ${[...secciones.keys()].join(" | ")})`);
+        return s;
+      };
+
+      // R-002.20
+      assert.match(seccion("Qué datos guardamos"), /no se sube, no se copia y no se guarda/);
+      seccion("Para qué los usamos");
+      assert.match(seccion("Quién los ve"), /Nunca recibe tu diagnóstico/);
+      assert.match(seccion("Tu consentimiento"), /retirarlo cuando quieras/);
+      // R-002.42 (CA-002.35)
+      const ia = seccion("Inteligencia artificial");
+      assert.match(ia, /Anthropic/);
+      assert.match(ia, /en cada etapa/, "no dice qué llega al modelo por etapa");
+      assert.match(ia, /Evaluación inicial:/);
+      seccion("Cuando termina tu acompañamiento");
+      assert.match(seccion("Si necesitas más apoyo"), /fuera del sistema/);
+      // R-002.49 (CA-002.43)
+      const retencion = seccion("Cuánto tiempo guardamos tus datos");
+      assert.match(retencion, /6 meses/, "no menciona los 6 meses después del retiro");
+      assert.match(retencion, /retiras tu consentimiento/);
+      assert.match(retencion, /pedir\w*[^.]*borr\w*[^.]*antes/i, "no dice que se puede pedir el borrado antes");
+
+      // CA-002.29: sin términos no permitidos.
+      assert.doesNotMatch(texto, /paciente|debilidad|déficit|business profile/i);
     },
   },
 ];

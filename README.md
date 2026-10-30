@@ -71,6 +71,35 @@ Synthetic accounts created by the seed. They exist only in this prototype.
 | --- | --- | --- |
 | Coach | `coach@caja-mex.test` | `caja-mex-coach-demo` |
 | Participant | `persona@caja-mex.test` | `caja-mex-persona-demo` |
+| Participant in onboarding | `persona-alta@caja-mex.test` | None. Sign in at `/invitacion` with the code the coach generates. |
+
+## Onboarding and consent (spec 002)
+
+The full requirements are in `specs/002-alta-y-consentimiento.md`.
+
+1. **The coach creates the engagement.** Type (`inclusion` or `workplace_support`), the participant's first name and a `.test` email. The app creates the participant's Supabase Auth account, their `app.users` row and the engagement in stage `alta`. One engagement per participant.
+2. **The coach records the diagnosis check.** The coach reviews the document outside the system and looks up the professional license on the SEP site. The app stores only verified yes or no and the license number; the database fills in who and when. The document never enters the app: there is no file field anywhere.
+3. **The coach generates an invitation code.** Single use, 8 characters, expires after 7 days. Supabase Auth stores it as a temporary password, hashed. The app does not store the code in its tables, logs or `audit_log`, and the code never goes in a URL. The coach sees it once and hands it over in person or by phone. A new code replaces the previous one. Once the participant has set a password, no new code can be generated.
+4. **The participant signs in at `/invitacion`.** They create their own password, read the privacy notice (`legal/2026-10-29_aviso-privacidad.md`, version `AVISO_VERSION` in `lib/legal/aviso.ts`) and either give consent or choose "No por ahora". The consent checkbox starts unchecked. The first consent moves the engagement from `alta` to `evaluacion_inicial`.
+5. **The participant can withdraw consent** from `/persona` at any time. Notes, profiles and recommendations are hidden from both the coach and the participant, not deleted, and no new notes or model calls are allowed. Giving consent again shows them again. Six months after a withdrawal the data is deleted with `scripts/purge-retirados.ts`.
+
+Consent is stored as events in `app.consent_events`. The current consent is the latest event, and `private.app_has_consent(engagement_id)` is the only check, used by RLS policies and by `exigirConsentimiento` in `lib/consent.ts`. The privacy notice is a draft without legal review.
+
+### Environment variable
+
+| Variable | Use |
+| --- | --- |
+| `SUPABASE_SECRET_KEY` | Server only, never with a `NEXT_PUBLIC_` prefix. Used only by `lib/supabase/admin.ts` to create the participant's Auth account, set the temporary password and delete the account if onboarding fails. It is not used to read or write tables in the `app` schema. |
+
+### Scripts
+
+| Command | What it does |
+| --- | --- |
+| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001 and 002 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
+| `npm run purge-retirados` | Runs `scripts/purge-retirados.ts`: for each engagement whose latest consent event is a withdrawal older than 6 months, deletes its sessions, profile events, profile snapshots, participant profiles and recommendations. The engagement and its consent events stay as a record. |
+| `npm run purge-retirados -- --dry-run` | Lists what would be deleted without deleting anything. |
+| `npm run purge-retirados -- --engagement <id>` | Deletes one engagement's data now, when the participant asks for it. |
+| `npm run purge-retirados -- --test` | Test mode (CA-002.42): runs against a simulated withdrawal date inside a transaction that rolls back, so nothing is deleted. |
 
 ## Scripts
 
