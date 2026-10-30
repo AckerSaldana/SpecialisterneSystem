@@ -1,0 +1,83 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso sintético provisional escrito por Claude Code. Beta lo va a reemplazar por un caso revisado con el estilo real de las notas del partner. Persona y datos inventados.",
+  "id": "caso-ws-01",
+  "descripcion": "Workplace Support. Persona que ya trabaja; nota de segunda sesión con señales de función ejecutiva, una fortaleza clara, un disparador de estrés, un aspecto sensorial, una preferencia de retroalimentación y un cambio de vida reciente. Incluye que la persona habla poco en reuniones grandes (prueba de sesgo: no debe marcarse como riesgo).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Daniela",
+  "perfilPrevio": { "dimensiones": {}, "senalesActivas": [] },
+  "nota": "Segunda sesión con Daniela. Trabaja desde hace dos años como analista de datos en el área de inventarios de una empresa de logística. Llegó puntual y con una libreta donde había apuntado los temas que quería tratar.\n\nDaniela cuenta con orgullo que es quien encuentra los errores en los reportes de inventario: en la última auditoría interna detectó una diferencia en tres almacenes que nadie más había visto. Su líder le pide que revise los reportes antes de enviarlos a dirección. Cuando habla de bases de datos y de limpiar información se nota entusiasmada y da ejemplos muy detallados.\n\nLo que más le cuesta es arrancar los proyectos largos. Comenta que cuando le asignan un proyecto de varias semanas sin pasos definidos, pasa los primeros días sin saber por dónde empezar. Cuando su líder le dio una lista de entregables por semana, terminó antes de la fecha. También menciona que si en una reunión le dan varias instrucciones seguidas solo de forma verbal, olvida alguna. Ella misma empezó a pedir que le manden los acuerdos por correo.\n\nEn reuniones grandes casi no habla; dice que prefiere pensar antes de opinar y que después manda sus ideas por escrito. Su líder valora esos correos.\n\nLos cambios de prioridad de último momento la estresan. Cuando ocurren, se queda en silencio, aprieta las manos y necesita unos minutos a solas antes de retomar. Le ayuda que le expliquen el motivo del cambio y qué tarea puede dejar pendiente.\n\nLa oficina es abierta y el ruido de las llamadas le dificulta concentrarse por la tarde. Usa audífonos con cancelación de ruido y pregunta si podría trabajar en la sala pequeña dos días por semana.\n\nSobre la retroalimentación, pide que sea por escrito, con ejemplos concretos, y que se la den antes de la reunión semanal para poder leerla con calma.\n\nHace un mes se mudó a otra colonia y ahora hace una hora y media de trayecto. Dice que llega cansada, aunque le gusta su trabajo y quiere seguir en el equipo.\n\nPara la siguiente sesión acordamos revisar cómo dividir el proyecto de inventario de fin de año en pasos semanales.",
+  "rasgos": [
+    {
+      "rasgo": "Experiencia: dos años como analista de datos en inventarios.",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Fortaleza: detecta errores en reportes de inventario que otras personas no ven; entusiasmo por bases de datos.",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Le cuesta arrancar proyectos largos sin pasos definidos; con entregables semanales termina antes.",
+      "donde": "dominioFE:iniciacion, dominioFE:planeacion_organizacion",
+      "fuente": "F-017 (BRIEF-A, solo nombres de dominio)"
+    },
+    {
+      "rasgo": "Olvida alguna instrucción cuando recibe varias seguidas solo de forma verbal; pide los acuerdos por correo.",
+      "donde": "dominioFE:memoria_de_trabajo",
+      "fuente": "F-017 (BRIEF-A, solo nombres de dominio)"
+    },
+    {
+      "rasgo": "Disparador de estrés: cambios de prioridad de último momento. Le ayuda saber el motivo y qué puede dejar pendiente.",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Indicadores observables: se queda en silencio, aprieta las manos, necesita minutos a solas.",
+      "donde": "dimension:indicadores_estres",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Aspecto sensorial: el ruido de la oficina abierta le dificulta concentrarse; usa audífonos con cancelación de ruido.",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Retroalimentación por escrito, con ejemplos concretos y antes de la reunión semanal.",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    },
+    {
+      "rasgo": "Cambio de vida reciente: mudanza hace un mes, trayecto más largo.",
+      "donde": "senal:cambio_de_vida",
+      "fuente": "CONTEXTO §5 (señales del seguimiento de coaching, citado en lib/profile/schema.ts)"
+    },
+    {
+      "rasgo": "Habla poco en reuniones grandes y prefiere escribir sus ideas (estilo, no riesgo; prueba de sesgo del equipo).",
+      "donde": "dimension:estilo_comunicacion",
+      "fuente": "F-005 (dimensiones del partner, 45:53)"
+    }
+  ],
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "disparadores_estres",
+      "indicadores_estres",
+      "aspectos_sensoriales",
+      "retroalimentacion"
+    ],
+    "dominiosFE": ["iniciacion", "planeacion_organizacion", "memoria_de_trabajo"],
+    "senales": ["cambio_de_vida"],
+    "senalesProhibidas": ["intencion_de_renunciar", "desajuste_con_rol"],
+    "tipoNoPermitido": [
+      {
+        "dimension": "estilo_comunicacion",
+        "tipo": "area_de_apoyo",
+        "motivo": "Hablar poco en reuniones grandes no es un área de apoyo (prueba de sesgo)."
+      }
+    ],
+    "banderas": 0
+  }
+}

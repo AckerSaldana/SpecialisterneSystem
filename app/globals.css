@@ -1,26 +1,405 @@
-@import "tailwindcss";
+/* AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/*
+  Design tokens de Caja MEX.
+
+  Hay tres modos, elegidos en /preferencias y guardados en una cookie.
+  El layout raíz pone en <html>:
+    data-mode="calma" | "estandar" | "alto-contraste"
+    data-font="atkinson" | "inter" | "lexend" | "opendyslexic"
+    style="--text-size; --letter-spacing; --line-height; --measure"
+
+  Los componentes de shadcn (components/ui) leen --background, --primary, etc.
+  Aquí solo cambiamos el valor de esos tokens según el modo; los componentes no cambian.
+
+  Colores en hex para poder revisarlos a mano y medir contraste.
+  Ratios medidos (texto/fondo) en el README, sección Accessibility.
+*/
+
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+  No hay modo oscuro. Si quitáramos esta línea, Tailwind usaría prefers-color-scheme
+  y las clases dark: de components/ui se activarían solas en equipos con tema oscuro.
+  Como nunca ponemos la clase .dark, las clases dark: no aplican nunca.
+*/
+@custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* --app-font cambia con [data-font]. No usamos --font-sans: var(--font-sans) porque sería circular. */
+  --font-sans: var(--app-font);
+  --font-mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+  --font-heading: var(--app-font);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /*
+    Las clases text-xs ... text-xl de Tailwind traen su propio interlineado.
+    Las apuntamos al interlineado que eligió la persona para que aplique también
+    dentro de botones, tarjetas y formularios. Los títulos grandes (text-2xl en adelante)
+    conservan el interlineado de Tailwind.
+  */
+  --text-xs--line-height: var(--line-height);
+  --text-sm--line-height: var(--line-height);
+  --text-base--line-height: var(--line-height);
+  --text-lg--line-height: var(--line-height);
+  --text-xl--line-height: var(--line-height);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ------------------------------------------------------------------------ */
+/* Tipografía y movimiento (iguales en los tres modos)                       */
+/* ------------------------------------------------------------------------ */
+
+:root {
+  /* Defaults; el layout los sobreescribe con las preferencias guardadas. */
+  --text-size: 1.125rem; /* 18 px con el tamaño base del navegador */
+  --letter-spacing: 0em;
+  --line-height: 1.5;
+  --measure: 70ch;
+
+  /* Fuente por defecto: Atkinson Hyperlegible (variable que define next/font en layout.tsx). */
+  --app-font: var(--font-atkinson), system-ui, sans-serif;
+
+  /* Movimiento. Componentes propios deben usar estos tokens en vez de valores fijos. */
+  --motion-duration: 150ms;
+  --motion-distance: 4px;
+
+  --radius: 0.5rem;
+  --focus-width: 3px;
+  --focus-offset: 2px;
+}
+
+[data-font="atkinson"] {
+  --app-font: var(--font-atkinson), system-ui, sans-serif;
+}
+[data-font="inter"] {
+  --app-font: var(--font-inter), system-ui, sans-serif;
+}
+[data-font="lexend"] {
+  --app-font: var(--font-lexend), system-ui, sans-serif;
+}
+[data-font="opendyslexic"] {
+  /* Viene de @fontsource/opendyslexic, importado en layout.tsx. */
+  --app-font: "OpenDyslexic", system-ui, sans-serif;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Colores por modo                                                          */
+/* ------------------------------------------------------------------------ */
+
+/*
+  Estándar: WCAG 2.2 AA. Texto normal al menos 4.5:1.
+  También se aplica con [data-mode="estandar"] para que la vista previa de
+  /preferencias pueda mostrar este modo dentro de otro.
+*/
+:root,
+[data-mode="estandar"] {
+  --background: #ffffff;
+  --foreground: #1c1c1e;
+  --card: #ffffff;
+  --card-foreground: #1c1c1e;
+  --popover: #ffffff;
+  --popover-foreground: #1c1c1e;
+  --primary: #1d4ed8;
+  /* Fondo del botón principal con el puntero encima. Más oscuro que --primary, no transparente. */
+  --primary-hover: #1e40af;
+  --primary-foreground: #ffffff;
+  --secondary: #eef2f6;
+  --secondary-foreground: #1c1c1e;
+  --muted: #f3f4f6;
+  --muted-foreground: #52525b;
+  --accent: #e8effc;
+  --accent-foreground: #1e3a8a;
+  --destructive: #b42318;
+  /* Separadores decorativos: no necesitan 3:1. */
+  --border: #d4d4d8;
+  /* Borde de campos de formulario: es lo que permite verlos, por eso al menos 3:1. */
+  --input: #71717a;
+  --ring: #1d4ed8;
+  --link: #1d4ed8;
+  --focus: #1d4ed8;
+}
+
+/*
+  Calma: contraste más bajo que Estándar pero todavía AA (al menos 4.5:1).
+  Fondo cálido, colores apagados, sin sombras, sin animación (ver más abajo).
+*/
+[data-mode="calma"] {
+  --background: #f5f2ec;
+  --foreground: #3b3833;
+  --card: #f5f2ec;
+  --card-foreground: #3b3833;
+  --popover: #f5f2ec;
+  --popover-foreground: #3b3833;
+  --primary: #3f625c;
+  --primary-hover: #2f4a45;
+  --primary-foreground: #f5f2ec;
+  --secondary: #ebe6dc;
+  --secondary-foreground: #3b3833;
+  --muted: #ece8e0;
+  --muted-foreground: #5c574f;
+  --accent: #e4e6dc;
+  --accent-foreground: #34504b;
+  --destructive: #8f3b2e;
+  --border: #d9d2c5;
+  --input: #8a8276;
+  --ring: #3f625c;
+  --link: #34504b;
+  --focus: #34504b;
+}
+
+/*
+  Alto contraste: al menos 7:1 (AAA) en todo el texto.
+  Negro sobre blanco, bordes de 2 px y foco más grueso.
+*/
+[data-mode="alto-contraste"] {
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --primary: #000000;
+  --primary-hover: #333333;
+  --primary-foreground: #ffffff;
+  --secondary: #ffffff;
+  --secondary-foreground: #000000;
+  --muted: #f0f0f0;
+  --muted-foreground: #1a1a1a;
+  --accent: #fff3a3;
+  --accent-foreground: #000000;
+  --destructive: #8b0000;
+  --border: #000000;
+  --input: #000000;
+  --ring: #000000;
+  --link: #0000cc;
+  --focus: #000000;
+  --focus-width: 4px;
+  --focus-offset: 3px;
+}
+
+/* Sidebar y gráficas siguen los colores del modo activo. */
+:root {
+  --sidebar: var(--muted);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+  --chart-1: var(--primary);
+  --chart-2: var(--accent-foreground);
+  --chart-3: var(--muted-foreground);
+  --chart-4: var(--destructive);
+  --chart-5: var(--foreground);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Base                                                                      */
+/* ------------------------------------------------------------------------ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  /*
+    El tamaño elegido va en el <html> para que todo lo que mide en rem
+    (textos y espacios de Tailwind) crezca junto.
+  */
+  html {
+    font-size: var(--text-size);
+    @apply font-sans;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1rem;
+    line-height: var(--line-height);
+  }
+
+  /*
+    letter-spacing en em se hereda ya convertido a px. Por eso se aplica a cada
+    elemento: así un título grande recibe más espacio que un texto chico.
+  */
+  body,
+  body * {
+    letter-spacing: var(--letter-spacing);
+  }
+
+  a:not([data-slot]) {
+    color: var(--link);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
   }
 }
 
-body {
+/* Ancho de lectura para párrafos y bloques de texto. */
+@utility prose-measure {
+  max-width: var(--measure);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Foco visible y skip link                                                  */
+/* ------------------------------------------------------------------------ */
+
+/*
+  Fuera de @layer a propósito: las reglas sin capa ganan sobre las utilidades
+  de Tailwind (por ejemplo outline-none en components/ui). Así el foco de teclado
+  siempre se ve, en los tres modos.
+*/
+:focus-visible {
+  outline: var(--focus-width) solid var(--focus) !important;
+  outline-offset: var(--focus-offset) !important;
+}
+
+/*
+  Elementos que reciben el foco por código (tabIndex={-1}): el título de una propuesta
+  nueva, un mensaje de error. Después de un clic con el mouse el navegador puede no
+  aplicar :focus-visible, así que aquí el contorno se pone con :focus.
+*/
+.foco-destino:focus {
+  outline: var(--focus-width) solid var(--focus);
+  outline-offset: var(--focus-offset);
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -100rem;
+  z-index: 100;
+  padding: 0.75rem 1rem;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  border: 2px solid var(--foreground);
+  border-radius: var(--radius);
+  font-weight: 700;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Alto contraste: bordes marcados                                           */
+/* ------------------------------------------------------------------------ */
+
+[data-mode="alto-contraste"] :is(
+    [data-slot="button"],
+    [data-slot="card"],
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="radio-group-item"],
+    [data-slot="dialog-content"],
+    [data-slot="alert"],
+    [data-slot="badge"],
+    input,
+    textarea,
+    select
+  ) {
+  border-width: 2px;
+  border-style: solid;
+  border-color: var(--foreground);
+}
+
+/* ------------------------------------------------------------------------ */
+/* Calma: sin sombras ni decoración                                          */
+/* ------------------------------------------------------------------------ */
+
+[data-mode="calma"] *,
+[data-mode="calma"] *::before,
+[data-mode="calma"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+/* ------------------------------------------------------------------------ */
+/* Movimiento reducido: modo Calma y prefers-reduced-motion                  */
+/* ------------------------------------------------------------------------ */
+
+/*
+  Quita el movimiento decorativo, incluidas las animaciones de entrada y salida
+  de los diálogos (tw-animate-css y Radix). Los cambios de estado siguen
+  ocurriendo, solo que al instante.
+
+  Se usa 0.01ms y no 0s: Radix espera el evento "animationend" para desmontar
+  un diálogo al cerrarse, y con una duración casi nula el evento llega enseguida.
+*/
+[data-mode="calma"] {
+  --motion-duration: 0ms;
+  --motion-distance: 0px;
+}
+
+[data-mode="calma"] *,
+[data-mode="calma"] *::before,
+[data-mode="calma"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* El botón de components/ui baja 1 px al presionarlo (active:translate-y-px). Aquí no se mueve. */
+[data-mode="calma"] [data-slot="button"]:active {
+  translate: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration: 0ms;
+    --motion-distance: 0px;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-slot="button"]:active {
+    translate: none;
+  }
 }
