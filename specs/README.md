@@ -13,7 +13,7 @@ Las fuentes viven en `00 Admin / Lectura` del Drive. Los IDs `F-0xx` son fuentes
 | [000](000-constitucion.md) | Reglas que ninguna spec puede romper | Completa | Revisada por Acker |
 | [001](001-evaluacion-inicial.md) | Evaluación inicial (ya construida) | As-built | Borrador |
 | [002](002-alta-y-consentimiento.md) | Alta y consentimiento | Detallada con tareas | Implementada (código pendiente de revisión) |
-| [003](003-plan-de-acompanamiento.md) | Plan de acompañamiento | Detallada con tareas | Borrador |
+| [003](003-plan-de-acompanamiento.md) | Plan de acompañamiento | Detallada con tareas | Implementada (código pendiente de revisión) |
 | [004](004-seguimiento-y-senales.md) | Sesiones de seguimiento y señales | Requisitos | Borrador |
 | [005](005-vista-persona-y-recursos.md) | Vista de la persona y recursos | Requisitos | Borrador |
 | [006](006-cierre.md) | Cierre | Requisitos | Borrador |

@@ -48,9 +48,22 @@ const PERSONA_NUEVA = "78787878-7878-4878-8878-787878787878"; // persona sin aco
 const AVISO = "2026-10-29";
 
 // Tablas con datos derivados de las notas que dejan de verse sin consentimiento vigente
-// (decisión b, R-002.30, R-002.44). 003 agrega plans y plan_items (R-003.53) y sus tablas nuevas;
+// (decisión b, R-002.30, R-002.44). 003 agrega plans, plan_items y persona_plans (R-003.53);
 // 004 a 006 agregan las suyas. Todas deben tener columna engagement_id.
-const TABLAS_BLOQUEO = ["sessions", "profile_events", "profile_snapshots", "persona_profiles", "recommendations"];
+const TABLAS_BLOQUEO = [
+  "sessions",
+  "profile_events",
+  "profile_snapshots",
+  "persona_profiles",
+  "recommendations",
+  "plans",
+  "plan_items",
+  "persona_plans",
+];
+
+// Tablas del plan (spec 003). knowledge_cards no tiene engagement_id: se cuenta aparte.
+const TABLAS_PLAN = ["plans", "plan_items", "persona_plans"];
+const PROMPT_PLAN = "2026-10-29_plan-acompanamiento";
 
 // ---------------------------------------------------------------------------
 // Utilidades
@@ -208,14 +221,11 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
   await tx`
     insert into app.persona_profiles (snapshot_id, engagement_id, version, contenido)
     values (${snap.id}, ${ENG_DEMO}, ${v}, '{}'::jsonb)`;
-  const [plan] = await tx`
-    insert into app.plans (engagement_id, titulo, status) values (${ENG_DEMO}, 'Plan sintético de rls-check', 'aprobado') returning id`;
-  const [item] = await tx`
-    insert into app.plan_items (plan_id, engagement_id, tipo, descripcion)
-    values (${plan.id}, ${ENG_DEMO}, 'objetivo', 'Objetivo sintético de rls-check') returning id`;
+  // Plan aprobado con su copia para la persona (spec 003).
+  const plan = await crearPlan(tx, ENG_DEMO, snap.id as string, "aprobado", { conPersona: true });
   await tx`
     insert into app.recommendations (engagement_id, catalog_unit_id, plan_item_id, razon, status)
-    values (${ENG_DEMO}, 'CU-001', ${item.id}, 'Razón sintética de rls-check', 'aprobada')`;
+    values (${ENG_DEMO}, 'CU-001', ${plan.itemId}, 'Razón sintética de rls-check', 'aprobada')`;
   // Un "no me representa" propio de la persona.
   const nmr = { tipo: "no_me_representa", dimension: null, comentario: "Comentario sintético de rls-check." };
   await tx`
@@ -226,8 +236,8 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
     eventoId: ev.id as string,
     snapshotId: snap.id as string,
     snapshotSinVistaId: snap2.id as string,
-    planId: plan.id as string,
-    planItemId: item.id as string,
+    planId: plan.planId,
+    planItemId: plan.itemId,
   };
 }
 
@@ -241,6 +251,96 @@ async function crearInvitacion(tx: Tx, engagementId: string, personaId: string, 
 }
 
 const NMR = (comentario: string) => JSON.stringify({ tipo: "no_me_representa", dimension: null, comentario });
+
+// ----- Spec 003: plan de acompañamiento -----
+
+// Lo mínimo de PayloadPlanIA (lib/plan/schema.ts) para que propuesta_ia no vaya vacío. Sintético.
+const PROPUESTA_IA = JSON.stringify({
+  propuesta: {
+    items: [
+      {
+        tipo: "objetivo",
+        descripcion: "Objetivo sintético de rls-check.",
+        textoPersona: "Texto sintético de rls-check.",
+        dominioFE: null,
+        fichaId: null,
+        evidencia: [{ evidenciaId: "E-01" }],
+      },
+    ],
+  },
+  descartados: [],
+  banderas: [],
+  fichasEnviadas: [],
+  evidenciaEnviada: ["E-01"],
+});
+
+async function siguienteVersionPlan(tx: Tx, engagementId: string): Promise<number> {
+  const [r] = await tx`select coalesce(max(version), 0)::int + 1 as v from app.plans where engagement_id = ${engagementId}`;
+  return r.v as number;
+}
+
+// Snapshot nuevo (con su evento de origen) como owner. Devuelve su id y versión.
+async function crearSnapshot(tx: Tx, engagementId: string): Promise<{ id: string; version: number }> {
+  const payload = { tipo: "propuesta_ia", update: { cambios: [], senales: [], relacionesConPerfilPrevio: [], preguntasParaSiguienteSesion: [] }, descartados: [], banderas: [] };
+  const [ev] = await tx`
+    insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+    values (${engagementId}, 'propuesta_ia', 'approved', ${JSON.stringify(payload)}::jsonb, ${COACH}) returning id`;
+  const [{ v }] = await tx`select coalesce(max(version), 0)::int + 1 as v from app.profile_snapshots where engagement_id = ${engagementId}`;
+  const [snap] = await tx`
+    insert into app.profile_snapshots (engagement_id, version, perfil, source_event_id, created_by)
+    values (${engagementId}, ${v}, '{"dimensiones":{},"senalesActivas":[]}'::jsonb, ${ev.id}, ${COACH}) returning id`;
+  return { id: snap.id as string, version: v as number };
+}
+
+type EstadoPlan = "borrador" | "aprobado" | "descartado";
+
+// Plan con un ítem objetivo, como owner. Un aprobado recibe la versión siguiente y, si se pide,
+// su copia en persona_plans; borrador y descartado quedan sin versión (R-003.34).
+async function crearPlan(
+  tx: Tx,
+  engagementId: string,
+  snapshotId: string,
+  status: EstadoPlan,
+  opciones: { conPersona?: boolean } = {},
+): Promise<{ planId: string; itemId: string; version: number | null }> {
+  const version = status === "aprobado" ? await siguienteVersionPlan(tx, engagementId) : null;
+  const aprobadoPor = status === "aprobado" ? COACH : null;
+  const aprobadoEn = status === "aprobado" ? tx`now()` : tx`null`;
+  const [plan] = await tx`
+    insert into app.plans (engagement_id, titulo, status, profile_snapshot_id, version, propuesta_ia, prompt_version, model, created_by, approved_by, approved_at)
+    values (${engagementId}, 'Plan de acompañamiento', ${status}, ${snapshotId}, ${version}, ${PROPUESTA_IA}::jsonb,
+      ${PROMPT_PLAN}, 'rls-check', ${COACH}, ${aprobadoPor}, ${aprobadoEn}) returning id`;
+  const [item] = await tx`
+    insert into app.plan_items (plan_id, engagement_id, tipo, descripcion, texto_persona, origen, propuesta_ref)
+    values (${plan.id}, ${engagementId}, 'objetivo', 'Objetivo sintético de rls-check.', 'Texto sintético de rls-check.', 'ia', 0) returning id`;
+  if (status === "aprobado" && opciones.conPersona) {
+    const contenido = { items: [{ planItemId: item.id, tipo: "objetivo", texto: "Texto sintético de rls-check.", orden: 0, itemsAnteriores: [] }] };
+    await tx`
+      insert into app.persona_plans (plan_id, engagement_id, version, contenido)
+      values (${plan.id}, ${engagementId}, ${version}, ${JSON.stringify(contenido)}::jsonb)`;
+  }
+  return { planId: plan.id as string, itemId: item.id as string, version };
+}
+
+// Borrador como lo inserta la ruta de propuesta (R-003.20): status y version por defecto.
+function insertarBorrador(sp: Tx, engagementId: string, snapshotId: string) {
+  return sp`
+    insert into app.plans (engagement_id, titulo, profile_snapshot_id, propuesta_ia, prompt_version, model, created_by)
+    values (${engagementId}, 'Plan de acompañamiento', ${snapshotId}, ${PROPUESTA_IA}::jsonb, ${PROMPT_PLAN}, 'rls-check', ${COACH})
+    returning id`;
+}
+
+// Etapa leída como owner; deja la sesión como owner.
+async function etapa(tx: Tx, engagementId: string): Promise<string> {
+  await comoOwner(tx);
+  const [r] = await tx`select stage::text as stage from app.engagements where id = ${engagementId}`;
+  return r.stage as string;
+}
+
+async function contarKnowledgeCards(tx: Tx): Promise<number> {
+  const [r] = await tx`select count(*)::int as n from app.knowledge_cards`;
+  return r.n as number;
+}
 
 // ---------------------------------------------------------------------------
 // Casos
@@ -301,7 +401,7 @@ const CASOS: Caso[] = [
       await como(tx, COACH_SIN);
       const [e] = await tx`select count(*)::int as n from app.engagements`;
       revisar(e.n === 0, `ve ${e.n} acompañamientos`);
-      for (const tabla of ["sessions", "profile_events", "profile_snapshots", "persona_profiles", "plans", "plan_items", "recommendations", "consent_events", "invitations"]) {
+      for (const tabla of ["sessions", "profile_events", "profile_snapshots", "persona_profiles", "plans", "plan_items", "persona_plans", "recommendations", "consent_events", "invitations"]) {
         for (const eid of [ENG_DEMO, ENG_ALTA]) {
           const n = await contar(tx, tabla, eid);
           revisar(n === 0, `ve ${n} filas de ${tabla} del acompañamiento ${eid}`);
@@ -585,6 +685,8 @@ const CASOS: Caso[] = [
         ["plans", "rls", (sp) => sp`insert into app.plans (engagement_id, titulo) values (${ENG_DEMO}, 'Plan')`],
         ["plan_items", "rls", (sp) => sp`
           insert into app.plan_items (plan_id, engagement_id, tipo, descripcion) values (${d.planId}, ${ENG_DEMO}, 'objetivo', 'Objetivo')`],
+        ["persona_plans", "rls", (sp) => sp`
+          insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${d.planId}, ${ENG_DEMO}, 999999, '{"items":[]}'::jsonb)`],
         ["knowledge_cards", "permiso", (sp) => sp`
           insert into app.knowledge_cards (id, titulo, tipo, contenido, fuente) values ('KC-999', 'T', 'senal', 'C', 'F-000')`],
         ["catalog_units", "permiso", (sp) => sp`
@@ -671,6 +773,308 @@ const CASOS: Caso[] = [
       await acepta(tx, "audit_log propio", (sp) => sp`insert into app.audit_log (user_id, engagement_id, accion, ok) values (${PERSONA}, ${ENG_DEMO}, 'rls_check', true)`);
     },
   },
+
+  // ----- 003: plan de acompañamiento -----
+  {
+    id: "CA-003.2",
+    descripcion: "sin consentimiento vigente (sin eventos o con retirado al final) la política rechaza el INSERT directo del coach en app.plans",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      // El acompañamiento en alta no tiene eventos de consentimiento; se le da un perfil aprobado.
+      const snapAlta = await crearSnapshot(tx, ENG_ALTA);
+      const antes = { demo: await contar(tx, "plans", ENG_DEMO), alta: await contar(tx, "plans", ENG_ALTA) };
+      await como(tx, COACH);
+      await acepta(tx, "borrador con consentimiento vigente (control)", (sp) => insertarBorrador(sp, ENG_DEMO, d.snapshotId));
+      await rechaza(tx, "borrador en un acompañamiento sin eventos de consentimiento", "rls", (sp) => insertarBorrador(sp, ENG_ALTA, snapAlta.id));
+      await como(tx, PERSONA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_DEMO}, ${PERSONA}, 'retirado', ${AVISO})`;
+      await como(tx, COACH);
+      await rechaza(tx, "borrador con el consentimiento retirado", "rls", (sp) => insertarBorrador(sp, ENG_DEMO, d.snapshotId));
+      await comoOwner(tx);
+      revisar((await contar(tx, "plans", ENG_DEMO)) === antes.demo, "hay planes nuevos en el acompañamiento de demo");
+      revisar((await contar(tx, "plans", ENG_ALTA)) === antes.alta, "hay planes nuevos en el acompañamiento en alta");
+    },
+  },
+  {
+    id: "CA-003.10",
+    descripcion: "el coach no cambia propuesta_ia, profile_snapshot_id, prompt_version, model ni created_by de un plan (permisos de columna)",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const b = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      await como(tx, COACH);
+      await rechaza(tx, "UPDATE de propuesta_ia", "permiso", (sp) => sp`update app.plans set propuesta_ia = '{}'::jsonb where id = ${b.planId}`);
+      await rechaza(tx, "UPDATE de profile_snapshot_id", "permiso", (sp) => sp`
+        update app.plans set profile_snapshot_id = ${d.snapshotSinVistaId} where id = ${b.planId}`);
+      await rechaza(tx, "UPDATE de prompt_version", "permiso", (sp) => sp`update app.plans set prompt_version = 'otra' where id = ${b.planId}`);
+      await rechaza(tx, "UPDATE de model", "permiso", (sp) => sp`update app.plans set model = 'otro' where id = ${b.planId}`);
+      await rechaza(tx, "UPDATE de created_by", "permiso", (sp) => sp`update app.plans set created_by = ${COACH} where id = ${b.planId}`);
+      // Control: el título del borrador sí se puede cambiar.
+      await acepta(tx, "UPDATE del título del borrador (control)", (sp) => sp`update app.plans set titulo = 'Otro título' where id = ${b.planId}`);
+    },
+  },
+  {
+    id: "CA-003.15",
+    descripcion: "en un plan aprobado o descartado el coach no edita, agrega ni quita ítems, ni cambia el plan; tampoco borra planes",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const descartado = await crearPlan(tx, ENG_DEMO, d.snapshotId, "descartado");
+      const borrador = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      await como(tx, COACH);
+      for (const [estado, planId, itemId] of [
+        ["aprobado", d.planId, d.planItemId],
+        ["descartado", descartado.planId, descartado.itemId],
+      ]) {
+        revisar((await tx`select id from app.plan_items where id = ${itemId}`).length === 1, `el coach no ve el ítem del plan ${estado} (control)`);
+        await ceroFilas(tx, `UPDATE de un ítem del plan ${estado}`, (sp) => sp`
+          update app.plan_items set descripcion = 'Cambio', texto_persona = 'Cambio' where id = ${itemId}`);
+        await rechaza(tx, `INSERT de un ítem en el plan ${estado}`, "rls", (sp) => sp`
+          insert into app.plan_items (plan_id, engagement_id, tipo, descripcion, origen) values (${planId}, ${ENG_DEMO}, 'objetivo', 'Nuevo', 'coach')`);
+        await ceroFilas(tx, `DELETE de un ítem del plan ${estado}`, (sp) => sp`delete from app.plan_items where id = ${itemId}`);
+        await ceroFilas(tx, `UPDATE del plan ${estado}`, (sp) => sp`update app.plans set titulo = 'Cambio', status = 'borrador' where id = ${planId}`);
+        await rechaza(tx, `DELETE del plan ${estado}`, "permiso", (sp) => sp`delete from app.plans where id = ${planId}`);
+      }
+      // Control: en el borrador las mismas operaciones sí pasan.
+      await acepta(tx, "UPDATE de un ítem del borrador (control)", (sp) => sp`
+        update app.plan_items set descripcion = 'Cambio', origen = 'ia_editado', editado_por = ${COACH}, editado_en = now() where id = ${borrador.itemId}`);
+      await acepta(tx, "INSERT de un ítem en el borrador (control)", (sp) => sp`
+        insert into app.plan_items (plan_id, engagement_id, tipo, descripcion, origen) values (${borrador.planId}, ${ENG_DEMO}, 'objetivo', 'Nuevo', 'coach')`);
+      await acepta(tx, "DELETE de un ítem del borrador (control)", (sp) => sp`delete from app.plan_items where id = ${borrador.itemId}`);
+      await comoOwner(tx);
+      const [i] = await tx`select descripcion from app.plan_items where id = ${d.planItemId}`;
+      revisar(i?.descripcion === "Objetivo sintético de rls-check.", "el ítem del plan aprobado cambió");
+    },
+  },
+  {
+    id: "CA-003.16",
+    descripcion: "otro plan del mismo acompañamiento con la misma versión lo rechaza plans_engagement_version (owner y aprobación del coach); un segundo borrador lo rechaza plans_un_borrador",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const [{ version }] = await tx`select version from app.plans where id = ${d.planId}`;
+      const e1 = await rechaza(tx, "INSERT como owner con versión repetida", "unique", (sp) => sp`
+        insert into app.plans (engagement_id, titulo, status, profile_snapshot_id, version, created_by, approved_by, approved_at)
+        values (${ENG_DEMO}, 'Plan de acompañamiento', 'aprobado', ${d.snapshotId}, ${version}, ${COACH}, ${COACH}, now())`);
+      revisar(e1.constraint_name === "plans_engagement_version", `lo rechazó otra restricción: ${e1.constraint_name}`);
+      const b = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      // La aprobación que llega tarde con la misma versión (R-003.31).
+      await como(tx, COACH);
+      const e2 = await rechaza(tx, "el coach aprueba el borrador con versión repetida", "unique", (sp) => sp`
+        update app.plans set status = 'aprobado', version = ${version}, approved_by = ${COACH}, approved_at = now() where id = ${b.planId}`);
+      revisar(e2.constraint_name === "plans_engagement_version", `lo rechazó otra restricción: ${e2.constraint_name}`);
+      const e3 = await rechaza(tx, "segundo borrador del mismo acompañamiento", "unique", (sp) => insertarBorrador(sp, ENG_DEMO, d.snapshotId));
+      revisar(e3.constraint_name === "plans_un_borrador", `lo rechazó otra restricción: ${e3.constraint_name}`);
+    },
+  },
+  {
+    id: "CA-003.18",
+    descripcion: "la persona lee 0 filas de plans, plan_items y knowledge_cards, y de persona_plans solo las de su acompañamiento",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      // Otro acompañamiento con consentimiento y plan aprobado, para que "solo las suyas" signifique algo.
+      await evento(tx, ENG_ALTA, PERSONA_ALTA, "otorgado");
+      const snapAlta = await crearSnapshot(tx, ENG_ALTA);
+      await crearPlan(tx, ENG_ALTA, snapAlta.id, "aprobado", { conPersona: true });
+      await como(tx, COACH);
+      for (const t of TABLAS_PLAN) revisar((await contar(tx, t, ENG_DEMO)) > 0, `el coach no ve ${t} (control)`);
+      revisar((await contarKnowledgeCards(tx)) > 0, "el coach no ve knowledge_cards (control)");
+      for (const [persona, propio, ajeno] of [
+        [PERSONA, ENG_DEMO, ENG_ALTA],
+        [PERSONA_ALTA, ENG_ALTA, ENG_DEMO],
+      ]) {
+        await como(tx, persona);
+        for (const t of ["plans", "plan_items"]) {
+          const [r] = await tx.unsafe(`select count(*)::int as n from app.${t}`);
+          revisar(r.n === 0, `la persona ${persona} lee ${r.n} filas de ${t}`);
+        }
+        const kc = await contarKnowledgeCards(tx);
+        revisar(kc === 0, `la persona ${persona} lee ${kc} fichas`);
+        const [todas] = await tx`select count(*)::int as n from app.persona_plans`;
+        const propias = await contar(tx, "persona_plans", propio);
+        revisar(propias > 0, `la persona ${persona} no ve su plan (control)`);
+        revisar(todas.n === propias, `la persona ${persona} lee ${todas.n - propias} filas de persona_plans de otro acompañamiento`);
+        revisar((await contar(tx, "persona_plans", ajeno)) === 0, `la persona ${persona} lee persona_plans de ${ajeno}`);
+      }
+    },
+  },
+  {
+    id: "CA-003.25",
+    descripcion: "el coach no cambia plan_items.tipo ni plan_items.propuesta_ref de un borrador (permisos de columna)",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const b = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      await como(tx, COACH);
+      await rechaza(tx, "UPDATE de tipo", "permiso", (sp) => sp`update app.plan_items set tipo = 'apoyo_fe' where id = ${b.itemId}`);
+      await rechaza(tx, "UPDATE de propuesta_ref", "permiso", (sp) => sp`update app.plan_items set propuesta_ref = 5 where id = ${b.itemId}`);
+      await acepta(tx, "UPDATE de la descripción (control)", (sp) => sp`
+        update app.plan_items set descripcion = 'Cambio', origen = 'ia_editado' where id = ${b.itemId}`);
+    },
+  },
+  {
+    id: "CA-003.28",
+    descripcion: "el coach no hace UPDATE, INSERT ni DELETE en app.knowledge_cards y KC-001 a KC-003 siguen sin verificar",
+    correr: async (tx) => {
+      await como(tx, COACH);
+      revisar((await contarKnowledgeCards(tx)) > 0, "el coach no ve knowledge_cards (control)");
+      await rechaza(tx, "UPDATE de verificada", "permiso", (sp) => sp`update app.knowledge_cards set verificada = true where id = 'KC-001'`);
+      await rechaza(tx, "UPDATE de contenido", "permiso", (sp) => sp`update app.knowledge_cards set contenido = 'Otro' where id = 'KC-001'`);
+      await rechaza(tx, "INSERT de una ficha", "permiso", (sp) => sp`
+        insert into app.knowledge_cards (id, titulo, tipo, contenido, fuente, verificada) values ('KC-999', 'T', 'estrategia_fe', 'C', 'F-000', true)`);
+      await rechaza(tx, "DELETE de una ficha", "permiso", (sp) => sp`delete from app.knowledge_cards where id = 'KC-001'`);
+      await comoOwner(tx);
+      const fichas = await tx`select id from app.knowledge_cards where id in ('KC-001', 'KC-002', 'KC-003') and verificada = false`;
+      revisar(fichas.length === 3, `solo ${fichas.length} de KC-001 a KC-003 siguen con verificada = false`);
+    },
+  },
+  {
+    id: "CA-003.32",
+    descripcion: "con el consentimiento retirado coach y persona leen 0 filas de plans, plan_items y persona_plans; nada se borra y la etapa no cambia",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const antes: Record<string, number> = {};
+      for (const t of TABLAS_PLAN) antes[t] = await contar(tx, t, ENG_DEMO);
+      const etapaAntes = await etapa(tx, ENG_DEMO);
+      await como(tx, COACH);
+      for (const t of TABLAS_PLAN) revisar((await contar(tx, t, ENG_DEMO)) > 0, `el coach no ve ${t} con consentimiento (control)`);
+      await como(tx, PERSONA);
+      revisar((await contar(tx, "persona_plans", ENG_DEMO)) > 0, "la persona no ve su plan con consentimiento (control)");
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_DEMO}, ${PERSONA}, 'retirado', ${AVISO})`;
+      for (const usuario of [COACH, PERSONA]) {
+        await como(tx, usuario);
+        for (const t of TABLAS_PLAN) {
+          const n = await contar(tx, t, ENG_DEMO);
+          revisar(n === 0, `${usuario === COACH ? "el coach" : "la persona"} lee ${n} filas de ${t} sin consentimiento`);
+        }
+      }
+      await comoOwner(tx);
+      for (const t of TABLAS_PLAN) {
+        const n = await contar(tx, t, ENG_DEMO);
+        revisar(n === antes[t], `${t} cambió de ${antes[t]} a ${n} filas`);
+      }
+      const etapaDespues = await etapa(tx, ENG_DEMO);
+      revisar(etapaDespues === etapaAntes, `retirar el consentimiento cambió la etapa de ${etapaAntes} a ${etapaDespues}`);
+    },
+  },
+  {
+    id: "CA-003.34",
+    descripcion: "etapas: snapshot v1 → perfil, primer plan → plan, aprobarlo → seguimiento; otro snapshot, descartar o aprobar la v2 no la mueven",
+    correr: async (tx) => {
+      // Se recorre el acompañamiento en alta con las sesiones reales del coach y de la persona,
+      // así cada paso pasa por las políticas y los triggers de verdad.
+      for (const t of ["profile_snapshots", "plans"]) {
+        revisar((await contar(tx, t, ENG_ALTA)) === 0, `el acompañamiento en alta ya tiene ${t}; vuelve a cargar el seed`);
+      }
+      await como(tx, COACH);
+      const r = await tx`update app.engagements set diagnostico_verificado = true, cedula_profesional = '1234567' where id = ${ENG_ALTA}`;
+      revisar(r.count === 1, "el coach no pudo verificar (preparación)");
+      await como(tx, PERSONA_ALTA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_ALTA}, ${PERSONA_ALTA}, 'otorgado', ${AVISO})`;
+      revisar((await etapa(tx, ENG_ALTA)) === "evaluacion_inicial", "la etapa no quedó en evaluacion_inicial (preparación)");
+
+      const payload = JSON.stringify({ tipo: "propuesta_ia", update: { cambios: [], senales: [], relacionesConPerfilPrevio: [], preguntasParaSiguienteSesion: [] }, descartados: [], banderas: [] });
+      const perfil = '{"dimensiones":{},"senalesActivas":[]}';
+      const snapshot = async (version: number) => {
+        await como(tx, COACH);
+        const [ev] = await tx`
+          insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+          values (${ENG_ALTA}, 'propuesta_ia', 'proposed', ${payload}::jsonb, ${COACH}) returning id`;
+        const [s] = await tx`
+          insert into app.profile_snapshots (engagement_id, version, perfil, source_event_id, created_by)
+          values (${ENG_ALTA}, ${version}, ${perfil}::jsonb, ${ev.id}, ${COACH}) returning id`;
+        return s.id as string;
+      };
+      const borrador = async (snapshotId: string) => {
+        await como(tx, COACH);
+        const [p] = await insertarBorrador(tx, ENG_ALTA, snapshotId);
+        await tx`insert into app.plan_items (plan_id, engagement_id, tipo, descripcion, origen) values (${p.id}, ${ENG_ALTA}, 'objetivo', 'Objetivo sintético', 'coach')`;
+        return p.id as string;
+      };
+      const decidir = async (planId: string, status: "aprobado" | "descartado", version: number | null) => {
+        await como(tx, COACH);
+        const aprobado = status === "aprobado";
+        const u = await tx`
+          update app.plans set status = ${status}, version = ${version},
+            approved_by = ${aprobado ? COACH : null}, approved_at = ${aprobado ? tx`now()` : tx`null`}
+          where id = ${planId}`;
+        revisar(u.count === 1, `el coach no pudo dejar el plan en ${status}`);
+      };
+      const esperar = async (esperada: string, paso: string) => {
+        const actual = await etapa(tx, ENG_ALTA);
+        revisar(actual === esperada, `${paso}: la etapa quedó en ${actual} y se esperaba ${esperada}`);
+      };
+
+      const s1 = await snapshot(1);
+      await esperar("perfil", "snapshot versión 1");
+      const p1 = await borrador(s1);
+      await esperar("plan", "primer borrador");
+      await decidir(p1, "aprobado", 1);
+      await esperar("seguimiento", "aprobar el primer plan");
+      const s2 = await snapshot(2);
+      await esperar("seguimiento", "snapshot versión 2");
+      await decidir(await borrador(s2), "descartado", null);
+      await esperar("seguimiento", "descartar un borrador");
+      await decidir(await borrador(s2), "aprobado", 2);
+      await esperar("seguimiento", "aprobar la versión 2");
+      await como(tx, PERSONA_ALTA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_ALTA}, ${PERSONA_ALTA}, 'retirado', ${AVISO})`;
+      await esperar("seguimiento", "retirar el consentimiento");
+    },
+  },
+  {
+    id: "CA-003.35",
+    descripcion: "ni el coach ni la persona hacen UPDATE de app.engagements.stage",
+    correr: async (tx) => {
+      const antes = await etapa(tx, ENG_DEMO);
+      for (const usuario of [COACH, PERSONA]) {
+        await como(tx, usuario);
+        for (const destino of ["perfil", "plan", "seguimiento", "cierre"]) {
+          await rechaza(tx, `${usuario === COACH ? "el coach" : "la persona"} pone stage = ${destino}`, "permiso", (sp) => sp`
+            update app.engagements set stage = ${destino} where id = ${ENG_DEMO}`);
+        }
+      }
+      const despues = await etapa(tx, ENG_DEMO);
+      revisar(antes === despues, `la etapa cambió de ${antes} a ${despues}`);
+    },
+  },
+  {
+    id: "CA-003.36",
+    descripcion: "la persona no hace INSERT, UPDATE ni DELETE en plans, plan_items, persona_plans ni knowledge_cards",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const b = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      const sinCopia = await crearPlan(tx, ENG_DEMO, d.snapshotId, "aprobado"); // aprobado sin persona_plans
+      const antes: Record<string, number> = {};
+      for (const t of TABLAS_PLAN) antes[t] = await contar(tx, t, ENG_DEMO);
+      await como(tx, PERSONA);
+      // INSERT
+      await rechaza(tx, "INSERT en plans", "rls", (sp) => sp`
+        insert into app.plans (engagement_id, titulo, profile_snapshot_id, created_by) values (${ENG_DEMO}, 'Plan', ${d.snapshotId}, ${PERSONA})`);
+      await rechaza(tx, "INSERT en plan_items de un borrador", "rls", (sp) => sp`
+        insert into app.plan_items (plan_id, engagement_id, tipo, descripcion) values (${b.planId}, ${ENG_DEMO}, 'objetivo', 'Objetivo')`);
+      await rechaza(tx, "INSERT en persona_plans de un plan aprobado", "rls", (sp) => sp`
+        insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${sinCopia.planId}, ${ENG_DEMO}, ${sinCopia.version}, '{"items":[]}'::jsonb)`);
+      await rechaza(tx, "INSERT en knowledge_cards", "permiso", (sp) => sp`
+        insert into app.knowledge_cards (id, titulo, tipo, contenido, fuente) values ('KC-999', 'T', 'estrategia_fe', 'C', 'F-000')`);
+      // UPDATE
+      for (const planId of [b.planId, d.planId]) {
+        await rechazaOCero(tx, "UPDATE de plans.titulo", (sp) => sp`update app.plans set titulo = 'Cambio' where id = ${planId}`);
+        await rechazaOCero(tx, "UPDATE de plans.status", (sp) => sp`update app.plans set status = 'aprobado', version = 999999 where id = ${planId}`);
+        await rechazaOCero(tx, "UPDATE de plan_items", (sp) => sp`update app.plan_items set texto_persona = 'Cambio' where plan_id = ${planId}`);
+      }
+      await rechaza(tx, "UPDATE de persona_plans", "permiso", (sp) => sp`update app.persona_plans set contenido = '{"items":[]}'::jsonb where plan_id = ${d.planId}`);
+      await rechaza(tx, "UPDATE de knowledge_cards", "permiso", (sp) => sp`update app.knowledge_cards set verificada = true where id = 'KC-001'`);
+      // DELETE
+      await rechaza(tx, "DELETE en plans", "permiso", (sp) => sp`delete from app.plans where engagement_id = ${ENG_DEMO}`);
+      await rechazaOCero(tx, "DELETE en plan_items", (sp) => sp`delete from app.plan_items where engagement_id = ${ENG_DEMO}`);
+      await rechaza(tx, "DELETE en persona_plans", "permiso", (sp) => sp`delete from app.persona_plans where engagement_id = ${ENG_DEMO}`);
+      await rechaza(tx, "DELETE en knowledge_cards", "permiso", (sp) => sp`delete from app.knowledge_cards where id = 'KC-001'`);
+      await comoOwner(tx);
+      for (const t of TABLAS_PLAN) {
+        const n = await contar(tx, t, ENG_DEMO);
+        revisar(n === antes[t], `${t} cambió de ${antes[t]} a ${n} filas`);
+      }
+      const [p] = await tx`select status::text as status from app.plans where id = ${b.planId}`;
+      revisar(p.status === "borrador", `el borrador quedó en ${p.status}`);
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -686,6 +1090,8 @@ async function prepararEstadoInicial(tx: Tx) {
   await tx`delete from app.consent_events where engagement_id = ${ENG_ALTA}`;
   await tx`delete from app.invitations where engagement_id = ${ENG_ALTA}`;
   await tx`update app.engagements set stage = 'alta', diagnostico_verificado = false where id = ${ENG_ALTA}`;
+  // Spec 003: si quedó un borrador de plan abierto en el demo, plans_un_borrador no dejaría crear otro.
+  await tx`update app.plans set status = 'descartado' where engagement_id = ${ENG_DEMO} and status = 'borrador'`;
 }
 
 async function main(url: string) {

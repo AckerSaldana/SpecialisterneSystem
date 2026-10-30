@@ -50,6 +50,34 @@
       "when": 1793328605939,
       "tag": "0006_triggers_y_permisos_alta",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793331679218,
+      "tag": "0007_funciones_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793331680952,
+      "tag": "0008_plan_de_acompanamiento",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1793331682894,
+      "tag": "0009_plan_sin_politicas_viejas",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793331715895,
+      "tag": "0010_triggers_y_permisos_plan",
+      "breakpoints": true
     }
   ]
 }

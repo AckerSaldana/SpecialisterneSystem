@@ -1,8 +1,8 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
 //
 // /coach/engagements/[id]: encabezado del acompañamiento, sección "Alta" (solo en etapa alta),
-// perfil actual, señales activas e historial de eventos. Todo se lee con RLS activa:
-// si el coach no puede ver el engagement, la página responde 404.
+// perfil actual, plan de acompañamiento (spec 003), señales activas e historial de eventos.
+// Todo se lee con RLS activa: si el coach no puede ver el engagement, la página responde 404.
 // Spec 002: el consentimiento sale de app.consent_events (estadoConsentimiento), no de una columna
 // de engagements (R-002.33). Sin consentimiento vigente no hay botón "Nueva sesión" (R-002.32) y,
 // si lo retiró, RLS oculta notas, perfil e historial también al coach (decisión b, R-002.30).
@@ -26,6 +26,8 @@ import { formatFecha } from "@/components/coach/labels";
 import { textoConsentimiento, textoDatosOcultos, textoSinNotas } from "@/components/coach/alta/consentimiento";
 import { InvitacionPaso, type EstadoInvitacion } from "@/components/coach/alta/invitacion-paso";
 import { VerificacionForm } from "@/components/coach/alta/verificacion-form";
+import { leerPlan, type DatosPlan } from "@/components/coach/plan/datos";
+import { SeccionPlan } from "@/components/coach/plan/seccion-plan";
 
 // Título fijo: así no hace falta otra consulta solo para el <title>.
 export const metadata: Metadata = { title: "Acompañamiento" };
@@ -99,7 +101,12 @@ export default async function EngagementPage({ params, searchParams }: Props) {
     }
 
     const [snapshot] = await tx
-      .select({ version: profileSnapshots.version, perfil: profileSnapshots.perfil, createdAt: profileSnapshots.createdAt })
+      .select({
+        id: profileSnapshots.id,
+        version: profileSnapshots.version,
+        perfil: profileSnapshots.perfil,
+        createdAt: profileSnapshots.createdAt,
+      })
       .from(profileSnapshots)
       .where(eq(profileSnapshots.engagementId, id))
       .orderBy(desc(profileSnapshots.version))
@@ -129,7 +136,10 @@ export default async function EngagementPage({ params, searchParams }: Props) {
       .where(eq(profileEvents.engagementId, id))
       .orderBy(desc(profileEvents.createdAt));
 
-    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos } };
+    // Spec 003: plan vigente, borrador y fichas, en la misma transacción con consentimiento vigente.
+    const plan = await leerPlan(tx, id, snapshot);
+
+    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan } };
   });
 
   if (!datos) notFound();
@@ -242,7 +252,7 @@ export default async function EngagementPage({ params, searchParams }: Props) {
       ) : null}
 
       {historial ? (
-        <HistorialVisible {...historial} />
+        <HistorialVisible {...historial} engagementId={engagement.id} nombre={nombre} />
       ) : consentimiento.estado === "retirado" ? (
         <>
           <Separator />
@@ -254,18 +264,29 @@ export default async function EngagementPage({ params, searchParams }: Props) {
           </section>
         </>
       ) : null}
+
+      {/* Sin consentimiento vigente, la sección del plan solo dice por qué no se muestra (spec 003). */}
+      {historial ? null : (
+        <>
+          <Separator />
+          <SeccionPlan engagementId={engagement.id} nombre={nombre} datos={null} />
+        </>
+      )}
     </div>
   );
 }
 
 type HistorialProps = {
-  snapshot: { version: number; perfil: Perfil; createdAt: Date } | undefined;
+  snapshot: { id: string; version: number; perfil: Perfil; createdAt: Date } | undefined;
   listaSesiones: { id: string; realizadaEn: Date }[];
   eventos: EventoVista[];
+  plan: DatosPlan;
+  engagementId: string;
+  nombre: string;
 };
 
-// Perfil, señales e historial: solo con consentimiento vigente.
-function HistorialVisible({ snapshot, listaSesiones, eventos }: HistorialProps) {
+// Perfil, plan, señales e historial: solo con consentimiento vigente.
+function HistorialVisible({ snapshot, listaSesiones, eventos, plan, engagementId, nombre }: HistorialProps) {
   // sessionId -> fecha formateada, para la evidencia de cada dimensión.
   const fechasSesion: Record<string, string> = {};
   for (const s of listaSesiones) fechasSesion[s.id] = formatFecha(s.realizadaEn);
@@ -291,6 +312,15 @@ function HistorialVisible({ snapshot, listaSesiones, eventos }: HistorialProps) 
           </p>
         )}
       </section>
+
+      <Separator />
+
+      {/* Spec 003: la sección del plan va después del perfil. */}
+      <SeccionPlan
+        engagementId={engagementId}
+        nombre={nombre}
+        datos={{ plan, snapshotActualVersion: snapshot?.version ?? null, fechasSesion }}
+      />
 
       <Separator />
 

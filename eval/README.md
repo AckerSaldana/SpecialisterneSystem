@@ -1,17 +1,20 @@
 <!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
 
-# Eval del pipeline de perfil
+# Eval del pipeline de perfil y del plan
 
-Revisa que la propuesta de la IA (`proposeProfileUpdate` + `sanitizeUpdate`) haga lo que esperamos con notas sintéticas.
+Revisa que la propuesta de la IA haga lo que esperamos con datos sintéticos:
+
+- Perfil (spec 001): `proposeProfileUpdate` + `sanitizeUpdate` sobre notas sintéticas.
+- Plan de acompañamiento (spec 003, tarea 21): `proposePlan` + `sanitizePlan` sobre un perfil aprobado fijo, con fichas de prueba propias del caso.
 
 ## Cómo correrlo
 
-- `npm run eval -- --offline`: solo pruebas sin red de `sanitizeUpdate` y `applyApproval`. No necesita key.
-- `npm run eval`: las pruebas sin red y después cada caso de `eval/cases/` con el modelo. Necesita `ANTHROPIC_API_KEY` en `.env.local`. Usa `LLM_MODEL` si está definido.
+- `npm run eval -- --offline`: solo pruebas sin red y la validación de los casos de plan. No necesita key. Incluye las pruebas de `sanitizeUpdate` y `applyApproval` (001), las del alta (002) y las del plan (003): `indiceEvidencia`, `systemPromptPlan` sin fichas sin verificar, `mensajeUsuarioPlan` sin cédula ni señales, `sanitizePlan`, `banderasQueBloquean`, `vistaPersonaPlan` (con la cadena `itemsAnteriores`), `rastroPlan`, los criterios del eval del plan con salidas fijas y que el prompt de perfil no cambió.
+- `npm run eval`: lo anterior y después cada caso de `eval/cases/` con el modelo. Necesita `ANTHROPIC_API_KEY` en `.env.local`. Usa `LLM_MODEL` si está definido.
 
 Sale con código 1 si algo crítico falla.
 
-## Qué mide
+## Casos de perfil: qué mide
 
 Por caso imprime una fila con:
 
@@ -24,7 +27,27 @@ Por caso imprime una fila con:
 Crítico (código 1): la llamada o la validación con Zod falla, hay más banderas de las esperadas o aparece una señal prohibida.
 Advertencia (no falla): dimensiones, dominios o señales esperadas que faltan, dimensiones extra, citas descartadas, o un tipo no permitido en una dimensión (prueba de sesgo).
 
-## Cómo agregar un caso
+## Casos de plan: qué mide
+
+Son los archivos con `"formato": 2` y `"etapas": ["plan"]` (formato 2 de la spec 007). Cada uno trae un `perfilAprobado` fijo, la `nota` de la que salen sus citas y un `catalogo.fichas` con fichas sintéticas de prueba (IDs distintos a los del seed, por ejemplo `KC-T01`). El eval no lee la base.
+
+Antes de llamar al modelo, cada caso se valida (también con `--offline`): esquema estricto, nombre de archivo e `id`, fuente en cada rasgo, nota sin términos no permitidos ni datos de contacto, cada cita del `perfilAprobado` dentro de la nota, y que ninguna ficha sin verificar llegue al system prompt. Un caso inválido no se corre y cuenta como falla crítica.
+
+Por caso imprime: puntos que quedaron después de `sanitizePlan` (y cuántos propuso el modelo), tipos esperados encontrados, fichas citadas, descartados, banderas (las que bloquean la aprobación / total), tokens y latencia.
+
+Crítico (código 1), según la spec 007:
+
+- La llamada o la validación con Zod falla.
+- Un punto limpio cita una ficha que no está en el catálogo del caso, que no está verificada o que está en `fichasExcluidas`.
+- Un punto limpio tiene evidencia que no sale del índice `E-nn` del `perfilAprobado`.
+- Más banderas `termino_no_permitido` o `mencion_condicion` de las declaradas en `esperado.plan.banderas`.
+- En un `textoPersona`: `termino_no_permitido`, `mencion_condicion` o una etiqueta de `DOMINIOS_FE`.
+- "Cédula" o "verificación del diagnóstico" en un punto `comunicacion_lider` u `objetivo_equipo`.
+- Un patrón de `esperado.plan.patronesProhibidos` con severidad `critica` en la descripción o en el texto para la persona (por ejemplo, pedirle que hable más o participe más en reuniones, C-13).
+
+Advertencia: descartes de `sanitizePlan` (fichas o evidencia inventadas que la limpieza quitó), tipos o fichas esperadas que faltan, un plan sin objetivos y las demás banderas (`termino_interno` que no es un dominio, citas copiadas).
+
+## Cómo agregar un caso de perfil
 
 1. Copia `cases/2026-10-29_caso-ws-01.json` con un nombre nuevo: `AAAA-MM-DD_caso-<tipo>-<nn>.json`.
 2. Solo datos sintéticos: nombre de pila inventado, sin empresas ni datos reales.
@@ -37,3 +60,11 @@ Advertencia (no falla): dimensiones, dominios o señales esperadas que faltan, d
    - `tipoNoPermitido` (opcional): por ejemplo, que hablar poco no salga como `area_de_apoyo`.
    - `banderas`: normalmente `0`.
 6. Corre `npm run eval`.
+
+## Cómo agregar un caso de plan
+
+1. Copia `cases/2026-10-29_caso-ws-plan-01.json` (con fichas) o `cases/2026-10-29_caso-ws-plan-02.json` (sin fichas) con un nombre nuevo.
+2. Escribe el `perfilAprobado` con la forma de `Perfil` de `lib/profile/schema.ts`. Cada `cita` se copia de `nota`; los `sessionId` y `eventoId` son uuids inventados.
+3. En `catalogo.fichas`, solo fichas de prueba, con IDs que no usa el seed. Puedes poner una con `verificada: false` para probar que no llega al prompt.
+4. En `esperado.plan`, pon `tipos`, `fichasEsperadas`, `fichasExcluidas`, `banderas` (normalmente `0`) y `patronesProhibidos`. Si el perfil describe a una persona callada o reservada, declara al menos un patrón contra pedirle que hable más o participe más en reuniones (R-007.54).
+5. Corre `npm run eval -- --offline` para validar el caso y luego `npm run eval`.

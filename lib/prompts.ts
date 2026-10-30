@@ -1,51 +1,78 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
 //
 // Arma los textos que se envían al modelo.
-// El system prompt vive en prompts/<PROMPT_VERSION>.md (versionado por fecha).
-// Los catálogos (dimensiones, dominios FE, señales) se insertan desde lib/profile/schema.ts
-// para que el prompt y el esquema nunca digan cosas distintas.
+// Cada system prompt vive en prompts/<version>.md (versionado por fecha).
+// Los catálogos (dimensiones, dominios FE, señales, tipos de punto del plan) se insertan desde
+// lib/profile/schema.ts y lib/plan/schema.ts para que el prompt y el esquema nunca digan cosas distintas.
 import "server-only";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ENGAGEMENT_CONFIG, type EngagementType } from "@/lib/engagements/config";
+import type { IndiceEvidencia } from "@/lib/plan/evidence";
+import { TIPOS_ITEM_PLAN } from "@/lib/plan/schema";
 import { DIMENSIONES, DOMINIOS_FE, SECCIONES, SENALES, type Perfil } from "@/lib/profile/schema";
 
 // Nombre del archivo sin ".md". Se guarda en profile_events.prompt_version y en audit_log.
 export const PROMPT_VERSION = "2026-10-29_profile-update";
+// Spec 003 (R-003.43). Se guarda en plans.prompt_version y en audit_log.
+export const PROMPT_VERSION_PLAN = "2026-10-29_plan-acompanamiento";
 
 // Todo lo que está arriba de esta línea en el .md es encabezado para humanos y no se envía.
 // Se busca como línea completa para no confundirla con una mención dentro del encabezado.
 const MARCADOR = /^<!-- PROMPT -->[ \t]*$/m;
 
-let cache: string | null = null;
+// Plantillas ya leídas, por versión. Se leen una vez por proceso.
+const plantillas = new Map<string, string>();
 
-export function systemPromptProfileUpdate(): string {
-  if (cache) return cache;
+function leerPlantilla(version: string): string {
+  const enCache = plantillas.get(version);
+  if (enCache) return enCache;
 
   // process.cwd() es la raíz del proyecto tanto en Next como en "npm run eval".
   // En producción, next.config.ts incluye ./prompts/** en el paquete de las rutas /api.
-  const archivo = path.join(process.cwd(), "prompts", `${PROMPT_VERSION}.md`);
+  const archivo = path.join(process.cwd(), "prompts", `${version}.md`);
   const md = readFileSync(archivo, "utf8");
 
   const marcador = MARCADOR.exec(md);
-  if (!marcador) throw new Error(`El prompt ${PROMPT_VERSION} no tiene la línea <!-- PROMPT -->`);
+  if (!marcador) throw new Error(`El prompt ${version} no tiene la línea <!-- PROMPT -->`);
   const plantilla = md.slice(marcador.index + marcador[0].length).trim();
+  plantillas.set(version, plantilla);
+  return plantilla;
+}
+
+const MARCADORES = /\{\{([A-Z_]+)\}\}/g;
+
+// Reemplaza cada {{MARCADOR}} de la plantilla en un solo paso. Si alguien agrega un marcador nuevo
+// al .md y olvida llenarlo aquí, mejor fallar ya. La revisión se hace sobre la plantilla, antes de
+// insertar datos: una ficha con "{{" en su título o contenido no debe tumbar el prompt.
+function llenar(version: string, reemplazos: Record<string, string>): string {
+  const plantilla = leerPlantilla(version);
+  const sinLlenar = [...plantilla.matchAll(MARCADORES)].map((m) => m[1]).filter((m) => !Object.hasOwn(reemplazos, m));
+  if (sinLlenar.length > 0 || plantilla.replace(MARCADORES, "").includes("{{")) {
+    throw new Error(`El prompt ${version} tiene marcadores sin llenar`);
+  }
+  // Con una función como reemplazo, un "$" dentro del valor (p. ej. en el contenido de una ficha)
+  // no se interpreta como patrón especial de String.replace. Lo insertado ya no se vuelve a revisar.
+  return plantilla.replace(MARCADORES, (_, marcador: string) => reemplazos[marcador]);
+}
+
+const listaDominios = () => DOMINIOS_FE.map((d) => `- ${d.id}: ${d.etiqueta}`).join("\n");
+
+// ===========================================================================
+// Perfil (spec 001)
+// ===========================================================================
+
+let cachePerfil: string | null = null;
+
+export function systemPromptProfileUpdate(): string {
+  if (cachePerfil) return cachePerfil;
 
   const seccion = (id: string) => SECCIONES.find((s) => s.id === id)!.etiqueta;
   const dimensiones = DIMENSIONES.map((d) => `- ${d.id}: ${d.etiqueta} (${seccion(d.seccion)})`).join("\n");
-  const dominios = DOMINIOS_FE.map((d) => `- ${d.id}: ${d.etiqueta}`).join("\n");
   const senales = SENALES.map((s) => `- ${s.id}: ${s.etiqueta}`).join("\n");
 
-  const texto = plantilla
-    .replace("{{DIMENSIONES}}", dimensiones)
-    .replace("{{DOMINIOS_FE}}", dominios)
-    .replace("{{SENALES}}", senales);
-
-  // Si alguien agrega un marcador nuevo al .md y olvida llenarlo aquí, mejor fallar ya.
-  if (texto.includes("{{")) throw new Error(`El prompt ${PROMPT_VERSION} tiene marcadores sin llenar`);
-
-  cache = texto;
-  return texto;
+  cachePerfil = llenar(PROMPT_VERSION, { DIMENSIONES: dimensiones, DOMINIOS_FE: listaDominios(), SENALES: senales });
+  return cachePerfil;
 }
 
 // Perfil previo reducido: lo que el modelo necesita para detectar coincidencias y
@@ -85,5 +112,85 @@ export function mensajeUsuarioProfileUpdate({ nota, nombrePila, engagementType, 
     "<nota_del_coach>",
     nota,
     "</nota_del_coach>",
+  ].join("\n");
+}
+
+// ===========================================================================
+// Plan de acompañamiento (spec 003)
+// ===========================================================================
+
+// Ficha de knowledge_cards tal como entra al prompt. La ruta la arma desde la fila de la base.
+export type FichaPrompt = { id: string; titulo: string; tipo: string; dominioFe: string | null; contenido: string };
+
+// R-003.5: solo fichas verificadas. La ruta ya filtra en la consulta; esto es por si acaso llega
+// un objeto con "verificada: false" (por ejemplo, el catálogo de un caso del eval).
+export function soloVerificadas<T extends FichaPrompt & { verificada?: boolean }>(fichas: T[]): T[] {
+  return fichas.filter((f) => f.verificada !== false);
+}
+
+function textoFichas(fichas: FichaPrompt[]): string {
+  if (fichas.length === 0) return "No hay fichas verificadas. Deja `fichaId` en null en todos los puntos.";
+  return fichas
+    .map((f) => {
+      const dominio = DOMINIOS_FE.find((d) => d.id === f.dominioFe);
+      return [
+        `### ${f.id}`,
+        `- título: ${f.titulo}`,
+        `- tipo: ${f.tipo}`,
+        `- dominio: ${dominio ? `${dominio.id} (${dominio.etiqueta})` : "ninguno"}`,
+        `- contenido: ${f.contenido}`,
+      ].join("\n");
+    })
+    .join("\n\n");
+}
+
+// System prompt del plan (R-003.6). La plantilla se cachea; el texto con las fichas se arma en
+// cada llamada porque las fichas viven en la base. Para el mismo conjunto de fichas el texto sale
+// igual, así el cache de Anthropic funciona entre llamadas.
+export function systemPromptPlan(fichas: (FichaPrompt & { verificada?: boolean })[]): string {
+  const tipos = TIPOS_ITEM_PLAN.map((t) => `- ${t.id}: ${t.grupo}`).join("\n");
+  return llenar(PROMPT_VERSION_PLAN, {
+    TIPOS_ITEM: tipos,
+    DOMINIOS_FE: listaDominios(),
+    FICHAS: textoFichas(soloVerificadas(fichas)),
+  });
+}
+
+export type EntradaPlan = {
+  nombrePila: string;
+  engagementType: EngagementType;
+  indice: IndiceEvidencia;
+  perfil: Perfil;
+};
+
+// Mensaje de usuario del plan (R-003.4, CA-003.5). Solo nombre de pila, tipo de acompañamiento y
+// las dimensiones del perfil aprobado (resumen, tipo, dominios) con cada cita identificada por su
+// ID E-nn. No lleva cédula, verificación del diagnóstico, notas completas, sessionId ni señales
+// activas (decisión 5).
+export function mensajeUsuarioPlan({ nombrePila, engagementType, indice, perfil }: EntradaPlan): string {
+  const engagement = ENGAGEMENT_CONFIG[engagementType];
+
+  // Mismo orden que el índice (orden de DIMENSIONES).
+  const dimensiones: Record<string, unknown> = {};
+  for (const d of DIMENSIONES) {
+    const dim = perfil.dimensiones[d.id];
+    if (!dim) continue;
+    dimensiones[d.id] = {
+      etiqueta: d.etiqueta,
+      resumen: dim.resumen,
+      tipo: dim.tipo,
+      dominiosFE: dim.dominiosFE,
+      evidencia: indice.lista.filter((e) => e.dimension === d.id).map((e) => ({ id: e.id, cita: e.cita })),
+    };
+  }
+
+  return [
+    `Nombre de pila de la persona: ${nombrePila}`,
+    `Tipo de acompañamiento: ${engagement.etiqueta}. ${engagement.descripcion}`,
+    "",
+    "Perfil aprobado por el coach (JSON). Cita la evidencia solo por su id:",
+    "<perfil_aprobado>",
+    JSON.stringify({ dimensiones }, null, 2),
+    "</perfil_aprobado>",
   ].join("\n");
 }

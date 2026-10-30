@@ -95,11 +95,24 @@ Consent is stored as events in `app.consent_events`. The current consent is the 
 
 | Command | What it does |
 | --- | --- |
-| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001 and 002 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
+| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001, 002 and 003 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
 | `npm run purge-retirados` | Runs `scripts/purge-retirados.ts`: for each engagement whose latest consent event is a withdrawal older than 6 months, deletes its sessions, profile events, profile snapshots, participant profiles and recommendations. The engagement and its consent events stay as a record. |
 | `npm run purge-retirados -- --dry-run` | Lists what would be deleted without deleting anything. |
 | `npm run purge-retirados -- --engagement <id>` | Deletes one engagement's data now, when the participant asks for it. |
 | `npm run purge-retirados -- --test` | Test mode (CA-002.42): runs against a simulated withdrawal date inside a transaction that rolls back, so nothing is deleted. |
+
+## Support plan (spec 003)
+
+The full requirements are in `specs/003-plan-de-acompanamiento.md`.
+
+1. **The AI proposes.** The coach asks for a proposal once a profile is approved and consent is current. The model receives the latest approved profile, with each quote replaced by a short ID (`E-01`, `E-02`…), and only the knowledge cards marked `verificada = true`. It does not receive risk signals, the diagnosis check or the notes. Code, not the model, turns each evidence ID back into its quote and session, and drops items that cite unknown evidence or cards.
+2. **The coach edits and approves.** The draft can be edited item by item: change the text or the card, remove quotes, remove items, add the coach's own. Item types: goals, team goals, executive function supports, reasonable adjustments, how to give instructions, and what to tell the team lead. Flagged terms block approval until the coach rewrites them.
+3. **Versions keep a trail.** Each approval creates a new version. The model's original proposal is stored and cannot be changed, so every version shows which items came from the AI unchanged, which the coach edited (with the original text) or wrote, which AI items were removed, and which item of the previous version each one continues. Approved and discarded plans are frozen by RLS.
+4. **The participant sees only goals and supports.** On approval the app writes a copy to `app.persona_plans` with the participant-facing text of goals and supports and nothing else: no quotes, cards, executive function names or coach descriptions. The participant cannot read `app.plans`, `app.plan_items` or `app.knowledge_cards`.
+5. **Lead notes and adjustments stay in the app.** Items for the team lead and reasonable adjustments are internal drafts. There is no route, export or view for the employer.
+6. **Stages move on their own.** Database triggers advance the engagement: the first approved profile moves it to `perfil`, the first plan draft to `plan`, and the first approved plan to `seguimiento`. Stages only move forward, and no user can write `stage`.
+
+Plans, plan items and the participant copy follow the consent block of spec 002: with consent withdrawn, neither the coach nor the participant can read them, and nothing is deleted. The privacy notice moved to version `2026-10-30` (`legal/2026-10-30_aviso-privacidad.md`) to say what this stage sends to the model.
 
 ## Scripts
 

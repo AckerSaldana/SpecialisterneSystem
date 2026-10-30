@@ -20,6 +20,8 @@ import {
   jsonb,
   pgPolicy,
   pgSchema,
+  uniqueIndex,
+  type AnyPgColumn,
   text,
   timestamp,
   unique,
@@ -27,6 +29,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUid, authUsers } from "drizzle-orm/supabase";
 import type { Aprobacion, Perfil, PerfilPersona, ProfileEventPayload } from "@/lib/profile/schema";
+import type { EvidenciaPlan, PayloadPlanIA, PlanPersona } from "@/lib/plan/schema";
 
 // Todas las tablas viven en el esquema "app". La Data API de Supabase (PostgREST) solo
 // expone "public", así que nadie puede leer ni escribir estas tablas con su sesión desde
@@ -50,8 +53,17 @@ export const engagementStage = app.enum("engagement_stage", [
 ]);
 export const profileEventType = app.enum("profile_event_type", ["propuesta_ia", "no_me_representa"]);
 export const profileEventStatus = app.enum("profile_event_status", ["proposed", "approved", "rejected"]);
-export const planStatus = app.enum("plan_status", ["borrador", "aprobado"]);
-export const planItemType = app.enum("plan_item_type", ["objetivo", "apoyo_fe", "instruccion", "comunicacion_lider"]);
+export const planStatus = app.enum("plan_status", ["borrador", "aprobado", "descartado"]);
+export const planItemType = app.enum("plan_item_type", [
+  "objetivo",
+  "apoyo_fe",
+  "instruccion",
+  "comunicacion_lider",
+  // Spec 003, decisión 10.
+  "objetivo_equipo",
+  "ajuste_razonable",
+]);
+export const planItemOrigen = app.enum("plan_item_origen", ["ia", "ia_editado", "coach"]);
 export const knowledgeCardType = app.enum("knowledge_card_type", ["estrategia_fe", "ajuste_razonable", "senal"]);
 export const catalogFormat = app.enum("catalog_format", ["lectura", "video", "audio", "ejercicio", "interactivo"]);
 export const cognitiveLoad = app.enum("cognitive_load", ["baja", "media", "alta"]);
@@ -67,6 +79,9 @@ const personaOf = (col: unknown) => sql`(select private.app_is_persona_of(${col}
 // Consentimiento vigente (spec 002, R-002.28): el último evento de app.consent_events es "otorgado".
 // Sin él no se guardan notas ni se manda nada a la IA, y lo que ya existe deja de verse (decisión b).
 const hasConsent = (col: unknown) => sql`(select private.app_has_consent(${col}))`;
+// Spec 003: los ítems solo se escriben mientras su plan está en borrador; persona_plans solo con el plan aprobado.
+const planEnBorrador = (plan: unknown, eng: unknown) => sql`(select private.app_plan_en_borrador(${plan}, ${eng}))`;
+const planAprobado = (plan: unknown, eng: unknown) => sql`(select private.app_plan_aprobado(${plan}, ${eng}))`;
 
 // ---------------------------------------------------------------------------
 // Organizaciones y usuarios
@@ -343,19 +358,39 @@ export const plans = app.table(
     status: planStatus("status").notNull().default("borrador"),
     approvedBy: uuid("approved_by").references(() => users.id),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
+    // Spec 003 (R-003.20): perfil base, versión al aprobar y rastro inmutable de la propuesta.
+    profileSnapshotId: uuid("profile_snapshot_id")
+      .notNull()
+      .references(() => profileSnapshots.id),
+    version: integer("version"),
+    propuestaIa: jsonb("propuesta_ia").$type<PayloadPlanIA>(),
+    promptVersion: text("prompt_version"),
+    model: text("model"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id),
     createdAt: createdAt(),
   },
   (t) => [
-    pgPolicy("plans_all_coach", {
-      for: "all",
-      to: authenticatedRole,
-      using: coachOf(t.engagementId),
-      withCheck: coachOf(t.engagementId),
-    }),
-    pgPolicy("plans_select_persona_approved", {
+    // R-003.31: una versión por acompañamiento. R-003.3: un solo borrador a la vez.
+    unique("plans_engagement_version").on(t.engagementId, t.version),
+    uniqueIndex("plans_un_borrador").on(t.engagementId).where(sql`${t.status} = 'borrador'`),
+    pgPolicy("plans_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${personaOf(t.engagementId)} and ${t.status} = 'aprobado'`,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("plans_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.status} = 'borrador' and ${t.version} is null and ${hasConsent(t.engagementId)}`,
+    }),
+    // Un plan aprobado o descartado ya no pasa el using: queda congelado (R-003.32).
+    pgPolicy("plans_update_coach_borrador", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${t.status} = 'borrador' and ${hasConsent(t.engagementId)}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
   ],
 );
@@ -374,21 +409,70 @@ export const planItems = app.table(
     descripcion: text("descripcion").notNull(),
     dominioFe: text("dominio_fe"),
     knowledgeCardId: text("knowledge_card_id").references(() => knowledgeCards.id),
-    evidencia: jsonb("evidencia").$type<{ cita: string; sessionId: string }[]>().notNull().default([]),
+    evidencia: jsonb("evidencia").$type<EvidenciaPlan[]>().notNull().default([]),
     orden: integer("orden").notNull().default(0),
+    // Spec 003: texto para la persona (solo objetivo y apoyo_fe), rastro de origen y edición.
+    textoPersona: text("texto_persona"),
+    origen: planItemOrigen("origen").notNull().default("ia"),
+    propuestaRef: integer("propuesta_ref"),
+    // R-003.50: el ítem equivalente de la versión aprobada anterior.
+    origenItemId: uuid("origen_item_id").references((): AnyPgColumn => planItems.id),
+    editadoPor: uuid("editado_por").references(() => users.id),
+    editadoEn: timestamp("editado_en", { withTimezone: true }),
     createdAt: createdAt(),
   },
   (t) => [
-    pgPolicy("plan_items_all_coach", {
-      for: "all",
-      to: authenticatedRole,
-      using: coachOf(t.engagementId),
-      withCheck: coachOf(t.engagementId),
-    }),
-    pgPolicy("plan_items_select_persona_approved", {
+    // R-003.51: dos ítems del mismo plan no siguen al mismo ítem anterior.
+    uniqueIndex("plan_items_origen_unico").on(t.planId, t.origenItemId).where(sql`${t.origenItemId} is not null`),
+    pgPolicy("plan_items_select_coach", {
       for: "select",
       to: authenticatedRole,
-      using: sql`${personaOf(t.engagementId)} and exists (select 1 from app.plans p where p.id = ${t.planId} and p.status = 'aprobado')`,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("plan_items_insert_coach_borrador", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${planEnBorrador(t.planId, t.engagementId)}`,
+    }),
+    pgPolicy("plan_items_update_coach_borrador", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${planEnBorrador(t.planId, t.engagementId)}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${planEnBorrador(t.planId, t.engagementId)}`,
+    }),
+    pgPolicy("plan_items_delete_coach_borrador", {
+      for: "delete",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${planEnBorrador(t.planId, t.engagementId)}`,
+    }),
+  ],
+);
+
+// Copia del plan aprobado para la persona (spec 003, R-003.37): solo objetivos y apoyos con su texto
+// para la persona y la cadena de versiones anteriores. Sin citas, fichas, dominios ni lo del líder.
+export const personaPlans = app.table(
+  "persona_plans",
+  {
+    planId: uuid("plan_id")
+      .primaryKey()
+      .references(() => plans.id, { onDelete: "cascade" }),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    version: integer("version").notNull(),
+    contenido: jsonb("contenido").$type<PlanPersona>().notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    pgPolicy("persona_plans_select_participants", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("persona_plans_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${planAprobado(t.planId, t.engagementId)}`,
     }),
   ],
 );
@@ -409,7 +493,9 @@ export const knowledgeCards = app.table(
     verificada: boolean("verificada").notNull().default(false),
     createdAt: createdAt(),
   },
-  () => [pgPolicy("knowledge_cards_select_all", { for: "select", to: authenticatedRole, using: sql`true` })],
+  () => [
+    pgPolicy("knowledge_cards_select_coach", { for: "select", to: authenticatedRole, using: isCoach }),
+  ],
 );
 
 // ---------------------------------------------------------------------------

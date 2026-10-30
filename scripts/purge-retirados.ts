@@ -28,8 +28,11 @@ type Tx = TransactionSql;
 // recommendations → plan_items → plans; persona_profiles → profile_snapshots → profile_events → sessions.
 // 003 a 006 agregan aquí las tablas de su lista de bloqueo (R-002.44), respetando sus llaves.
 // Todas tienen columna engagement_id. engagements y consent_events no se tocan nunca.
+// Orden por llaves foráneas: lo que apunta a otra tabla se borra antes. persona_plans y
+// plan_items van antes que plans, y plans antes que profile_snapshots (plans.profile_snapshot_id).
 const TABLAS_PURGA = [
   "recommendations",
+  "persona_plans",
   "plan_items",
   "plans",
   "persona_profiles",
@@ -163,9 +166,14 @@ async function sembrar(tx: Tx, engagementId: string) {
     insert into app.profile_snapshots (engagement_id, version, perfil, source_event_id, created_by)
     values (${engagementId}, ${v}, '{}'::jsonb, ${ev.id}, ${COACH}) returning id`;
   await tx`insert into app.persona_profiles (snapshot_id, engagement_id, version, contenido) values (${snap.id}, ${engagementId}, ${v}, '{}'::jsonb)`;
-  const [plan] = await tx`insert into app.plans (engagement_id, titulo) values (${engagementId}, 'Plan sintético') returning id`;
+  // Spec 003: un plan necesita su perfil base y quién lo creó; el aprobado lleva su copia para la persona.
+  const [plan] = await tx`
+    insert into app.plans (engagement_id, titulo, status, version, profile_snapshot_id, created_by)
+    values (${engagementId}, 'Plan sintético', 'aprobado', 1, ${snap.id}, ${COACH}) returning id`;
   const [item] = await tx`
     insert into app.plan_items (plan_id, engagement_id, tipo, descripcion) values (${plan.id}, ${engagementId}, 'objetivo', 'Objetivo sintético') returning id`;
+  await tx`
+    insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${plan.id}, ${engagementId}, 1, '{"items":[]}'::jsonb)`;
   await tx`
     insert into app.recommendations (engagement_id, catalog_unit_id, plan_item_id, razon) values (${engagementId}, 'CU-001', ${item.id}, 'Razón sintética')`;
 }
