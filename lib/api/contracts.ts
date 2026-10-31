@@ -3,29 +3,29 @@
 // Contratos de los Route Handlers. El servidor valida el body con estos esquemas
 // y la UI usa los mismos tipos para leer la respuesta.
 import { z } from "zod";
-import { Aprobacion, Bandera, Descartado, DimensionId, ProfileUpdate } from "@/lib/profile/schema";
+import { TipoSesion } from "@/lib/followup/schema";
+import { Aprobacion, DimensionId, TipoSenal } from "@/lib/profile/schema";
 import { BanderaPlan, EvidenciaPlan, OrigenItemPlan, TipoItemPlan } from "@/lib/plan/schema";
 
 // POST /api/engagements/[id]/sessions
 // Crea la sesión con la nota original, pide la propuesta a la IA, la valida y
 // guarda un profile_event con status "proposed". Nada se aplica al perfil todavía.
+// "tipo" y "fecha" solo cuentan en etapa de seguimiento (R-004.57).
 export const ProposeRequest = z.strictObject({
   nota: z
     .string()
     .trim()
     .min(20, "La nota necesita al menos 20 caracteres.")
     .max(20000, "La nota puede tener hasta 20,000 caracteres."),
+  tipo: TipoSesion.optional(),
+  fecha: z.iso.date("Escribe la fecha de la sesión.").optional(),
 });
 export type ProposeRequest = z.infer<typeof ProposeRequest>;
 
+// Lo mismo responde el reintento. La página de revisión lee el resto de profile_events (R-004.26).
 export const ProposeResponse = z.strictObject({
   sessionId: z.uuid(),
   eventId: z.uuid(),
-  propuesta: ProfileUpdate, // ya sin las citas que no estaban en la nota
-  descartados: z.array(Descartado),
-  banderas: z.array(Bandera),
-  promptVersion: z.string(),
-  modelo: z.string(),
 });
 export type ProposeResponse = z.infer<typeof ProposeResponse>;
 
@@ -44,6 +44,24 @@ export const DecisionResponse = z.strictObject({
   version: z.int().nullable(),
 });
 export type DecisionResponse = z.infer<typeof DecisionResponse>;
+
+// POST /api/engagements/[id]/signals/[tipo]/close
+export const CerrarSenalRequest = z.strictObject({ motivo: z.string().trim().max(1000).optional() });
+export type CerrarSenalRequest = z.infer<typeof CerrarSenalRequest>;
+
+// POST /api/engagements/[id]/alerts
+export const CrearAlertaRequest = z.strictObject({
+  tipoSenal: TipoSenal,
+  nota: z.string().trim().max(1000).optional(),
+});
+export type CrearAlertaRequest = z.infer<typeof CrearAlertaRequest>;
+
+// PATCH /api/alerts/[id]   ("Ya la pasé" y "Atendida")
+export const CambiarAlertaRequest = z.strictObject({
+  estado: z.enum(["escalada", "atendida"]),
+  notaEscalada: z.string().trim().max(1000).optional(),
+});
+export type CambiarAlertaRequest = z.infer<typeof CambiarAlertaRequest>;
 
 // POST /api/persona/feedback   (botón "esto no me representa")
 export const FeedbackRequest = z.strictObject({
@@ -124,5 +142,12 @@ export type PlanDecisionResponse = z.infer<typeof PlanDecisionResponse>;
 
 // Errores: siempre { error: string } con un mensaje en lenguaje literal. "ruta" es opcional: al
 // bloquear la aprobación por una bandera es el id del punto que hay que corregir (R-003.30).
-export const ApiError = z.strictObject({ error: z.string(), ruta: z.string().optional() });
+// El 502 y el 500 de guardar la propuesta traen sessionId, para pedirla otra vez. El 409 del
+// reintento trae eventId solo si ya existe propuesta (spec 004).
+export const ApiError = z.strictObject({
+  error: z.string(),
+  ruta: z.string().optional(),
+  sessionId: z.uuid().optional(),
+  eventId: z.uuid().optional(),
+});
 export type ApiError = z.infer<typeof ApiError>;

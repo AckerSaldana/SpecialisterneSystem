@@ -6,6 +6,7 @@
 // Spec 002: el consentimiento sale de app.consent_events (estadoConsentimiento), no de una columna
 // de engagements (R-002.33). Sin consentimiento vigente no hay botón "Nueva sesión" (R-002.32) y,
 // si lo retiró, RLS oculta notas, perfil e historial también al coach (decisión b, R-002.30).
+// Spec 004: propuestas sin revisar, sesiones sin propuesta, alertas fuertes e historiales.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -17,6 +18,7 @@ import { estadoConsentimiento } from "@/lib/consent";
 import { withRls } from "@/lib/db/rls";
 import { engagements, invitations, profileEvents, profileSnapshots, sessions, users } from "@/lib/db/schema";
 import { ENGAGEMENT_CONFIG, etiquetaEtapa } from "@/lib/engagements/config";
+import { leerSeguimiento, type DatosSeguimiento } from "@/lib/followup/lectura";
 import type { Perfil } from "@/lib/profile/schema";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -28,6 +30,7 @@ import { InvitacionPaso, type EstadoInvitacion } from "@/components/coach/alta/i
 import { VerificacionForm } from "@/components/coach/alta/verificacion-form";
 import { leerPlan, type DatosPlan } from "@/components/coach/plan/datos";
 import { SeccionPlan } from "@/components/coach/plan/seccion-plan";
+import { AccionesSenal, AlertasFuertes, Historiales, PropuestasPendientes } from "@/components/coach/seguimiento/secciones";
 
 // Título fijo: así no hace falta otra consulta solo para el <title>.
 export const metadata: Metadata = { title: "Acompañamiento" };
@@ -129,8 +132,11 @@ export default async function EngagementPage({ params, searchParams }: Props) {
         promptVersion: profileEvents.promptVersion,
         model: profileEvents.model,
         createdAt: profileEvents.createdAt,
+        sesionTipo: sessions.tipo,
+        sesionFecha: sessions.realizadaEn,
       })
       .from(profileEvents)
+      .leftJoin(sessions, eq(sessions.id, profileEvents.sessionId))
       .leftJoin(aprobador, eq(aprobador.id, profileEvents.decidedBy))
       .leftJoin(creador, eq(creador.id, profileEvents.createdBy))
       .where(eq(profileEvents.engagementId, id))
@@ -139,7 +145,9 @@ export default async function EngagementPage({ params, searchParams }: Props) {
     // Spec 003: plan vigente, borrador y fichas, en la misma transacción con consentimiento vigente.
     const plan = await leerPlan(tx, id, snapshot);
 
-    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan } };
+    const seguimiento = await leerSeguimiento(tx, id, snapshot?.perfil ?? null);
+
+    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan, seguimiento } };
   });
 
   if (!datos) notFound();
@@ -281,18 +289,24 @@ type HistorialProps = {
   listaSesiones: { id: string; realizadaEn: Date }[];
   eventos: EventoVista[];
   plan: DatosPlan;
+  seguimiento: DatosSeguimiento;
   engagementId: string;
   nombre: string;
 };
 
 // Perfil, plan, señales e historial: solo con consentimiento vigente.
-function HistorialVisible({ snapshot, listaSesiones, eventos, plan, engagementId, nombre }: HistorialProps) {
+function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento, engagementId, nombre }: HistorialProps) {
   // sessionId -> fecha formateada, para la evidencia de cada dimensión.
   const fechasSesion: Record<string, string> = {};
   for (const s of listaSesiones) fechasSesion[s.id] = formatFecha(s.realizadaEn);
 
+  // Una señal con alerta sin atender no ofrece marcar otra (strong_alerts_una_vigente).
+  const conAlerta = new Set(seguimiento.alertas.filter((a) => a.estado !== "atendida").map((a) => a.tipoSenal));
+
   return (
     <>
+      <PropuestasPendientes datos={seguimiento} engagementId={engagementId} />
+
       <Separator />
 
       <section aria-labelledby="perfil-actual" className="flex flex-col gap-4">
@@ -325,24 +339,36 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, engagementId
       <Separator />
 
       <section aria-labelledby="senales-activas" className="flex flex-col gap-4">
-        <h2 id="senales-activas" className="text-xl font-semibold">
+        <h2 id="senales-activas" tabIndex={-1} className="foco-destino text-xl font-semibold">
           Señales activas
         </h2>
         <p className="prose-measure text-sm text-muted-foreground">Solo tú ves esta sección. La persona no la ve.</p>
-        {snapshot ? (
-          <SenalesView perfil={snapshot.perfil} fechasSesion={fechasSesion} />
-        ) : (
-          <p className="text-sm text-muted-foreground">No hay señales activas.</p>
-        )}
+        <SenalesView
+          senales={seguimiento.senales}
+          fechasSesion={fechasSesion}
+          acciones={(s) => (
+            <AccionesSenal tipo={s.tipo} engagementId={engagementId} nombre={nombre} conAlertaVigente={conAlerta.has(s.tipo)} />
+          )}
+        />
       </section>
 
       <Separator />
 
-      <section aria-labelledby="historial" className="flex flex-col gap-4">
+      <AlertasFuertes alertas={seguimiento.alertas} />
+
+      <Separator />
+
+      <section aria-labelledby="historial" className="flex flex-col gap-6">
         <h2 id="historial" className="text-xl font-semibold">
           Historial
         </h2>
-        <EventTimeline eventos={eventos} />
+        <Historiales datos={seguimiento} nombre={nombre} />
+        <section aria-labelledby="historial-eventos" className="flex flex-col gap-3">
+          <h3 id="historial-eventos" className="text-lg font-semibold">
+            Propuestas y comentarios
+          </h3>
+          <EventTimeline eventos={eventos} nombre={nombre} />
+        </section>
       </section>
     </>
   );

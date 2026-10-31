@@ -2,6 +2,7 @@
 //
 // Textos y formatos que comparten las pantallas del coach.
 // El tipo de hallazgo siempre se muestra como texto; el color solo acompaña.
+import type { TipoSesion } from "@/lib/followup/schema";
 import type { TipoHallazgo } from "@/lib/profile/schema";
 
 export const ETIQUETA_TIPO: Record<TipoHallazgo, string> = {
@@ -9,6 +10,11 @@ export const ETIQUETA_TIPO: Record<TipoHallazgo, string> = {
   area_de_apoyo: "Área de apoyo",
   contexto: "Contexto",
 };
+
+// Spec 004: el tipo de sesión siempre con estos textos.
+export function textoTipoSesion(tipo: TipoSesion, nombre: string): string {
+  return tipo === "persona" ? `Sesión con ${nombre}` : "Sesión con la red de apoyo";
+}
 
 // Colores suaves por tipo. Siempre van junto con ETIQUETA_TIPO, nunca solos.
 export const CLASES_TIPO: Record<TipoHallazgo, string> = {

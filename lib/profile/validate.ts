@@ -18,78 +18,12 @@
 // 3. Banderas: términos no permitidos en resumen, descripcion y preguntas. No quitan nada;
 //    solo avisan al coach. Las rutas de "banderas" se refieren al update YA LIMPIO (el que
 //    ve el coach).
+//    En cambios[i].resumen, que llega a la persona, también busca condiciones, términos internos y
+//    citas copiadas (R-004.59). La ruta de decisión repite esa revisión con el texto final.
 import type { Bandera, CambioDimension, Descartado, DimensionId, ProfileUpdate } from "@/lib/profile/schema";
+import { buscarTerminos, citaEnNota, MIN_CITA, normalizar, revisarTextoPersona } from "@/lib/profile/terminos";
 
-// ---------------------------------------------------------------------------
-// Normalización
-// ---------------------------------------------------------------------------
-
-// Comillas y signos que se recortan de los bordes de una cita.
-const BORDES = /^[\s"'«»“”‘’`.,;:!?¡¿()[\]{}…-]+|[\s"'«»“”‘’`.,;:!?¡¿()[\]{}…-]+$/g;
-
-export function normalizar(texto: string): string {
-  return texto
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "") // quita acentos y diéresis (la ñ queda como n)
-    .toLowerCase()
-    .replace(/[“”«»„]/g, '"') // todas las comillas dobles iguales
-    .replace(/[‘’‚`]/g, "'") // todas las comillas simples iguales
-    .replace(/…/g, "...")
-    .replace(/[–—]/g, "-")
-    .replace(/\s+/g, " ")
-    .trim()
-    .replace(BORDES, "");
-}
-
-// Largo mínimo de una cita ya normalizada.
-export const MIN_CITA = 8;
-
-const LETRA_O_DIGITO = /[\p{L}\p{N}]/u;
-
-// true si "cita" aparece en "nota" con límites de palabra. Ambas ya normalizadas.
-// Revisa cada aparición: basta una que no tenga letra o dígito pegado a los lados.
-export function citaEnNota(cita: string, nota: string): boolean {
-  if (cita.length < MIN_CITA) return false;
-  for (let i = nota.indexOf(cita); i !== -1; i = nota.indexOf(cita, i + 1)) {
-    const antes = nota[i - 1] ?? "";
-    const despues = nota[i + cita.length] ?? "";
-    if (!LETRA_O_DIGITO.test(antes) && !LETRA_O_DIGITO.test(despues)) return true;
-  }
-  return false;
-}
-
-// ---------------------------------------------------------------------------
-// Términos no permitidos
-// ---------------------------------------------------------------------------
-
-// Se buscan sobre el texto normalizado (sin acentos, minúsculas).
-// "nivel" y "grado" solo cuentan junto a palabras de severidad: "nivel de inglés" no es bandera.
-const TERMINOS: { termino: string; patron: RegExp }[] = [
-  { termino: "diagnóstico", patron: /\bdiagnostic\w*/ }, // diagnóstico, diagnosticar, diagnosticada
-  { termino: "trastorno", patron: /\btrastornos?\b/ },
-  { termino: "asperger", patron: /\basperger\b/ },
-  { termino: "autismo leve/moderado/severo", patron: /\bautismo (leve|moderado|severo)\b/ },
-  { termino: "nivel 1/2/3", patron: /\bnivel (1|2|3|uno|dos|tres)\b/ },
-  {
-    termino: "nivel o grado de autismo/apoyo/severidad/funcionamiento",
-    patron: /\b(nivel|niveles|grado|grados) de (autismo|apoyo|severidad|funcionamiento)\b/,
-  },
-  { termino: "alto/bajo funcionamiento", patron: /\b(alto|bajo) funcionamiento\b/ },
-  { termino: "paciente", patron: /\bpacientes?\b/ },
-  { termino: "debilidad", patron: /\bdebilidad(es)?\b/ },
-  { termino: "déficit", patron: /\bdeficits?\b/ },
-  { termino: "síntoma", patron: /\bsintomas?\b/ },
-];
-
-// "TEA" se busca en el texto original y solo en mayúsculas, para no confundirlo con otras palabras.
-const SIGLA_TEA = /\bTEA\b/;
-
-export function buscarTerminos(texto: string): string[] {
-  const normal = normalizar(texto);
-  const encontrados = TERMINOS.filter((t) => t.patron.test(normal)).map((t) => t.termino);
-  if (SIGLA_TEA.test(texto)) encontrados.push("TEA");
-  return encontrados;
-}
+export { buscarTerminos, citaEnNota, MIN_CITA, normalizar };
 
 // ---------------------------------------------------------------------------
 // sanitizeUpdate
@@ -149,7 +83,16 @@ export function sanitizeUpdate(update: ProfileUpdate, nota: string): ResultadoSa
   const revisar = (texto: string, ruta: string) => {
     for (const termino of buscarTerminos(texto)) banderas.push({ ruta, termino, motivo: "termino_no_permitido" });
   };
-  limpio.cambios.forEach((c, i) => revisar(c.resumen, `cambios[${i}].resumen`));
+  const citas = [
+    ...limpio.cambios.flatMap((c) => c.evidencia),
+    ...limpio.senales.flatMap((s) => s.evidencia),
+    ...limpio.relacionesConPerfilPrevio.flatMap((r) => r.evidencia),
+  ].map((e) => e.cita);
+  limpio.cambios.forEach((c, i) => {
+    for (const { termino, motivo } of revisarTextoPersona(c.resumen, citas)) {
+      banderas.push({ ruta: `cambios[${i}].resumen`, termino, motivo });
+    }
+  });
   limpio.senales.forEach((s, i) => revisar(s.descripcion, `senales[${i}].descripcion`));
   limpio.relacionesConPerfilPrevio.forEach((r, i) => revisar(r.descripcion, `relacionesConPerfilPrevio[${i}].descripcion`));
   limpio.preguntasParaSiguienteSesion.forEach((p, i) => revisar(p, `preguntasParaSiguienteSesion[${i}]`));

@@ -23,68 +23,10 @@ import {
   type PlanProposal,
   type TipoItemPlan,
 } from "@/lib/plan/schema";
-import { DOMINIOS_FE, SENALES } from "@/lib/profile/schema";
-import { buscarTerminos, citaEnNota, normalizar } from "@/lib/profile/validate";
+import { DOMINIOS_FE } from "@/lib/profile/schema";
+import { buscarCondiciones, buscarInternos, buscarTerminos, citasCopiadas, TERMINOS_CONDICION } from "@/lib/profile/terminos";
 
-// ---------------------------------------------------------------------------
-// Listas de términos
-// ---------------------------------------------------------------------------
-
-// Decisión 9 (a): lista corta de nombres de condiciones que buscarTerminos no cubre siempre
-// (buscarTerminos solo marca "autismo" con leve, moderado o severo). La lista larga es una
-// pregunta para el partner.
-export const TERMINOS_CONDICION: readonly string[] = ["autismo", "autista", "TEA", "Asperger"];
-
-// Cómo se busca cada término de TERMINOS_CONDICION, sobre el texto normalizado (sin acentos,
-// minúsculas) y por palabra completa, con plural y variantes cercanas.
-const PATRONES_CONDICION: { termino: string; patron: RegExp }[] = [
-  { termino: "autismo", patron: /\bautismos?\b/ },
-  { termino: "autista", patron: /\b(autistas?|autistic[oa]s?)\b/ },
-  { termino: "Asperger", patron: /\baspergers?\b/ },
-];
-// "TEA" se busca en el texto original y solo en mayúsculas, como en buscarTerminos: en minúsculas
-// "tea" es otra palabra.
-const SIGLA_TEA = /\bTEA\b/;
-
-// Palabras que la persona no debe leer (C-09): etiquetas de DOMINIOS_FE, etiquetas de SENALES
-// (como R-005.18) y "función ejecutiva". Se buscan normalizadas y por palabra completa.
-const TERMINOS_INTERNOS: string[] = [
-  ...DOMINIOS_FE.map((d) => d.etiqueta),
-  ...SENALES.map((s) => s.etiqueta),
-  "función ejecutiva",
-  "funciones ejecutivas",
-];
-
-// Escapa un texto para usarlo dentro de una expresión regular.
-const escapar = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-
-// Patrón de "palabra completa" que también sirve para frases: no puede haber una letra o un
-// dígito pegado antes o después. Se arma una vez por término.
-const PATRONES_INTERNOS = TERMINOS_INTERNOS.map((termino) => ({
-  termino,
-  patron: new RegExp(`(?<![\\p{L}\\p{N}])${escapar(normalizar(termino))}(?![\\p{L}\\p{N}])`, "u"),
-}));
-
-function buscarCondiciones(texto: string, yaMarcados: string[]): string[] {
-  const normal = normalizar(texto);
-  const encontrados = PATRONES_CONDICION.filter((t) => t.patron.test(normal)).map((t) => t.termino);
-  if (SIGLA_TEA.test(texto)) encontrados.push("TEA");
-  // Si buscarTerminos ya marcó el mismo término en este campo (p. ej. "asperger", "TEA" o
-  // "autismo leve/moderado/severo"), no se repite como mencion_condicion: una sola bandera basta.
-  const marcados = yaMarcados.map(normalizar);
-  return encontrados.filter((t) => !marcados.some((m) => m.includes(normalizar(t))));
-}
-
-function buscarInternos(texto: string): string[] {
-  const normal = normalizar(texto);
-  return PATRONES_INTERNOS.filter((t) => t.patron.test(normal)).map((t) => t.termino);
-}
-
-// Citas del snapshot que aparecen completas en el texto (con límites de palabra).
-function citasCopiadas(texto: string, citas: string[]): string[] {
-  const normal = normalizar(texto);
-  return citas.filter((c) => citaEnNota(normalizar(c), normal));
-}
+export { TERMINOS_CONDICION };
 
 // ---------------------------------------------------------------------------
 // Banderas de un ítem

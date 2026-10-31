@@ -2,7 +2,8 @@
 //
 // Registra cada llamada al modelo en audit_log (éxito o error, tokens y latencia).
 // Se llama dentro de un withRls(...): la política audit_log_insert_self exige que
-// userId sea el usuario de la sesión.
+// userId sea el usuario de la sesión. La fila va en su propia transacción, separada de la del
+// evento, para que una llamada exitosa quede registrada aunque falle el guardado (R-004.45).
 import "server-only";
 import type { Tx } from "@/lib/db/rls";
 import { auditLog } from "@/lib/db/schema";

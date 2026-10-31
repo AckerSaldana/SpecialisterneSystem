@@ -13,6 +13,8 @@
 //   - Los dominios de función ejecutiva son solo los nombres de BRIEF-A (F-017), sin ítems.
 
 import { z } from "zod";
+// Solo el tipo: lib/followup/schema.ts importa valores de este archivo, y al revés fallaría al cargar.
+import type { PayloadSeguimientoIA } from "@/lib/followup/schema";
 
 // ---------------------------------------------------------------------------
 // Catálogos
@@ -101,7 +103,7 @@ const Cita = z
 export const EvidenciaPropuesta = z.strictObject({ cita: Cita });
 export type EvidenciaPropuesta = z.infer<typeof EvidenciaPropuesta>;
 
-const ListaEvidencia = z.array(EvidenciaPropuesta).min(1).max(5);
+export const ListaEvidencia = z.array(EvidenciaPropuesta).min(1).max(5);
 
 export const CambioDimension = z.strictObject({
   dimension: DimensionId,
@@ -208,14 +210,30 @@ export const Descartado = z.strictObject({
   // "dimension_duplicada": ruta del cambio, p. ej. "cambios[3]", y cita "".
   ruta: z.string(),
   cita: z.string(),
-  motivo: z.enum(["cita_no_encontrada", "dimension_duplicada"]),
+  // Spec 004, con ruta del elemento y cita "": "item_no_existe", "avance_duplicado",
+  // "ficha_no_valida" y "siguiente_paso_sin_destino".
+  motivo: z.enum([
+    "cita_no_encontrada",
+    "dimension_duplicada",
+    "item_no_existe",
+    "avance_duplicado",
+    "ficha_no_valida",
+    "siguiente_paso_sin_destino",
+  ]),
 });
 export type Descartado = z.infer<typeof Descartado>;
 
 export const Bandera = z.strictObject({
   ruta: z.string(),
   termino: z.string(),
-  motivo: z.literal("termino_no_permitido"),
+  // "solo_participacion" (R-004.33) va con termino vacío y tiene su propio texto.
+  motivo: z.enum([
+    "termino_no_permitido",
+    "solo_participacion",
+    "mencion_condicion",
+    "termino_interno",
+    "cita_en_texto_persona",
+  ]),
 });
 export type Bandera = z.infer<typeof Bandera>;
 
@@ -233,15 +251,36 @@ export const PayloadNoMeRepresenta = z.strictObject({
   comentario: z.string().max(2000),
 });
 
-export const ProfileEventPayload = z.discriminatedUnion("tipo", [PayloadPropuestaIA, PayloadNoMeRepresenta]);
-export type ProfileEventPayload = z.infer<typeof ProfileEventPayload>;
+// Cada lector parsea con el esquema de su tipo; aquí solo se junta el tipo de TypeScript.
+export type ProfileEventPayload =
+  | z.infer<typeof PayloadPropuestaIA>
+  | z.infer<typeof PayloadNoMeRepresenta>
+  | PayloadSeguimientoIA;
 
 // Lo que el coach aprobó de una propuesta (profile_events.approved_payload).
 export const Aprobacion = z.strictObject({
   cambios: z.array(z.int().nonnegative()), // índices de update.cambios
   senales: z.array(z.int().nonnegative()), // índices de update.senales
+  // Spec 004. Con estos valores por defecto, los approved_payload que ya existen se siguen leyendo.
+  avance: z.array(z.int().nonnegative()).default([]), // índices de update.avance
+  preguntas: z.array(z.int().nonnegative()).default([]), // índices de update.preguntasParaSiguienteSesion
+  contexto: z.array(z.int().nonnegative()).default([]), // índices de update.contexto
+  siguientePaso: z.boolean().default(false),
+  // El tipo y el texto que eligió el coach (R-004.43, R-004.44). "indice" es de update.cambios.
+  // La propuesta original queda en payload, así que la decisión guarda los dos.
+  ediciones: z
+    .array(
+      z.strictObject({
+        indice: z.int().nonnegative(),
+        tipo: TipoHallazgo.optional(),
+        resumen: z.string().trim().min(1).max(1200).optional(),
+      }),
+    )
+    .default([]),
 });
 export type Aprobacion = z.infer<typeof Aprobacion>;
+// Una aprobación antes de los valores por defecto, como la de un approved_payload anterior a 004.
+export type AprobacionEntrada = z.input<typeof Aprobacion>;
 
 // ---------------------------------------------------------------------------
 // Utilidades de presentación

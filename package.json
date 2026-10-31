@@ -14,6 +14,7 @@
     "seed": "tsx scripts/seed.ts",
     "eval": "tsx --conditions=react-server eval/compare.ts",
     "rls-check": "tsx scripts/rls-check.ts",
+    "followup-check": "tsx --conditions=react-server scripts/followup-check.ts",
     "purge-retirados": "tsx scripts/purge-retirados.ts"
   },
   "dependencies": {

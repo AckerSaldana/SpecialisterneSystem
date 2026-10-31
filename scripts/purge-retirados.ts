@@ -30,7 +30,12 @@ type Tx = TransactionSql;
 // Todas tienen columna engagement_id. engagements y consent_events no se tocan nunca.
 // Orden por llaves foráneas: lo que apunta a otra tabla se borra antes. persona_plans y
 // plan_items van antes que plans, y plans antes que profile_snapshots (plans.profile_snapshot_id).
+// Spec 004: sus cuatro tablas apuntan a plan_items, sessions y profile_events, así que van primero.
 const TABLAS_PURGA = [
+  "plan_item_updates",
+  "followup_context",
+  "signal_states",
+  "strong_alerts",
   "recommendations",
   "persona_plans",
   "plan_items",
@@ -167,15 +172,33 @@ async function sembrar(tx: Tx, engagementId: string) {
     values (${engagementId}, ${v}, '{}'::jsonb, ${ev.id}, ${COACH}) returning id`;
   await tx`insert into app.persona_profiles (snapshot_id, engagement_id, version, contenido) values (${snap.id}, ${engagementId}, ${v}, '{}'::jsonb)`;
   // Spec 003: un plan necesita su perfil base y quién lo creó; el aprobado lleva su copia para la persona.
+  // La versión sigue a la última: el demo puede tener planes aprobados de un recorrido.
+  const [{ vp }] = await tx`select coalesce(max(version), 0)::int + 1 as vp from app.plans where engagement_id = ${engagementId}`;
   const [plan] = await tx`
     insert into app.plans (engagement_id, titulo, status, version, profile_snapshot_id, created_by)
-    values (${engagementId}, 'Plan sintético', 'aprobado', 1, ${snap.id}, ${COACH}) returning id`;
+    values (${engagementId}, 'Plan sintético', 'aprobado', ${vp}, ${snap.id}, ${COACH}) returning id`;
   const [item] = await tx`
     insert into app.plan_items (plan_id, engagement_id, tipo, descripcion) values (${plan.id}, ${engagementId}, 'objetivo', 'Objetivo sintético') returning id`;
   await tx`
-    insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${plan.id}, ${engagementId}, 1, '{"items":[]}'::jsonb)`;
+    insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${plan.id}, ${engagementId}, ${vp}, '{"items":[]}'::jsonb)`;
   await tx`
     insert into app.recommendations (engagement_id, catalog_unit_id, plan_item_id, razon) values (${engagementId}, 'CU-001', ${item.id}, 'Razón sintética')`;
+  // Spec 004: una fila en cada tabla, y un evento con plan_base_id para cubrir el ciclo de llaves
+  // plans → profile_snapshots → profile_events → plans.
+  await tx`update app.profile_events set plan_base_id = ${plan.id} where id = ${ev.id}`;
+  await tx`
+    insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+    values (${engagementId}, ${item.id}, ${s.id}, ${ev.id}, 'avanza', 'Avance sintético', '[]'::jsonb, ${COACH})`;
+  await tx`
+    insert into app.followup_context (engagement_id, tipo, texto, plan_item_id, session_id, event_id, approved_by)
+    values (${engagementId}, 'siguiente_paso', 'Paso sintético', ${item.id}, ${s.id}, ${ev.id}, ${COACH})`;
+  await tx`
+    insert into app.signal_states (engagement_id, tipo, estado, event_id, created_by)
+    values (${engagementId}, 'cambio_de_vida', 'cerrada', ${ev.id}, ${COACH})`;
+  // "do nothing": una alerta vigente de un recorrido no debe tumbar la prueba.
+  await tx`
+    insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por)
+    values (${engagementId}, 'cambio_de_vida', ${ev.id}, ${COACH}) on conflict do nothing`;
 }
 
 async function eventoConFecha(tx: Tx, engagementId: string, userId: string, tipo: "otorgado" | "retirado", hace: string) {

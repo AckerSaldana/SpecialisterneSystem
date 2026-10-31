@@ -2,7 +2,7 @@
 
 # 005 · Vista de la persona y recursos
 
-- Estado: Borrador · Versión 4 · 2026-10-30
+- Estado: Borrador · Versión 5 · 2026-10-30
 - Fuentes: CONTEXTO §4 (F-005), §5, §6 (paso 5, Valor, Arquitectura), §7, §11; D-015, D-017 y D-021 (propuestas en CONTEXTO §9); D-031 a D-035 (propuestas en CONTEXTO §9); REGLAS §2.5, §3, §6 y §7; C-01, C-02, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-14, C-16, C-17, C-18
 - Depende de: 001 (perfil aprobado y `persona_profiles`), 002 (consentimiento vigente, bloqueo al retirarlo, lista de lo que escribe la persona, aviso de privacidad, `private.app_mi_acompanamiento()` y `scripts/rls-check.ts`), 003 (plan vigente, `persona_plans` con `itemsAnteriores`, `origen_item_id`, `TERMINOS_CONDICION` y la regla de bloqueo de R-003.30), 006 (qué se bloquea en la etapa `cierre`). Sus migraciones van después de las de 003.
 
@@ -86,7 +86,7 @@ Entra:
 | R-005.24 | Después de enviar, y también al volver a cargar la página, la persona ve en esa parte del perfil o del plan que su mensaje está pendiente y la fecha en que lo envió. Hoy ese estado vive en el estado local de `NotMeButton` y se pierde al recargar. | C-14 (sin sorpresas); hallazgo del código (`components/persona/not-me-button.tsx`) |
 | R-005.25 | El coach ve los "no me representa" en el historial del acompañamiento, como ya hace `components/coach/event-timeline.tsx`, y además un aviso con el número de comentarios en estado `proposed` en la página del acompañamiento. Cada comentario dice si es sobre el perfil, el plan o el resumen de cierre (R-005.33). | As-built; el aviso es interpretación del equipo |
 | R-005.26 | El coach cierra un "no me representa" del perfil con una de dos opciones y con confirmación: "Hubo cambios al perfil" (estado `approved`) o "Sin cambios al perfil" (estado `rejected`). Se guardan `decided_by` y `decided_at`. La ruta de decisión actual responde 409 a estos eventos, así que el cierre usa una ruta propia. Cerrar un comentario no crea un snapshot ni una versión de `persona_profiles`. | C-04; hallazgo del código (`app/api/profile-events/[id]/decision/route.ts`) |
-| R-005.27 | Un cambio al perfil entra por el camino normal de 001: el coach registra la sesión, la IA propone y el coach aprueba. La opción "Hubo cambios al perfil" solo se puede elegir si existe una `propuesta_ia` aprobada en el acompañamiento con `decided_at` posterior al comentario; el coach elige cuál y queda guardada en `resuelto_por_evento`. Sin esa propuesta, la opción aparece deshabilitada con su explicación. | C-04, C-05; interpretación del equipo |
+| R-005.27 | Un cambio al perfil entra por el camino normal de 001: el coach registra la sesión, la IA propone y el coach aprueba. La opción "Hubo cambios al perfil" solo se puede elegir si existe un evento con columna `tipo = 'propuesta_ia'`, de 001 o de seguimiento, con `status = 'approved'`, `decided_at` posterior al comentario y `approved_payload.cambios` no vacío, porque 004 permite aprobar sin cambiar el perfil (R-004.56); el coach elige cuál y queda guardada en `resuelto_por_evento`. Sin esa propuesta, la opción aparece deshabilitada con su explicación. | C-04, C-05; interpretación del equipo |
 | R-005.28 | Cuando el coach cierra el comentario, la persona ve el resultado y la fecha en esa parte del perfil o del plan, y el botón vuelve a estar disponible. | CONTEXTO §4 (F-005, revisión conjunta); interpretación del equipo |
 | R-005.32 | La persona puede enviar "Esto no me representa" sobre cada ítem de la versión vigente de su plan en `persona_plans` y sobre el plan en general, con comentario opcional de hasta 2000 caracteres. El envío crea un `profile_event` de tipo `no_me_representa` en estado `proposed` y no cambia el plan. | CONTEXTO §6 (paso 5); extenderlo al plan: propuesta (Claude), decide Acker |
 | R-005.33 | `PayloadNoMeRepresenta` (`lib/profile/schema.ts`) agrega `origen` (`perfil`, `plan` o `cierre`) y, solo con `origen = 'plan'`, `planItemId` (nulo para el plan en general) y `planVersion`. Un evento guardado sin `origen` se lee como `perfil`. El valor `cierre` es el que usa 006 para el resumen de cierre (R-006.8); con este requisito y R-005.43, la decisión abierta 6 de 006 queda resuelta. La ruta `/api/persona/feedback` rechaza con 400 un `planItemId` que no esté en la versión vigente de `persona_plans` de ese acompañamiento. | Propuesta (Claude), decide Acker; alternativa en la decisión abierta 13 |
@@ -129,7 +129,7 @@ Entra:
 | CA-005.10 | Dado un módulo en `borrador`, cuando la persona abre `/persona`, entonces no lo ve; cuando el coach lo aprueba, entonces lo ve y el módulo anterior queda en `retirado`. | R-005.19 | RLS + navegador |
 | CA-005.11 | Dada una persona que envió "Esto no me representa", cuando recarga la página, entonces ve "Enviaste esto el {fecha}. Tu coach lo va a revisar contigo." en esa dimensión. | R-005.24 | navegador |
 | CA-005.12 | Dado un comentario pendiente, cuando el coach lo cierra con "Sin cambios al perfil", entonces el evento queda `rejected` con `decided_by` y `decided_at`, `persona_profiles` y `profile_snapshots` no tienen versión nueva y la persona ve el resultado. | R-005.26, R-005.28 | prueba offline + navegador |
-| CA-005.13 | Dado un comentario pendiente y ninguna `propuesta_ia` aprobada después de él, cuando el coach abre el cierre, entonces "Hubo cambios al perfil" está deshabilitada; y si la ruta recibe esa opción, responde 409. | R-005.27 | prueba offline + navegador |
+| CA-005.13 | Dado un comentario pendiente y ninguna propuesta aprobada con cambios después de él, cuando el coach abre el cierre, entonces "Hubo cambios al perfil" está deshabilitada; y si la ruta recibe esa opción, o un evento aprobado solo con avance o con señales, responde 409. | R-005.27 | prueba offline + navegador |
 | CA-005.14 | Dado el modo Calma y la fuente OpenDyslexic guardados en la cookie, cuando la persona abre su módulo, entonces el `<html>` trae `data-mode="calma"` y `data-font="opendyslexic"`, y ningún elemento tiene animación ni transición activa. | R-005.29, R-005.30 | navegador |
 | CA-005.15 | Dada cualquier llamada al modelo de esta spec, cuando termina, entonces hay una fila en `audit_log` con `accion` igual a `propose_recommendations` o `propose_module`, con `modelo` y `prompt_version`, y la fila no tiene texto del perfil, de las notas ni del comentario. | R-005.21 | prueba offline |
 | CA-005.16 | Dado un plan vigente cuyos dominios no coinciden con ninguna unidad verificada, cuando el coach pide recursos, entonces el modelo (simulado) no se invoca y el coach ve "No hay recursos verificados que coincidan con este plan." | R-005.8 | prueba offline |
@@ -290,6 +290,10 @@ No aplica: esta spec es de requisitos. Las tareas se escriben cuando pase a "rev
 - ¿Tienen un perfil en blanco o inventado que nos puedan compartir?
 
 ## Cambios
+
+Versión 5 · 2026-10-30 · ajuste por 004
+
+- R-005.27 y CA-005.13 exigen `approved_payload.cambios` no vacío, porque 004 permite aprobar sin cambiar el perfil.
 
 Versión 4 · 2026-10-30 · registro en CONTEXTO
 

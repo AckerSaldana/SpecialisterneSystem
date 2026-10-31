@@ -28,7 +28,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUid, authUsers } from "drizzle-orm/supabase";
-import type { Aprobacion, Perfil, PerfilPersona, ProfileEventPayload } from "@/lib/profile/schema";
+import type { Aprobacion, EvidenciaGuardada, Perfil, PerfilPersona, ProfileEventPayload } from "@/lib/profile/schema";
 import type { EvidenciaPlan, PayloadPlanIA, PlanPersona } from "@/lib/plan/schema";
 
 // Todas las tablas viven en el esquema "app". La Data API de Supabase (PostgREST) solo
@@ -69,6 +69,19 @@ export const catalogFormat = app.enum("catalog_format", ["lectura", "video", "au
 export const cognitiveLoad = app.enum("cognitive_load", ["baja", "media", "alta"]);
 export const recommendationStatus = app.enum("recommendation_status", ["propuesta", "aprobada", "descartada"]);
 export const consentEventType = app.enum("consent_event_type", ["otorgado", "retirado"]);
+// Spec 004.
+export const sessionType = app.enum("session_type", ["persona", "red_de_apoyo"]);
+export const planItemEstado = app.enum("plan_item_estado", ["avanza", "sin_cambios", "necesita_ajuste", "cumplido"]);
+export const followupContextTipo = app.enum("followup_context_tipo", ["pregunta", "contexto", "siguiente_paso"]);
+// Los mismos cuatro de SENALES (lib/profile/schema.ts).
+export const signalType = app.enum("signal_type", [
+  "estres_desregulacion",
+  "intencion_de_renunciar",
+  "cambio_de_vida",
+  "desajuste_con_rol",
+]);
+export const signalStatus = app.enum("signal_status", ["activa", "cerrada"]);
+export const alertStatus = app.enum("alert_status", ["abierta", "escalada", "atendida"]);
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -82,6 +95,11 @@ const hasConsent = (col: unknown) => sql`(select private.app_has_consent(${col})
 // Spec 003: los ítems solo se escriben mientras su plan está en borrador; persona_plans solo con el plan aprobado.
 const planEnBorrador = (plan: unknown, eng: unknown) => sql`(select private.app_plan_en_borrador(${plan}, ${eng}))`;
 const planAprobado = (plan: unknown, eng: unknown) => sql`(select private.app_plan_aprobado(${plan}, ${eng}))`;
+// Spec 004: una fila de avance o de contexto no puede apuntar a otro acompañamiento.
+const eventoDeSesion = (ev: unknown, ses: unknown, eng: unknown) =>
+  sql`(select private.app_evento_de_sesion(${ev}, ${ses}, ${eng}))`;
+const itemDelAcompanamiento = (item: unknown, eng: unknown) =>
+  sql`(select private.app_item_del_acompanamiento(${item}, ${eng}))`;
 
 // ---------------------------------------------------------------------------
 // Organizaciones y usuarios
@@ -207,6 +225,8 @@ export const sessions = app.table(
       .references(() => users.id),
     notaOriginal: text("nota_original").notNull(),
     audioPath: text("audio_path"),
+    // Spec 004 (R-004.1): con la persona o con su red de apoyo.
+    tipo: sessionType("tipo").notNull().default("persona"),
     realizadaEn: timestamp("realizada_en", { withTimezone: true }).notNull().defaultNow(),
     createdAt: createdAt(),
   },
@@ -249,8 +269,14 @@ export const profileEvents = app.table(
       .notNull()
       .references(() => users.id),
     createdAt: createdAt(),
+    // Spec 004: con qué versión del perfil y con qué plan se generó la propuesta (R-004.27, R-004.41).
+    perfilVersionBase: integer("perfil_version_base"),
+    // "set null" evita el ciclo plans → profile_snapshots → profile_events → plans, que rompería la purga.
+    planBaseId: uuid("plan_base_id").references((): AnyPgColumn => plans.id, { onDelete: "set null" }),
   },
   (t) => [
+    // R-004.30: una sola propuesta de la IA por sesión, aunque lleguen dos reintentos a la vez.
+    uniqueIndex("profile_events_una_propuesta").on(t.sessionId).where(sql`${t.tipo} = 'propuesta_ia'`),
     pgPolicy("profile_events_select_coach", {
       for: "select",
       to: authenticatedRole,
@@ -633,6 +659,176 @@ export const invitations = app.table(
       to: authenticatedRole,
       using: sql`${t.personaId} = ${authUid} and ${t.usadaEn} is null and ${t.reemplazadaEn} is null and ${t.expiraEn} > now()`,
       withCheck: sql`${t.personaId} = ${authUid} and ${t.reemplazadaEn} is null`,
+    }),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Seguimiento (spec 004): avance del plan, contexto, estado de señales y alertas fuertes.
+// Solo el coach del acompañamiento, con consentimiento vigente. La persona no tiene políticas (C-09).
+// ---------------------------------------------------------------------------
+
+// Una fila por cada estado aprobado de un ítem, sin borrar los anteriores (R-004.10).
+export const planItemUpdates = app.table(
+  "plan_item_updates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    // "restrict": un borrado que se salte R-003.32 falla en lugar de perder la historia.
+    planItemId: uuid("plan_item_id")
+      .notNull()
+      .references(() => planItems.id, { onDelete: "restrict" }),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => sessions.id),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => profileEvents.id),
+    estado: planItemEstado("estado").notNull(),
+    resumen: text("resumen").notNull(),
+    evidencia: jsonb("evidencia").$type<EvidenciaGuardada[]>().notNull(),
+    approvedBy: uuid("approved_by")
+      .notNull()
+      .references(() => users.id),
+    approvedAt: timestamp("approved_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("plan_item_updates_evento_item").on(t.eventId, t.planItemId),
+    pgPolicy("plan_item_updates_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("plan_item_updates_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.approvedBy} = ${authUid} and ${hasConsent(t.engagementId)} and ${eventoDeSesion(t.eventId, t.sessionId, t.engagementId)} and ${itemDelAcompanamiento(t.planItemId, t.engagementId)}`,
+    }),
+  ],
+);
+
+// Preguntas, contexto y siguiente paso que el coach aprobó para la siguiente sesión (R-004.21, R-004.53).
+// Nunca en persona_profiles (C-09). Quitar es una marca, no un borrado (R-004.23).
+export const followupContext = app.table(
+  "followup_context",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    tipo: followupContextTipo("tipo").notNull(),
+    texto: text("texto").notNull(),
+    evidencia: jsonb("evidencia").$type<EvidenciaGuardada[]>().notNull().default([]),
+    planItemId: uuid("plan_item_id").references(() => planItems.id),
+    knowledgeCardId: text("knowledge_card_id").references(() => knowledgeCards.id),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => sessions.id),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => profileEvents.id),
+    approvedBy: uuid("approved_by")
+      .notNull()
+      .references(() => users.id),
+    approvedAt: timestamp("approved_at", { withTimezone: true }).notNull().defaultNow(),
+    quitadaPor: uuid("quitada_por").references(() => users.id),
+    quitadaEn: timestamp("quitada_en", { withTimezone: true }),
+  },
+  (t) => [
+    pgPolicy("followup_context_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("followup_context_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.approvedBy} = ${authUid} and ${hasConsent(t.engagementId)} and ${t.quitadaPor} is null and ${t.quitadaEn} is null and ${eventoDeSesion(t.eventId, t.sessionId, t.engagementId)} and (${t.planItemId} is null or ${itemDelAcompanamiento(t.planItemId, t.engagementId)})`,
+    }),
+    // Los permisos por columna (0013) solo dejan escribir quitada_por y quitada_en. Lo ya quitado no cambia.
+    pgPolicy("followup_context_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.quitadaEn} is null`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.quitadaPor} = ${authUid}`,
+    }),
+  ],
+);
+
+// Una fila por cada cambio de estado de una señal (R-004.13). El estado vigente de un tipo es su
+// fila más reciente; sin filas, cuenta como activa. No crea snapshots ni mueve la versión del perfil.
+export const signalStates = app.table(
+  "signal_states",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    tipo: signalType("tipo").notNull(),
+    estado: signalStatus("estado").notNull(),
+    motivo: text("motivo"),
+    eventId: uuid("event_id").references(() => profileEvents.id),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    pgPolicy("signal_states_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("signal_states_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${hasConsent(t.engagementId)}`,
+    }),
+  ],
+);
+
+// Alertas que el coach marca sobre una señal activa. La app no avisa a nadie: el coach la pasa a una
+// persona de Specialisterne fuera del sistema y registra que lo hizo (R-004.16, R-004.42).
+export const strongAlerts = app.table(
+  "strong_alerts",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    tipoSenal: signalType("tipo_senal").notNull(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => profileEvents.id),
+    marcadaPor: uuid("marcada_por")
+      .notNull()
+      .references(() => users.id),
+    marcadaEn: timestamp("marcada_en", { withTimezone: true }).notNull().defaultNow(),
+    nota: text("nota"),
+    estado: alertStatus("estado").notNull().default("abierta"),
+    notaEscalada: text("nota_escalada"),
+    escaladaEn: timestamp("escalada_en", { withTimezone: true }),
+    atendidaEn: timestamp("atendida_en", { withTimezone: true }),
+  },
+  (t) => [
+    uniqueIndex("strong_alerts_una_vigente").on(t.engagementId, t.tipoSenal).where(sql`${t.estado} <> 'atendida'`),
+    pgPolicy("strong_alerts_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("strong_alerts_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.marcadaPor} = ${authUid} and ${hasConsent(t.engagementId)} and ${t.estado} = 'abierta'`,
+    }),
+    pgPolicy("strong_alerts_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
     }),
   ],
 );

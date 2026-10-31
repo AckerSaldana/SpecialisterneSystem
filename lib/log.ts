@@ -5,12 +5,11 @@
 //   - DrizzleQueryError trae "params" (la nota, el perfil, comentarios de la persona).
 //   - El error de Postgres trae "detail" con la fila y su "message" puede incluir valores.
 //   - Los errores del AI SDK pueden traer el texto del modelo o el cuerpo de la petición.
-// resumirError arma un texto corto solo con campos que no llevan contenido. El mismo texto
-// se guarda en audit_log.error.
+//   - El message de un error desconocido puede llevar texto de la nota (R-004.47).
+// resumirError arma un texto corto solo con la clase y el código. El mismo texto se guarda en
+// audit_log.error.
 import { AISDKError } from "ai";
 import { DrizzleQueryError } from "drizzle-orm";
-
-const MAX_MENSAJE = 200;
 
 // Campos de un error de Postgres (paquete postgres) que no traen datos de la fila.
 const CAMPOS_POSTGRES = ["code", "constraint_name", "table_name", "column_name"] as const;
@@ -39,8 +38,10 @@ export function resumirError(e: unknown): string {
     return ["PostgresError", ...camposPostgres(e)].join(" ");
   }
   if (e instanceof Error) {
-    const mensaje = e.message.length > MAX_MENSAJE ? `${e.message.slice(0, MAX_MENSAJE)}…` : e.message;
-    return [`${e.name}: ${mensaje}`, ...camposPostgres(e.cause)].join(" ");
+    // Código de Node o de Postgres, nunca el message. Solo si parece un código y no texto libre.
+    const code = (e as { code?: unknown }).code;
+    const codigo = typeof code === "string" && /^[A-Z0-9_]{1,40}$/.test(code) ? [`code=${code}`] : [];
+    return [e.name, ...codigo, ...camposPostgres(e.cause)].join(" ");
   }
   return typeof e;
 }

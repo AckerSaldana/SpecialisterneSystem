@@ -2,6 +2,7 @@
 //
 // Perfil actual visto por el coach: dimensiones agrupadas por sección, con su
 // evidencia, y las señales activas aparte. Recibe el perfil del último snapshot.
+import type { ReactNode } from "react";
 import {
   DIMENSIONES,
   SECCIONES,
@@ -10,6 +11,7 @@ import {
   etiquetaSenal,
   type EvidenciaGuardada,
   type Perfil,
+  type SenalActiva,
 } from "@/lib/profile/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Citas } from "./citas";
@@ -86,14 +88,22 @@ export function ProfileView({ perfil, fechasSesion }: Props) {
   );
 }
 
-// Señales de riesgo activas. Solo las ve el coach.
-export function SenalesView({ perfil, fechasSesion }: Props) {
-  if (perfil.senalesActivas.length === 0) {
+// Señales de riesgo activas. Solo las ve el coach. Recibe solo las vigentes (R-004.52).
+export function SenalesView({
+  senales,
+  fechasSesion,
+  acciones,
+}: {
+  senales: SenalActiva[];
+  fechasSesion: Record<string, string>;
+  acciones?: (senal: SenalActiva) => ReactNode;
+}) {
+  if (senales.length === 0) {
     return <p className="text-sm text-muted-foreground">No hay señales activas.</p>;
   }
   return (
     <ul className="flex flex-col gap-3">
-      {perfil.senalesActivas.map((s, i) => (
+      {senales.map((s, i) => (
         <li key={`${s.eventoId}-${i}`}>
           <Card>
             <CardHeader>
@@ -103,6 +113,7 @@ export function SenalesView({ perfil, fechasSesion }: Props) {
               <p className="prose-measure">{s.descripcion}</p>
               <p className="mt-2 text-xs text-muted-foreground">Registrada el {formatFecha(s.detectadaEn)}</p>
               <Evidencia evidencia={s.evidencia} fechasSesion={fechasSesion} />
+              {acciones?.(s)}
             </CardContent>
           </Card>
         </li>

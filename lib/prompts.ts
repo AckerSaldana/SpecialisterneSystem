@@ -9,6 +9,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { ENGAGEMENT_CONFIG, type EngagementType } from "@/lib/engagements/config";
 import type { IndiceEvidencia } from "@/lib/plan/evidence";
+import { ESTADOS_AVANCE, etiquetaEstadoAvance, type EstadoAvance, type TipoSesion } from "@/lib/followup/schema";
 import { TIPOS_ITEM_PLAN } from "@/lib/plan/schema";
 import { DIMENSIONES, DOMINIOS_FE, SECCIONES, SENALES, type Perfil } from "@/lib/profile/schema";
 
@@ -16,6 +17,8 @@ import { DIMENSIONES, DOMINIOS_FE, SECCIONES, SENALES, type Perfil } from "@/lib
 export const PROMPT_VERSION = "2026-10-29_profile-update";
 // Spec 003 (R-003.43). Se guarda en plans.prompt_version y en audit_log.
 export const PROMPT_VERSION_PLAN = "2026-10-29_plan-acompanamiento";
+// Spec 004. Se guarda en profile_events.prompt_version y en audit_log. El prompt de 001 no cambia.
+export const PROMPT_VERSION_SEGUIMIENTO = "2026-10-30_seguimiento";
 
 // Todo lo que está arriba de esta línea en el .md es encabezado para humanos y no se envía.
 // Se busca como línea completa para no confundirla con una mención dentro del encabezado.
@@ -57,6 +60,11 @@ function llenar(version: string, reemplazos: Record<string, string>): string {
 }
 
 const listaDominios = () => DOMINIOS_FE.map((d) => `- ${d.id}: ${d.etiqueta}`).join("\n");
+const listaSenales = () => SENALES.map((s) => `- ${s.id}: ${s.etiqueta}`).join("\n");
+const listaDimensiones = () => {
+  const seccion = (id: string) => SECCIONES.find((s) => s.id === id)!.etiqueta;
+  return DIMENSIONES.map((d) => `- ${d.id}: ${d.etiqueta} (${seccion(d.seccion)})`).join("\n");
+};
 
 // ===========================================================================
 // Perfil (spec 001)
@@ -67,11 +75,7 @@ let cachePerfil: string | null = null;
 export function systemPromptProfileUpdate(): string {
   if (cachePerfil) return cachePerfil;
 
-  const seccion = (id: string) => SECCIONES.find((s) => s.id === id)!.etiqueta;
-  const dimensiones = DIMENSIONES.map((d) => `- ${d.id}: ${d.etiqueta} (${seccion(d.seccion)})`).join("\n");
-  const senales = SENALES.map((s) => `- ${s.id}: ${s.etiqueta}`).join("\n");
-
-  cachePerfil = llenar(PROMPT_VERSION, { DIMENSIONES: dimensiones, DOMINIOS_FE: listaDominios(), SENALES: senales });
+  cachePerfil = llenar(PROMPT_VERSION, { DIMENSIONES: listaDimensiones(), DOMINIOS_FE: listaDominios(), SENALES: listaSenales() });
   return cachePerfil;
 }
 
@@ -192,5 +196,90 @@ export function mensajeUsuarioPlan({ nombrePila, engagementType, indice, perfil 
     "<perfil_aprobado>",
     JSON.stringify({ dimensiones }, null, 2),
     "</perfil_aprobado>",
+  ].join("\n");
+}
+
+// ===========================================================================
+// Sesiones de seguimiento (spec 004)
+// ===========================================================================
+
+// System prompt de seguimiento. Mismo filtro de fichas que el plan (R-004.24).
+export function systemPromptSeguimiento(fichas: (FichaPrompt & { verificada?: boolean })[]): string {
+  const verificadas = soloVerificadas(fichas);
+  return llenar(PROMPT_VERSION_SEGUIMIENTO, {
+    DIMENSIONES: listaDimensiones(),
+    DOMINIOS_FE: listaDominios(),
+    SENALES: listaSenales(),
+    ESTADOS_AVANCE: ESTADOS_AVANCE.map((e) => `- ${e.id}: ${e.etiqueta}`).join("\n"),
+    FICHAS:
+      verificadas.length === 0
+        ? "No hay fichas verificadas. Si propones un siguiente paso, tiene que salir de un punto del plan y `fichaId` queda en null."
+        : textoFichas(verificadas),
+  });
+}
+
+// Un punto del plan tal como entra al prompt: con ID corto, nunca con el id real (R-004.54).
+export type ItemPrompt = { ref: string; tipo: string; descripcion: string; ultimoEstado: EstadoAvance | null };
+
+export type EntradaSeguimiento = {
+  nota: string;
+  nombrePila: string;
+  engagementType: EngagementType;
+  tipoSesion: TipoSesion;
+  // Con solo sus señales vigentes (perfilConSenalesVigentes, R-004.52).
+  perfilPrevio: Perfil;
+  itemsPlan: ItemPrompt[];
+  contextoGuardado: { tipo: "pregunta" | "contexto" | "siguiente_paso"; texto: string }[];
+};
+
+const TIPO_SESION_PROMPT: Record<TipoSesion, string> = {
+  persona: "sesión con la persona",
+  red_de_apoyo: "sesión con la red de apoyo (el líder y el mentor)",
+};
+
+// Mensaje de usuario de seguimiento. No recibe datos de la verificación del diagnóstico (R-004.36)
+// ni notas completas de sesiones anteriores.
+export function mensajeUsuarioSeguimiento({
+  nota,
+  nombrePila,
+  engagementType,
+  tipoSesion,
+  perfilPrevio,
+  itemsPlan,
+  contextoGuardado,
+}: EntradaSeguimiento): string {
+  const engagement = ENGAGEMENT_CONFIG[engagementType];
+  const puntos = itemsPlan.map((i) => ({
+    id: i.ref,
+    tipo: i.tipo,
+    descripcion: i.descripcion,
+    ultimoEstado: i.ultimoEstado ? etiquetaEstadoAvance(i.ultimoEstado) : "Sin avance registrado",
+  }));
+  return [
+    `Nombre de pila de la persona: ${nombrePila}`,
+    `Tipo de acompañamiento: ${engagement.etiqueta}. ${engagement.descripcion}`,
+    `Tipo de sesión: ${TIPO_SESION_PROMPT[tipoSesion]}`,
+    "",
+    "Perfil previo aprobado por el coach, con las señales activas (JSON):",
+    "<perfil_previo>",
+    JSON.stringify(perfilParaModelo(perfilPrevio), null, 2),
+    "</perfil_previo>",
+    "",
+    itemsPlan.length > 0
+      ? "Puntos vigentes del plan aprobado (JSON). En `itemRef` usa su id tal cual:"
+      : "Este acompañamiento no tiene plan aprobado. Deja `avance` vacío:",
+    "<plan_aprobado>",
+    JSON.stringify(puntos, null, 2),
+    "</plan_aprobado>",
+    "",
+    "Lo que el coach guardó para esta sesión (JSON):",
+    "<contexto_guardado>",
+    JSON.stringify(contextoGuardado, null, 2),
+    "</contexto_guardado>",
+    "",
+    "Nota del coach (las citas se copian de aquí, letra por letra):",
+    "<nota_del_coach>",
+    nota,
+    "</nota_del_coach>",
   ].join("\n");
 }

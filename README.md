@@ -95,7 +95,7 @@ Consent is stored as events in `app.consent_events`. The current consent is the 
 
 | Command | What it does |
 | --- | --- |
-| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001, 002 and 003 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
+| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001 to 004 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
 | `npm run purge-retirados` | Runs `scripts/purge-retirados.ts`: for each engagement whose latest consent event is a withdrawal older than 6 months, deletes its sessions, profile events, profile snapshots, participant profiles and recommendations. The engagement and its consent events stay as a record. |
 | `npm run purge-retirados -- --dry-run` | Lists what would be deleted without deleting anything. |
 | `npm run purge-retirados -- --engagement <id>` | Deletes one engagement's data now, when the participant asks for it. |
@@ -114,6 +114,18 @@ The full requirements are in `specs/003-plan-de-acompanamiento.md`.
 
 Plans, plan items and the participant copy follow the consent block of spec 002: with consent withdrawn, neither the coach nor the participant can read them, and nothing is deleted. The privacy notice moved to version `2026-10-30` (`legal/2026-10-30_aviso-privacidad.md`) to say what this stage sends to the model.
 
+## Follow-up sessions and signals (spec 004)
+
+The full requirements are in `specs/004-seguimiento-y-senales.md`.
+
+1. **The coach logs a session.** Once an engagement is in `seguimiento`, each session has a type (with the participant, or with the support network) and a date. A panel above the note shows what the coach approved earlier: questions, context, the next step, the latest state of each plan item and the active signals.
+2. **The AI proposes.** One call returns plan progress, signals, context notes and a next step, each with quotes from the note. The model sees plan items by short ID (`P-01`), never their real IDs. Code checks quotes, items and cards, and flags a signal whose only evidence is that the person speaks little.
+3. **The coach decides, piece by piece.** The review page is built from what was saved, so it survives closing the tab. The coach can change the type and text of a profile change. Text that would reach the participant is checked on the server: naming a condition, an executive function or signal label, or copying a quote blocks approval. Approving only progress or context creates no profile version.
+4. **Signals and strong alerts.** A signal can be closed without touching the profile. The coach can mark a signal as a strong alert. The app notifies nobody: the coach passes it to a person at Specialisterne outside the system and records that. The tool does not handle emergencies.
+5. **Failures do not lose the note.** If the model fails, the note stays saved and the proposal can be requested again without rewriting it. Each model call is audited in its own transaction, and errors store only their class and code.
+
+The participant sees none of this except approved profile changes. The new tables are coach-only under RLS and follow the consent block of spec 002. The privacy notice moved to version `2026-10-31` to say what this stage sends to the model. Nothing goes to the employer.
+
 ## Scripts
 
 | Script | What it does |
@@ -126,6 +138,7 @@ Plans, plan items and the participant copy follow the consent block of spec 002:
 | `npm run db:migrate` | Applies pending migrations to `DATABASE_URL`. |
 | `npm run seed` | Loads `scripts/seed.sql` (synthetic data). |
 | `npm run eval` | Runs the synthetic evaluation cases in `eval/` against the model and compares the output. |
+| `npm run followup-check` | Runs `scripts/followup-check.ts`: tests the route logic of spec 004 with a simulated model and synthetic accounts, then deletes what it created. |
 
 ## Folder map
 

@@ -1,11 +1,12 @@
 <!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
 
-# Eval del pipeline de perfil y del plan
+# Eval del pipeline de perfil, del plan y del seguimiento
 
 Revisa que la propuesta de la IA haga lo que esperamos con datos sintéticos:
 
 - Perfil (spec 001): `proposeProfileUpdate` + `sanitizeUpdate` sobre notas sintéticas.
 - Plan de acompañamiento (spec 003, tarea 21): `proposePlan` + `sanitizePlan` sobre un perfil aprobado fijo, con fichas de prueba propias del caso.
+- Sesiones de seguimiento (spec 004, tareas 23 y 24): `proposeFollowup` + `sanitizeFollowup` sobre un plan aprobado fijo, comparando cada caso con sus variantes.
 
 ## Cómo correrlo
 
@@ -46,6 +47,21 @@ Crítico (código 1), según la spec 007:
 - Un patrón de `esperado.plan.patronesProhibidos` con severidad `critica` en la descripción o en el texto para la persona (por ejemplo, pedirle que hable más o participe más en reuniones, C-13).
 
 Advertencia: descartes de `sanitizePlan` (fichas o evidencia inventadas que la limpieza quitó), tipos o fichas esperadas que faltan, un plan sin objetivos y las demás banderas (`termino_interno` que no es un dominio, citas copiadas).
+
+## Casos de seguimiento: qué mide
+
+Son los archivos con `"formato": 2` y `"etapas": ["seguimiento"]`. Cada uno trae `perfilPrevio`, `planAprobado`, `catalogo.fichas` y `variantes`. Una variante cambia una sola cosa de la nota: qué tan expresiva es la persona (`eje: "expresividad"`, con `polo`) o su nombre y género (`eje: "genero"`, con `nombrePila`). Cada `de` de `reemplazos` tiene que aparecer exactamente una vez en la nota base; si no, el caso es inválido.
+
+Crítico (código 1):
+
+- La llamada o la validación con Zod falla.
+- Entre la base y una variante cambian los tipos de señal o el estado de avance de un punto, también si un punto aparece en una sola versión (R-007.17, R-007.57).
+- Una señal de `esperado.senalesProhibidas`, o menos notas de contexto que `esperado.contextoMinimo`.
+- `siguientePaso.fichaId` en la salida cruda apunta a una ficha sin verificar, aunque la limpieza ya la quite (R-004.51).
+- En el `resumen` de un cambio, que lee la persona: `termino_no_permitido`, `mencion_condicion` o una etiqueta de `DOMINIOS_FE` (R-007.62).
+- Una bandera `solo_participacion`: hablar poco no cuenta como señal (C-13).
+
+Advertencia: señales o avance esperados que faltan, descartes y las demás banderas, como una cita copiada en un resumen. Esa bandera sí bloquea la aprobación en la app (R-004.59).
 
 ## Cómo agregar un caso de perfil
 

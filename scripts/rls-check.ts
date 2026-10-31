@@ -59,7 +59,15 @@ const TABLAS_BLOQUEO = [
   "plans",
   "plan_items",
   "persona_plans",
+  // Spec 004 (R-004.48).
+  "plan_item_updates",
+  "followup_context",
+  "signal_states",
+  "strong_alerts",
 ];
+
+// Tablas de seguimiento (spec 004).
+const TABLAS_SEGUIMIENTO = ["plan_item_updates", "followup_context", "signal_states", "strong_alerts"];
 
 // Tablas del plan (spec 003). knowledge_cards no tiene engagement_id: se cuenta aparte.
 const TABLAS_PLAN = ["plans", "plan_items", "persona_plans"];
@@ -198,7 +206,16 @@ async function asegurarConsentimientoDemo(tx: Tx) {
   if ((await ultimoEvento(tx, ENG_DEMO)) !== "otorgado") await evento(tx, ENG_DEMO, PERSONA, "otorgado");
 }
 
-type DatosDemo = { sessionId: string; eventoId: string; snapshotId: string; snapshotSinVistaId: string; planId: string; planItemId: string };
+type DatosDemo = {
+  sessionId: string;
+  eventoId: string;
+  snapshotId: string;
+  snapshotSinVistaId: string;
+  planId: string;
+  planItemId: string;
+  contextoId: string;
+  alertaId: string;
+};
 
 // Una fila sintética en cada tabla del acompañamiento de demo, para que las lecturas en 0 signifiquen algo.
 async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
@@ -226,6 +243,20 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
   await tx`
     insert into app.recommendations (engagement_id, catalog_unit_id, plan_item_id, razon, status)
     values (${ENG_DEMO}, 'CU-001', ${plan.itemId}, 'Razón sintética de rls-check', 'aprobada')`;
+  // Spec 004: una fila en cada tabla de seguimiento.
+  const evidencia = JSON.stringify([{ cita: "Cita sintética de rls-check", sessionId: s.id }]);
+  await tx`
+    insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+    values (${ENG_DEMO}, ${plan.itemId}, ${s.id}, ${ev.id}, 'avanza', 'Avance sintético', ${evidencia}::jsonb, ${COACH})`;
+  const [ctx] = await tx`
+    insert into app.followup_context (engagement_id, tipo, texto, evidencia, session_id, event_id, approved_by)
+    values (${ENG_DEMO}, 'contexto', 'Contexto sintético', ${evidencia}::jsonb, ${s.id}, ${ev.id}, ${COACH}) returning id`;
+  await tx`
+    insert into app.signal_states (engagement_id, tipo, estado, motivo, created_by)
+    values (${ENG_DEMO}, 'cambio_de_vida', 'cerrada', 'Motivo sintético', ${COACH})`;
+  const [alerta] = await tx`
+    insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por, nota)
+    values (${ENG_DEMO}, 'estres_desregulacion', ${ev.id}, ${COACH}, 'Nota sintética') returning id`;
   // Un "no me representa" propio de la persona.
   const nmr = { tipo: "no_me_representa", dimension: null, comentario: "Comentario sintético de rls-check." };
   await tx`
@@ -238,6 +269,8 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
     snapshotSinVistaId: snap2.id as string,
     planId: plan.planId,
     planItemId: plan.itemId,
+    contextoId: ctx.id as string,
+    alertaId: alerta.id as string,
   };
 }
 
@@ -697,6 +730,16 @@ const CASOS: Caso[] = [
         ["invitations", "rls", (sp) => sp`
           insert into app.invitations (engagement_id, persona_id, creada_por, expira_en) values (${ENG_DEMO}, ${PERSONA}, ${PERSONA}, now() + interval '7 days')`],
         ["audit_log con otro user_id", "rls", (sp) => sp`insert into app.audit_log (user_id, accion, ok) values (${COACH}, 'rls_check', true)`],
+        ["plan_item_updates", "rls", (sp) => sp`
+          insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+          values (${ENG_DEMO}, ${d.planItemId}, ${d.sessionId}, ${d.eventoId}, 'avanza', 'Avance', '[]'::jsonb, ${PERSONA})`],
+        ["followup_context", "rls", (sp) => sp`
+          insert into app.followup_context (engagement_id, tipo, texto, session_id, event_id, approved_by)
+          values (${ENG_DEMO}, 'contexto', 'Contexto', ${d.sessionId}, ${d.eventoId}, ${PERSONA})`],
+        ["signal_states", "rls", (sp) => sp`
+          insert into app.signal_states (engagement_id, tipo, estado, created_by) values (${ENG_DEMO}, 'cambio_de_vida', 'cerrada', ${PERSONA})`],
+        ["strong_alerts", "rls", (sp) => sp`
+          insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${PERSONA})`],
       ];
       for (const [tabla, tipo, consulta] of intentos) await rechaza(tx, `INSERT en ${tabla}`, tipo, consulta);
       // Si una spec agrega una tabla al esquema app, este caso tiene que probarla.
@@ -1075,6 +1118,216 @@ const CASOS: Caso[] = [
       revisar(p.status === "borrador", `el borrador quedó en ${p.status}`);
     },
   },
+
+  // ----- 004: seguimiento y señales -----
+  {
+    id: "CA-004.3",
+    descripcion: "sin consentimiento vigente el coach no inserta en sessions ni en las tablas de seguimiento",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_DEMO}, ${PERSONA}, 'retirado', ${AVISO})`;
+      await como(tx, COACH);
+      await rechaza(tx, "INSERT en sessions", "rls", (sp) => sp`
+        insert into app.sessions (engagement_id, coach_id, nota_original) values (${ENG_DEMO}, ${COACH}, 'Nota sintética')`);
+      await rechaza(tx, "INSERT en plan_item_updates", "rls", (sp) => sp`
+        insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+        values (${ENG_DEMO}, ${d.planItemId}, ${d.sessionId}, ${d.eventoId}, 'avanza', 'Avance', '[]'::jsonb, ${COACH})`);
+      await rechaza(tx, "INSERT en followup_context", "rls", (sp) => sp`
+        insert into app.followup_context (engagement_id, tipo, texto, session_id, event_id, approved_by)
+        values (${ENG_DEMO}, 'contexto', 'Contexto', ${d.sessionId}, ${d.eventoId}, ${COACH})`);
+      await rechaza(tx, "INSERT en signal_states", "rls", (sp) => sp`
+        insert into app.signal_states (engagement_id, tipo, estado, created_by) values (${ENG_DEMO}, 'desajuste_con_rol', 'cerrada', ${COACH})`);
+      await rechaza(tx, "INSERT en strong_alerts", "rls", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'desajuste_con_rol', ${d.eventoId}, ${COACH})`);
+    },
+  },
+  {
+    id: "CA-004.6",
+    descripcion: "la persona no lee una sesión de tipo red de apoyo",
+    correr: async (tx) => {
+      await asegurarConsentimientoDemo(tx);
+      const [s] = await tx`
+        insert into app.sessions (engagement_id, coach_id, nota_original, tipo)
+        values (${ENG_DEMO}, ${COACH}, 'Nota sintética de la red de apoyo.', 'red_de_apoyo') returning id`;
+      await como(tx, COACH);
+      const leidas = await tx`select id from app.sessions where id = ${s.id}`;
+      revisar(leidas.length === 1, "el coach no lee la sesión (control)");
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona lee la sesión", (sp) => sp`select id from app.sessions where id = ${s.id}`);
+    },
+  },
+  {
+    id: "CA-004.14",
+    descripcion: "cerrar una señal escribe solo en signal_states: sin snapshot nuevo y sin cambiar persona_profiles; el historial no se edita",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const snapshots = await contar(tx, "profile_snapshots", ENG_DEMO);
+      const vistas = await contar(tx, "persona_profiles", ENG_DEMO);
+      await como(tx, COACH);
+      await acepta(tx, "cerrar la señal", (sp) => sp`
+        insert into app.signal_states (engagement_id, tipo, estado, motivo, created_by)
+        values (${ENG_DEMO}, 'desajuste_con_rol', 'cerrada', 'Ya no aplica', ${COACH})`);
+      await tx`
+        insert into app.signal_states (engagement_id, tipo, estado, motivo, created_by)
+        values (${ENG_DEMO}, 'desajuste_con_rol', 'cerrada', 'Ya no aplica', ${COACH})`;
+      await rechaza(tx, "UPDATE de signal_states", "permiso", (sp) => sp`update app.signal_states set motivo = 'Cambio' where engagement_id = ${ENG_DEMO}`);
+      await rechaza(tx, "DELETE de signal_states", "permiso", (sp) => sp`delete from app.signal_states where engagement_id = ${ENG_DEMO}`);
+      await rechaza(tx, "UPDATE de plan_item_updates", "permiso", (sp) => sp`update app.plan_item_updates set resumen = 'Cambio' where engagement_id = ${ENG_DEMO}`);
+      await rechaza(tx, "DELETE de plan_item_updates", "permiso", (sp) => sp`delete from app.plan_item_updates where engagement_id = ${ENG_DEMO}`);
+      await comoOwner(tx);
+      revisar((await contar(tx, "profile_snapshots", ENG_DEMO)) === snapshots, "cambió el número de snapshots");
+      revisar((await contar(tx, "persona_profiles", ENG_DEMO)) === vistas, "cambió el número de persona_profiles");
+    },
+  },
+  {
+    id: "CA-004.16",
+    descripcion: "ni otro coach ni la persona crean una alerta fuerte; el coach sí, solo como abierta y a su nombre",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      for (const usuario of [COACH_SIN, PERSONA]) {
+        await como(tx, usuario);
+        await rechaza(tx, "INSERT en strong_alerts", "rls", (sp) => sp`
+          insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${usuario})`);
+      }
+      await como(tx, COACH);
+      await acepta(tx, "el coach crea la alerta", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${COACH})`);
+      await rechaza(tx, "la alerta se crea a nombre de otro", "rls", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${PERSONA})`);
+      await rechaza(tx, "la alerta nace atendida", "rls", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por, estado) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${COACH}, 'atendida')`);
+      await rechaza(tx, "dos alertas vigentes del mismo tipo", "unique", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'estres_desregulacion', ${d.eventoId}, ${COACH})`);
+    },
+  },
+  {
+    id: "CA-004.17",
+    descripcion: "la persona no lee alertas fuertes ni el estado de las señales",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      revisar((await contar(tx, "strong_alerts", ENG_DEMO)) === 0, "la persona lee alertas");
+      revisar((await contar(tx, "signal_states", ENG_DEMO)) === 0, "la persona lee el estado de las señales");
+      revisar((await contar(tx, "profile_snapshots", ENG_DEMO)) === 0, "la persona lee los snapshots con las señales");
+    },
+  },
+  {
+    id: "CA-004.37",
+    descripcion: "el coach no hace UPDATE directo de app.engagements.stage; las tablas de esta spec no tienen permiso sobre engagements",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const antes = await etapa(tx, ENG_DEMO);
+      await como(tx, COACH);
+      await rechaza(tx, "UPDATE de engagements.stage", "permiso", (sp) => sp`update app.engagements set stage = 'cierre' where id = ${ENG_DEMO}`);
+      revisar((await etapa(tx, ENG_DEMO)) === antes, "la etapa cambió");
+    },
+  },
+  {
+    id: "CA-004.38",
+    descripcion: "la persona no inserta en sessions, avance, contexto, estado de señales ni alertas",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      await rechaza(tx, "INSERT en sessions", "rls", (sp) => sp`
+        insert into app.sessions (engagement_id, coach_id, nota_original) values (${ENG_DEMO}, ${PERSONA}, 'Nota sintética')`);
+      await rechaza(tx, "INSERT en plan_item_updates", "rls", (sp) => sp`
+        insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+        values (${ENG_DEMO}, ${d.planItemId}, ${d.sessionId}, ${d.eventoId}, 'avanza', 'Avance', '[]'::jsonb, ${PERSONA})`);
+      await rechaza(tx, "INSERT en followup_context", "rls", (sp) => sp`
+        insert into app.followup_context (engagement_id, tipo, texto, session_id, event_id, approved_by)
+        values (${ENG_DEMO}, 'contexto', 'Contexto', ${d.sessionId}, ${d.eventoId}, ${PERSONA})`);
+      await rechaza(tx, "INSERT en signal_states", "rls", (sp) => sp`
+        insert into app.signal_states (engagement_id, tipo, estado, created_by) values (${ENG_DEMO}, 'cambio_de_vida', 'cerrada', ${PERSONA})`);
+      await rechaza(tx, "INSERT en strong_alerts", "rls", (sp) => sp`
+        insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${PERSONA})`);
+    },
+  },
+  {
+    id: "CA-004.38",
+    descripcion: "una fila de avance o de contexto no apunta a otro acompañamiento, y el contexto no nace quitado",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      // El mismo coach con consentimiento en los dos: solo lo detienen las funciones de private.
+      await evento(tx, ENG_ALTA, PERSONA_ALTA, "otorgado");
+      await como(tx, COACH);
+      await rechaza(tx, "avance con la sesión de otro acompañamiento", "rls", (sp) => sp`
+        insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+        values (${ENG_ALTA}, ${d.planItemId}, ${d.sessionId}, ${d.eventoId}, 'avanza', 'Avance', '[]'::jsonb, ${COACH})`);
+      await rechaza(tx, "contexto con la sesión de otro acompañamiento", "rls", (sp) => sp`
+        insert into app.followup_context (engagement_id, tipo, texto, session_id, event_id, approved_by)
+        values (${ENG_ALTA}, 'contexto', 'Contexto', ${d.sessionId}, ${d.eventoId}, ${COACH})`);
+      await rechaza(tx, "contexto que nace quitado", "rls", (sp) => sp`
+        insert into app.followup_context (engagement_id, tipo, texto, session_id, event_id, approved_by, quitada_por, quitada_en)
+        values (${ENG_DEMO}, 'contexto', 'Contexto', ${d.sessionId}, ${d.eventoId}, ${COACH}, ${COACH}, now())`);
+      await comoOwner(tx);
+      const b = await crearPlan(tx, ENG_DEMO, d.snapshotId, "borrador");
+      await como(tx, COACH);
+      await rechaza(tx, "avance sobre un ítem de un borrador", "rls", (sp) => sp`
+        insert into app.plan_item_updates (engagement_id, plan_item_id, session_id, event_id, estado, resumen, evidencia, approved_by)
+        values (${ENG_DEMO}, ${b.itemId}, ${d.sessionId}, ${d.eventoId}, 'avanza', 'Avance', '[]'::jsonb, ${COACH})`);
+      await acepta(tx, "contexto ligado a un ítem aprobado", (sp) => sp`
+        insert into app.followup_context (engagement_id, tipo, texto, plan_item_id, session_id, event_id, approved_by)
+        values (${ENG_DEMO}, 'siguiente_paso', 'Paso', ${d.planItemId}, ${d.sessionId}, ${d.eventoId}, ${COACH})`);
+    },
+  },
+  {
+    id: "CA-004.39",
+    descripcion: "el coach cambia el estado de su alerta y quita contexto; otro coach no; solo se escriben las columnas permitidas",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await como(tx, COACH_SIN);
+      await ceroFilas(tx, "otro coach escala la alerta", (sp) => sp`update app.strong_alerts set estado = 'escalada', escalada_en = now() where id = ${d.alertaId}`);
+      await ceroFilas(tx, "otro coach quita el contexto", (sp) => sp`update app.followup_context set quitada_por = ${COACH_SIN}, quitada_en = now() where id = ${d.contextoId}`);
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona escala la alerta", (sp) => sp`update app.strong_alerts set estado = 'escalada', escalada_en = now() where id = ${d.alertaId}`);
+      await como(tx, COACH);
+      await acepta(tx, "el coach escala la alerta", (sp) => sp`update app.strong_alerts set estado = 'escalada', nota_escalada = 'Nota', escalada_en = now() where id = ${d.alertaId}`);
+      await rechaza(tx, "editar la nota original de la alerta", "permiso", (sp) => sp`update app.strong_alerts set nota = 'Cambio' where id = ${d.alertaId}`);
+      await rechaza(tx, "cambiar el tipo de la alerta", "permiso", (sp) => sp`update app.strong_alerts set tipo_senal = 'cambio_de_vida' where id = ${d.alertaId}`);
+      await rechaza(tx, "editar el texto del contexto", "permiso", (sp) => sp`update app.followup_context set texto = 'Cambio' where id = ${d.contextoId}`);
+      await rechaza(tx, "quitar el contexto a nombre de otro", "rls", (sp) => sp`update app.followup_context set quitada_por = ${PERSONA}, quitada_en = now() where id = ${d.contextoId}`);
+      await tx`update app.followup_context set quitada_por = ${COACH}, quitada_en = now() where id = ${d.contextoId}`;
+      await ceroFilas(tx, "volver a quitar lo ya quitado", (sp) => sp`update app.followup_context set quitada_por = ${COACH}, quitada_en = now() where id = ${d.contextoId}`);
+    },
+  },
+  {
+    id: "CA-004.47",
+    descripcion: "al retirar el consentimiento el coach deja de ver avance, contexto, señales y alertas, y ninguna fila se borra",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const antes: Record<string, number> = {};
+      for (const t of TABLAS_SEGUIMIENTO) antes[t] = await contar(tx, t, ENG_DEMO);
+      await como(tx, PERSONA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_DEMO}, ${PERSONA}, 'retirado', ${AVISO})`;
+      await como(tx, COACH);
+      for (const t of TABLAS_SEGUIMIENTO) revisar((await contar(tx, t, ENG_DEMO)) === 0, `el coach ve ${t} sin consentimiento`);
+      await comoOwner(tx);
+      for (const t of TABLAS_SEGUIMIENTO) {
+        const n = await contar(tx, t, ENG_DEMO);
+        revisar(n === antes[t] && n > 0, `${t} cambió de ${antes[t]} a ${n} filas`);
+      }
+    },
+  },
+  {
+    id: "CA-004.58",
+    descripcion: "con consentimiento, su coach ve las cuatro tablas de seguimiento; la persona y un coach ajeno leen 0 filas",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await como(tx, COACH);
+      for (const t of TABLAS_SEGUIMIENTO) revisar((await contar(tx, t, ENG_DEMO)) > 0, `el coach no ve ${t}`);
+      for (const usuario of [PERSONA, COACH_SIN]) {
+        await como(tx, usuario);
+        for (const t of TABLAS_SEGUIMIENTO) {
+          const n = await contar(tx, t, ENG_DEMO);
+          revisar(n === 0, `${usuario === PERSONA ? "la persona" : "el coach ajeno"} lee ${n} filas de ${t}`);
+        }
+      }
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1092,6 +1345,8 @@ async function prepararEstadoInicial(tx: Tx) {
   await tx`update app.engagements set stage = 'alta', diagnostico_verificado = false where id = ${ENG_ALTA}`;
   // Spec 003: si quedó un borrador de plan abierto en el demo, plans_un_borrador no dejaría crear otro.
   await tx`update app.plans set status = 'descartado' where engagement_id = ${ENG_DEMO} and status = 'borrador'`;
+  // Spec 004: una alerta vigente de un recorrido no debe chocar con strong_alerts_una_vigente.
+  await tx`update app.strong_alerts set estado = 'atendida' where engagement_id = ${ENG_DEMO}`;
 }
 
 async function main(url: string) {
