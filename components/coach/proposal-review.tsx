@@ -125,7 +125,7 @@ export function ProposalReview({ vista, nombre }: Props) {
   const nadaSeleccionado = aprobacionVacia(aprobacion);
   // La misma revisión que hace el servidor con el texto final (R-004.59). Lo no seleccionado no bloquea.
   const textoVacio = edicionesFinales.some((e) => e.resumen === "");
-  const bloqueos = textoVacio ? [] : bloqueosDeCambios(update, aprobacion, citasBase);
+  const bloqueos = textoVacio ? [] : bloqueosDeCambios(update, aprobacion, citasBase, vista.nota ? [vista.nota] : []);
   const noSePuedeAprobar = nadaSeleccionado || textoVacio || bloqueos.length > 0;
   const cambiosBloqueados = [...new Set(bloqueos.map((b) => b.indice))];
 

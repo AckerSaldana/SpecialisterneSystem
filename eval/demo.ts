@@ -262,7 +262,7 @@ export function problemasCasoDemo(
       return;
     }
     const citas = [...citasDePropuesta(update), ...citasAnteriores, ...limpio.indiceObservaciones.map((e) => e.cita)];
-    for (const b of bloqueosDeCambios(update, s.aprobacion, citas)) {
+    for (const b of bloqueosDeCambios(update, s.aprobacion, citas, [s.nota])) {
       problemas.push(`la aprobación de la sesión ${s.id} se bloquearía: ${b.ruta} «${b.termino}»`);
     }
     perfilAcumulado = applyApproval(perfilAcumulado, update, s.aprobacion, {

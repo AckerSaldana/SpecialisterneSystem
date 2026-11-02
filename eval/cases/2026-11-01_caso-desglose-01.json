@@ -31,7 +31,7 @@
     {
       "dimension": "antecedentes_experiencia",
       "tipo": "contexto",
-      "resumen": "Renata lleva tres años dando soporte a los clientes de una empresa de software.",
+      "resumen": "Renata lleva tres años dando soporte en una empresa de software.",
       "dominiosFe": []
     },
     {
@@ -45,7 +45,7 @@
     {
       "dimension": "disparadores_estres",
       "tipo": "contexto",
-      "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse unos minutos y que las llamadas se acuerden antes por escrito.",
+      "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse un rato y acordar las llamadas antes por escrito.",
       "dominiosFe": [
         "control_emocional"
       ]

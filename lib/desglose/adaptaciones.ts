@@ -48,8 +48,8 @@ export type Apoyo = {
 export const porQueDimension = (etiqueta: string, resumen: string) => `Tu perfil dice esto en "${etiqueta}": ${resumen}`;
 export const porQuePlan = (texto: string) => `Tu plan dice: ${texto}`;
 
-// R-010.5: un texto con un término no llega al modelo. La aprobación del perfil usa revisarTextoPersona, que no cubre los
-// términos clínicos, así que un resumen con "tiene TDAH" se puede aprobar. Su nota se descartaría igual (R-010.22), pero para
+// R-010.5: un texto con un término no llega al modelo. Un resumen aprobado antes de R-004.59 puede decir "tiene TDAH", y
+// revisarTextoPersona no revisa todas las formas que revisa 010. Su nota se descartaría igual (R-010.22), pero para
 // entonces el modelo ya habría recibido ese dato de salud.
 const sinTerminos = (texto: string) => revisarTextoDesglose(texto).length === 0;
 

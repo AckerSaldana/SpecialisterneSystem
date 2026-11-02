@@ -20,6 +20,7 @@ import {
   planItemUpdates,
   profileEvents,
   profileSnapshots,
+  sessions,
   signalStates,
   users,
 } from "@/lib/db/schema";
@@ -122,7 +123,8 @@ export async function decidirPropuesta(user: UsuarioRuta, eventId: string, body:
         ...citasDelPerfil(ultimo?.perfil ?? PERFIL_VACIO),
         ...payload.indiceObservaciones.map((e) => e.cita),
       ];
-      const [bloqueo] = bloqueosDeCambios(update, aprobacion, citas);
+      const [sesion] = await tx.select({ nota: sessions.notaOriginal }).from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+      const [bloqueo] = bloqueosDeCambios(update, aprobacion, citas, sesion ? [sesion.nota] : []);
       if (bloqueo) {
         const [persona] = await tx
           .select({ nombrePila: users.nombrePila })

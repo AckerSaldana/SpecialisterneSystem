@@ -18,8 +18,8 @@
 // 3. Banderas: términos no permitidos en resumen, descripcion y preguntas. No quitan nada;
 //    solo avisan al coach. Las rutas de "banderas" se refieren al update YA LIMPIO (el que
 //    ve el coach).
-//    En cambios[i].resumen, que llega a la persona, también busca condiciones, términos internos y
-//    citas copiadas (R-004.59). La ruta de decisión repite esa revisión con el texto final. "citasPrevias"
+//    En cambios[i].resumen, que llega a la persona, también busca condiciones, términos clínicos, términos internos,
+//    citas copiadas y pedazos de la nota (R-004.59). La ruta de decisión repite esa revisión con el texto final. "citasPrevias"
 //    son las de las observaciones previas que recibió el modelo (R-008.6): solo agregan banderas.
 import type { Bandera, CambioDimension, Descartado, DimensionId, ProfileUpdate } from "@/lib/profile/schema";
 import { buscarTerminos, citaEnNota, MIN_CITA, normalizar, revisarTextoPersona } from "@/lib/profile/terminos";
@@ -92,7 +92,7 @@ export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias
     .map((e) => e.cita)
     .concat(citasPrevias);
   limpio.cambios.forEach((c, i) => {
-    for (const { termino, motivo } of revisarTextoPersona(c.resumen, citas)) {
+    for (const { termino, motivo } of revisarTextoPersona(c.resumen, citas, [nota])) {
       banderas.push({ ruta: `cambios[${i}].resumen`, termino, motivo });
     }
   });

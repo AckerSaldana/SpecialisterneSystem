@@ -85,7 +85,7 @@ export function mensajeBandera(b: BanderaPlan, nombre: string): string {
     case "termino_interno":
       return `Este texto lo verá ${nombre} y nombra una función ejecutiva: «${b.termino}». Escríbelo con palabras de todos los días.`;
     case "cita_en_texto_persona":
-      return `Este texto lo verá ${nombre} y copia una cita de tus notas. Escríbelo con tus palabras.`;
+      return `Este texto lo verá ${nombre} y copia parte de tus notas: «${b.termino}». Escríbelo con tus palabras.`;
     case "mencion_condicion":
       return `Este punto nombra una condición: «${b.termino}». El plan describe conductas, no condiciones.`;
     case "cita_en_texto_lider":

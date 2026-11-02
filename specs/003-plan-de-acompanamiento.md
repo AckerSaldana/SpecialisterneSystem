@@ -2,7 +2,7 @@
 
 # 003 · Plan de acompañamiento
 
-- Estado: Implementada · Versión 8 · 2026-11-01 (código pendiente de revisión de Acker)
+- Estado: Implementada · Versión 9 · 2026-11-01 (código pendiente de revisión de Acker)
 - Fuentes: F-005 (13:12, 23:31, 32:01, 45:53), F-009, F-017, F-022, F-023, D-015, D-016, D-021, D-031 a D-035 (propuestas en CONTEXTO §9), CONTEXTO §4, §5 (objetivos del equipo; dimensión 15, ajustes razonables), §6 (flujo del demo, paso 3; Valor; arquitectura), §11 (preguntas para el partner), REGLAS §2.5, §3, §4, §5, §6, §7; constitución C-01 a C-11, C-13 a C-18
 - Depende de: 001 (perfil aprobado en `profile_snapshots`), 002 (consentimiento vigente según `private.app_has_consent`, R-002.28; bloqueo al retirar el consentimiento, R-002.44; lista de lo que escribe la persona, R-002.45; aviso de privacidad, R-002.42 y R-002.43; paso `alta` → `evaluacion_inicial` y regla de etapas, R-002.25 y R-002.41; script `scripts/rls-check.ts`, R-002.46), 007 (formato de los casos del eval)
 
@@ -78,8 +78,8 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 | R-003.17 | `textoPersona` se revisa además contra las etiquetas de `DOMINIOS_FE`, las etiquetas de `SENALES` (como en R-005.18) y la frase "función ejecutiva". Cada coincidencia es una bandera `termino_interno`. | C-09 |
 | R-003.18 | Si la `descripcion` de un ítem `comunicacion_lider` contiene, normalizada, una cita completa del snapshot, se marca con bandera `cita_en_texto_lider`. | C-09; interpretación del equipo (las notas son privadas del coach) |
 | R-003.19 | El ítem que sobrevive guarda su `dominio_fe` solo si es uno de los IDs de `DOMINIOS_FE`; si no, queda nulo. | F-017; `lib/profile/schema.ts` |
-| R-003.46 | Si `textoPersona` contiene, normalizada con `normalizar`, una cita completa del snapshot, se marca con bandera `cita_en_texto_persona`. | C-09 (la persona nunca ve las citas) |
-| R-003.47 | `descripcion` y `textoPersona` se revisan además contra `TERMINOS_CONDICION`, una lista de nombres de condiciones que `buscarTerminos` no cubre (por ejemplo "autismo" o "autista" sin calificativo). Cada coincidencia es una bandera `mencion_condicion`. La lista final la decide Acker (decisión abierta 9). | C-01, C-11; interpretación del equipo: `buscarTerminos` solo marca "autismo" con leve, moderado o severo |
+| R-003.46 | Si `textoPersona` contiene, normalizada con `normalizar`, una cita completa del snapshot o un pedazo de 6 o más palabras seguidas de una, se marca con bandera `cita_en_texto_persona`. | C-09 (la persona nunca ve las citas) |
+| R-003.47 | `descripcion` y `textoPersona` se revisan además contra `TERMINOS_CONDICION`, una lista de nombres de condiciones que `buscarTerminos` no cubre (por ejemplo "autismo" o "autista" sin calificativo). Cada coincidencia es una bandera `mencion_condicion`. `textoPersona` también se revisa contra los términos clínicos de R-009.24, con la misma bandera. La lista final la decide Acker (decisión abierta 9). | C-01, C-11; interpretación del equipo: `buscarTerminos` solo marca "autismo" con leve, moderado o severo |
 
 ### Borrador y edición del coach
 
@@ -191,6 +191,7 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 | CA-003.35 | Dada la sesión del coach o la de la persona, cuando intenta un UPDATE de `app.engagements.stage`, entonces la base lo rechaza. | R-003.55 | RLS |
 | CA-003.36 | Dada la sesión de la persona, cuando intenta un INSERT, UPDATE o DELETE en `app.plans`, `app.plan_items`, `app.persona_plans` o `app.knowledge_cards`, entonces la base lo rechaza. | R-003.52 | RLS |
 | CA-003.37 | Dado un objetivo X en la versión 1, su equivalente Y en la versión 2 (`origen_item_id = X`) y un borrador con Z ligado a Y, cuando el coach aprueba la versión 3, entonces el ítem Z en `persona_plans.contenido` tiene `itemsAnteriores = [Y, X]`, y un punto nuevo de la versión 3 tiene `itemsAnteriores = []`. Dado un apoyo de la versión 1 sin `textoPersona` ligado desde un apoyo con texto de la versión 2, entonces el ítem de la versión 2 lleva el ID del de la versión 1. | R-003.61 | prueba offline + consulta a la base |
+| CA-003.38 | Dado un `textoPersona` con 6 palabras seguidas de una cita del snapshot, o con "TDAH", cuando corre la revisión, entonces hay una bandera que bloquea la aprobación. Con esas palabras en la `descripcion`, los términos clínicos no marcan nada. | R-003.46, R-003.47, R-003.30 | prueba offline |
 
 ## Datos
 
@@ -329,7 +330,7 @@ Borrador:
 - Cuando hay un plan vigente, en cada ítem: "Sigue al punto de la versión {v}:" con una lista de los puntos del mismo tipo del plan vigente y la opción "Es un punto nuevo". Valor inicial: "Es un punto nuevo".
 - Botones por ítem: "Editar", "Quitar". En edición: "Guardar cambio", "Cancelar". Al quitar: diálogo "¿Quitar este punto del plan? Queda registrado en el historial." con "Sí, quitar" y "Cancelar".
 - Al final de cada grupo: "Agregar objetivo", "Agregar objetivo del equipo", "Agregar apoyo", "Agregar ajuste razonable", "Agregar instrucción", "Agregar punto para el líder".
-- Avisos de la validación: "La IA citó una ficha que no existe. Quitamos ese punto." / "La IA citó evidencia que no está en el perfil. Quitamos esa cita." / "Revisa esta palabra: «{término}». No usamos ese lenguaje." / "Este texto lo verá {nombre} y nombra una función ejecutiva: «{término}». Escríbelo con palabras de todos los días." / "Este texto lo verá {nombre} y copia una cita de tus notas. Escríbelo con tus palabras." / "Este punto nombra una condición: «{término}». El plan describe conductas, no condiciones." / "Este punto copia una cita de tus notas. Tus notas son privadas; escríbelo con tus palabras."
+- Avisos de la validación: "La IA citó una ficha que no existe. Quitamos ese punto." / "La IA citó evidencia que no está en el perfil. Quitamos esa cita." / "Revisa esta palabra: «{término}». No usamos ese lenguaje." / "Este texto lo verá {nombre} y nombra una función ejecutiva: «{término}». Escríbelo con palabras de todos los días." / "Este texto lo verá {nombre} y copia parte de tus notas: «{término}». Escríbelo con tus palabras." / "Este punto nombra una condición: «{término}». El plan describe conductas, no condiciones." / "Este punto copia una cita de tus notas. Tus notas son privadas; escríbelo con tus palabras."
 - Botones al final: "Aprobar plan" y "Descartar borrador".
 - Diálogo de aprobar: "¿Aprobar este plan? {nombre} va a ver sus objetivos y apoyos. Los objetivos del equipo, los ajustes razonables, las instrucciones y lo del líder no los ve tal cual, pero la IA puede usarlos para proponerle líneas de "Cómo trabajar conmigo". {nombre} sí lee esas líneas y decide si las comparte. Después de aprobarlo ya no se edita; para cambiarlo pides una propuesta nueva." Botones "Sí, aprobar plan" y "Volver al borrador".
 - Diálogo de descartar: "¿Descartar este borrador? Se queda en el historial, pero no se usa." Botones "Sí, descartar" y "Volver al borrador".
@@ -416,7 +417,7 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 6. Índice de evidencia: `lib/plan/evidence.ts` con `indiceEvidencia(perfil)` que devuelve la lista `E-nn` para el prompt y el mapa `E-nn → { cita, sessionId, dimension }`. (R-003.4, R-003.14)
 7. Validación: `lib/plan/validate.ts` con `sanitizePlan(propuesta, { fichas, indice })` y `TERMINOS_CONDICION`, reusando `buscarTerminos` y `normalizar` de `lib/profile/validate.ts`. (R-003.13 a R-003.19, R-003.46, R-003.47)
 8. Vista persona y rastro: `lib/plan/persona.ts` con `vistaPersonaPlan(items, itemsAnteriores)`, que recibe los ítems del plan y el mapa `id → origen_item_id` de las versiones aprobadas del acompañamiento, y `lib/plan/trail.ts` con `rastroPlan(propuestaIa, items)` (sin cambios, editados con texto original, escritos por el coach, punto anterior al que siguen, quitados). (R-003.35, R-003.37, R-003.48, R-003.50, R-003.61)
-9. Pruebas sin red en `eval/compare.ts` (o `eval/plan.ts` si crece mucho): CA-003.4 a CA-003.9, CA-003.27, CA-003.30, `vistaPersonaPlan` (incluida la cadena de CA-003.37) y `rastroPlan`. (R-003.45, R-003.61)
+9. Pruebas sin red en `eval/compare.ts` (o `eval/plan.ts` si crece mucho): CA-003.4 a CA-003.9, CA-003.27, CA-003.30, CA-003.38, `vistaPersonaPlan` (incluida la cadena de CA-003.37) y `rastroPlan`. (R-003.45, R-003.61)
 10. Prompts: generalizar la lectura en `lib/prompts.ts`, agregar `PROMPT_VERSION_PLAN`, `systemPromptPlan(fichas)` y `mensajeUsuarioPlan(entrada)`; confirmar que el prompt de perfil no cambia. (R-003.4, R-003.5, R-003.6, R-003.43)
 11. Escribir `prompts/2026-10-29_plan-acompanamiento.md` con lo de la sección Prompts. (R-003.9, R-003.10, R-003.11, R-003.43, R-003.49)
 12. Llamada al modelo: `lib/ai/propose-plan.ts`, igual que `propose-profile-update.ts` (instrucciones con `cacheControl`, `Output.object` con `PlanProposal`, uso de tokens y latencia). (R-003.6, R-003.7)
@@ -437,7 +438,7 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 - `npm run eval` corre los casos de `eval/cases/`, incluidos los de plan, sin fallas críticas, y la tabla muestra tokens de cache en la segunda llamada si el system prompt supera el mínimo de Anthropic.
 - `scripts/rls-check.ts` pasa con los casos de la tarea 4 y las sesiones de coach y persona del seed.
 - En el navegador, con las cuentas `.test` del seed: el coach aprueba el primer perfil y la etapa pasa a `perfil`; pide propuesta (etapa `plan`), edita un ítem, agrega otro, quita uno, aprueba (etapa `seguimiento`); la persona ve solo objetivos y apoyos; el coach aprueba un perfil nuevo y ve el aviso; pide otra propuesta, liga un punto con su equivalente y aprueba; el historial muestra las dos versiones con su rastro.
-- Cada criterio de aceptación CA-003.1 a CA-003.37 queda marcado con la prueba que lo cubrió antes de pasar la spec a "Verificada".
+- Cada criterio de aceptación CA-003.1 a CA-003.38 queda marcado con la prueba que lo cubrió antes de pasar la spec a "Verificada".
 
 ## Preguntas para el partner
 
@@ -452,6 +453,10 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 - ¿Qué palabras evitan en los textos que ve la persona y en lo que se habla con el líder? Por ejemplo, ¿nombran la condición o las funciones ejecutivas?
 
 ## Cambios
+
+Versión 9 · 2026-11-01 · huecos del filtro de lo que lee la persona
+
+Decide Acker (1 nov). `textoPersona` usa la misma revisión que el resumen del perfil (R-004.59): pedazos de 6 o más palabras de una cita y términos clínicos, para TDAH y dislexia. La `descripcion` no cambia, porque la lee el coach. La comparación es contra las citas y no contra la nota completa, porque el modelo del plan no recibe la nota. Nuevo CA-003.38.
 
 Versión 3 · 2026-10-29 · ajustes de consistencia
 

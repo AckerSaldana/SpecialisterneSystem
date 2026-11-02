@@ -150,7 +150,7 @@ import {
   type PayloadPlanIA,
 } from "@/lib/plan/schema";
 import { rastroPlan, type ItemRastro } from "@/lib/plan/trail";
-import { banderasQueBloquean, sanitizePlan } from "@/lib/plan/validate";
+import { banderasDeItem, banderasQueBloquean, sanitizePlan } from "@/lib/plan/validate";
 import { applyApproval, tiposReabiertos, validarIndices } from "@/lib/profile/merge";
 import { perfilConSenalesVigentes, senalesVigentes, type EstadoSenal } from "@/lib/profile/senales";
 import { Cedula, CorreoPrueba, Verificacion } from "@/lib/validators/alta";
@@ -180,7 +180,7 @@ import {
   type EntradaIndiceObservacion,
   type EvidenciaEtiquetada,
 } from "@/lib/profile/schema";
-import { buscarClinicos as buscarClinicosDePerfil, buscarInternos, revisarTextoPersona, TERMINOS_CLINICOS_GUIA as TERMINOS_CLINICOS_DE_PERFIL, TERMINOS_CONDICION } from "@/lib/profile/terminos";
+import { buscarClinicos as buscarClinicosDePerfil, buscarInternos, MIN_PALABRAS_COPIADAS, pedazosCopiados, revisarTextoPersona, TERMINOS_CLINICOS_GUIA as TERMINOS_CLINICOS_DE_PERFIL, TERMINOS_CONDICION } from "@/lib/profile/terminos";
 import { buscarTerminos, citaEnNota, normalizar, sanitizeUpdate } from "@/lib/profile/validate";
 import { filtrarTrayectoria, Filtros, leerFiltros } from "@/lib/trayectoria/filtros";
 import {
@@ -1037,11 +1037,11 @@ const PRUEBAS: Prueba[] = [
   {
     nombre: "003 · el prompt de perfil no cambió al generalizar lib/prompts.ts (tarea 10)",
     correr: () => {
-      // Hashes de 2026-10-31_profile-update (spec 008). Si el prompt de perfil cambia a propósito, va en
+      // Hashes de 2026-11-01_profile-update (R-004.59). Si el prompt de perfil cambia a propósito, va en
       // un archivo con fecha nueva y aquí se anota el hash nuevo.
       const hash = (s: string) => createHash("sha256").update(s.replace(/\r\n/g, "\n")).digest("hex");
-      assert.equal(PROMPT_VERSION, "2026-10-31_profile-update");
-      assert.equal(hash(systemPromptProfileUpdate()), "c14f3a635dc92eeab680feca6e7fad0fa9c63b6f5652e4907679abb8f06f8d41");
+      assert.equal(PROMPT_VERSION, "2026-11-01_profile-update");
+      assert.equal(hash(systemPromptProfileUpdate()), "67e8cd49255ab18fbea62b0dbd52944cdda15d321b9beeea104d555f883e7ef0");
       const mensaje = mensajeUsuarioProfileUpdate({
         nota: "Nota de prueba. Prefiere instrucciones por escrito.",
         nombrePila: "Daniela",
@@ -1620,6 +1620,79 @@ const PRUEBAS: Prueba[] = [
       assert.deepEqual(con("Sol es autista.", []), [], "un cambio sin seleccionar no bloquea");
       assert.deepEqual(bloqueosDeCambios(update, { cambios: [0], ediciones: [] }, citas), [], "sin edición revisa el texto de la IA");
       assert.equal(textoBloqueo("Sol", "forma_aprender", "autista"), "Hay texto que no puede llegar a Sol en Forma de aprender: «autista». Corrígelo para aprobar.");
+    },
+  },
+  {
+    nombre: "004 · un pedazo de 6 palabras seguidas de la nota o de una cita bloquea; 5 o un orden distinto no (CA-004.63, R-004.59)",
+    correr: () => {
+      const cita = "escribió casi la mitad de los artículos y sus compañeros la buscan cuando un error se repite";
+      const nota = `Renata ${cita}. Dice que no sabe qué preguntar primero cuando el cliente manda poca información.`;
+      const update = updateVacio();
+      update.cambios.push(cambio("antecedentes_experiencia", "Le gusta su trabajo.", [cita]));
+      const con = (resumen: string, seleccion = [0]) =>
+        bloqueosDeCambios(update, { cambios: seleccion, ediciones: [{ indice: 0, resumen }] }, [cita], [nota]).map((b) => [b.motivo, b.termino]);
+
+      // El hueco que se vio con Renata: un pedazo de una cita, sin la cita completa.
+      const pedazo = "sus compañeros la buscan cuando un error se repite";
+      assert.deepEqual(con(`Renata sabe que ${pedazo}.`), [["cita_en_texto_persona", pedazo]]);
+      // Un pedazo de la nota que el modelo no citó, sin importar acentos, mayúsculas ni puntuación, y como lo escribió.
+      assert.deepEqual(con("Dice que no sabe, qué pregúntar PRIMERO cuando llega."), [["cita_en_texto_persona", "Dice que no sabe, qué pregúntar PRIMERO cuando"]]);
+      // El límite exacto: 6 palabras seguidas cuentan, 5 no.
+      assert.deepEqual(con("Sabe que sus compañeros la buscan cuando un."), [["cita_en_texto_persona", "sus compañeros la buscan cuando un"]]);
+      assert.deepEqual(con("Sabe que la buscan cuando un error."), []);
+      // Lo mismo copiado dos veces es una sola bandera, y tramos de fuentes distintas que se enciman son un pedazo.
+      assert.equal(con(`Sabe que ${pedazo}. Y sabe que ${pedazo}.`).length, 1);
+      assert.deepEqual(pedazosCopiados("uno dos tres cuatro cinco seis siete ocho", ["uno dos tres cuatro cinco seis", "tres cuatro cinco seis siete ocho"]), ["uno dos tres cuatro cinco seis siete ocho"]);
+      // Una cita corta dentro de un pedazo largo no lo esconde: se reporta lo largo.
+      const notaLarga = "Cuando llega tarde se queda en silencio, aprieta las manos y necesita unos minutos a solas.";
+      assert.deepEqual(revisarTextoPersona(notaLarga, ["aprieta las manos"], [notaLarga]), [{ termino: notaLarga.slice(0, -1), motivo: "cita_en_texto_persona" }]);
+      // Dos tramos que se enciman son un solo pedazo; dos separados, dos.
+      assert.equal(con(`Sabe que ${pedazo} y también lo cuenta.`).length, 1);
+      assert.equal(con(`Sabe que ${pedazo} y que no sabe qué preguntar primero cuando.`).length, 2);
+      // La cita completa se reporta una vez, no como cita y como pedazo.
+      assert.deepEqual(con(`Contó que ${cita}.`), [["cita_en_texto_persona", cita]]);
+
+      // No bloquea: cinco palabras, otro orden, un parafraseo, un cambio sin seleccionar.
+      assert.deepEqual(con("Sabe que un error se repite."), []);
+      assert.deepEqual(con("Cuando se repite un error, sus compañeros van con Renata."), []);
+      assert.deepEqual(con(`Renata sabe que ${pedazo}.`, []), []);
+      // Sin la nota, lo que no se citó no se puede saber (control).
+      assert.deepEqual(bloqueosDeCambios(update, { cambios: [0], ediciones: [{ indice: 0, resumen: "Dice que no sabe qué preguntar primero." }] }, [cita]), []);
+      assert.deepEqual(pedazosCopiados("uno dos tres cuatro cinco", ["uno dos tres cuatro cinco"]), [], `menos de ${MIN_PALABRAS_COPIADAS} palabras`);
+
+      // sanitizeUpdate compara con la nota; la pantalla y la ruta hacen lo mismo con la misma función.
+      const u = updateVacio();
+      u.cambios.push(cambio("antecedentes_experiencia", "Dice que no sabe qué preguntar primero con un cliente.", [cita]));
+      assert.deepEqual(sanitizeUpdate(u, nota).banderas.map((b) => [b.ruta, b.motivo]), [["cambios[0].resumen", "cita_en_texto_persona"]]);
+    },
+  },
+  {
+    nombre: "004 · TDAH, dislexia y los demás términos clínicos en un resumen se marcan y bloquean (CA-004.64, R-004.59)",
+    correr: () => {
+      const update = updateVacio();
+      update.cambios.push(cambio("forma_aprender", "Le ayuda escribir sus ideas.", ["Prefiere escribir sus ideas"]));
+      const con = (resumen: string) => bloqueosDeCambios(update, { cambios: [0], ediciones: [{ indice: 0, resumen }] }, []).map((b) => [b.motivo, b.termino]);
+      assert.deepEqual(con("Tiene TDAH."), [["mencion_condicion", "TDAH"]]);
+      assert.deepEqual(con("Como es disléxica, prefiere audio."), [["mencion_condicion", "dislexia"]]);
+      assert.deepEqual(con("Tiene T.D.A.H."), [["mencion_condicion", "TDAH"]]);
+      assert.deepEqual(con("Sol es autista y tiene TDAH."), [["mencion_condicion", "autista"], ["mencion_condicion", "TDAH"]]);
+      assert.deepEqual(con("Tiene un diagnóstico."), [["termino_no_permitido", "diagnóstico"]], "sin doble bandera");
+      assert.deepEqual(con("Le ayuda escribir sus ideas antes."), []);
+      const u = updateVacio();
+      u.cambios.push(cambio("forma_aprender", "Tiene dislexia.", ["Prefiere escribir sus ideas"]));
+      assert.deepEqual(sanitizeUpdate(u, "Prefiere escribir sus ideas.").banderas.map((b) => [b.motivo, b.termino]), [["mencion_condicion", "dislexia"]]);
+    },
+  },
+  {
+    nombre: "003 · el textoPersona del plan se revisa igual: pedazos de citas y términos clínicos bloquean; la descripción no cambia (CA-003.38, R-003.30)",
+    correr: () => {
+      const citas = ["sus compañeros la buscan cuando un error se repite en la semana"];
+      const marcas = (descripcion: string, textoPersona: string | null) =>
+        banderasQueBloquean(banderasDeItem({ tipo: "apoyo_fe", descripcion, textoPersona }, { citas, ruta: "items[0]" })).map((b) => `${b.campo} ${b.motivo} ${b.termino}`);
+      assert.deepEqual(marcas("Apoyo.", "Tus compañeros saben que sus compañeros la buscan cuando un error."), ["textoPersona cita_en_texto_persona sus compañeros la buscan cuando un error"]);
+      assert.deepEqual(marcas("Apoyo.", "Como tienes TDAH, usa una lista."), ["textoPersona mencion_condicion TDAH"]);
+      assert.deepEqual(marcas("Apoyo.", "Usa una lista corta."), []);
+      assert.deepEqual(marcas("Cuidar lo que dijo sobre su terapia.", null), [], "la descripción la lee el coach");
     },
   },
   {
@@ -2229,6 +2302,15 @@ const PRUEBAS: Prueba[] = [
         assert.equal(CasoDemo.safeParse({ ...caso, [llave]: {} }).success, false, llave);
       }
       assert.equal(CasoDemo.safeParse(caso).success, true);
+    },
+  },
+  {
+    nombre: "007 · una edición del caso de demo con un pedazo de su nota se detecta, igual que en la ruta (R-004.59, R-007.63)",
+    correr: () => {
+      const { archivo, caso, base } = casoDemoReal();
+      const copia = structuredClone(caso);
+      copia.sesiones[0].aprobacion.ediciones = [{ indice: copia.sesiones[0].aprobacion.cambios[0], resumen: "Su líder y Recursos Humanos pidieron el acompañamiento." }];
+      assert.ok(problemasCasoDemo(archivo, copia, base).some((p) => p.includes("se bloquearía") && p.includes("pidieron el acompañamiento")));
     },
   },
   {
@@ -2931,12 +3013,12 @@ const PRUEBAS: Prueba[] = [
     nombre: "008 · los prompts nuevos existen, traen las etiquetas y las direcciones, y sus marcadores se llenan (R-008.1, C-18)",
     correr: () => {
       for (const version of [PROMPT_VERSION, PROMPT_VERSION_SEGUIMIENTO]) {
-        assert.match(version, /^2026-10-31_/);
+        assert.match(version, /^2026-11-01_/);
         const archivo = readFileSync(path.join(process.cwd(), "prompts", `${version}.md`), "utf8");
         assert.match(archivo, /^<!-- PROMPT -->[ \t]*$/m);
         assert.ok(archivo.includes(`\`${version}\``), "el encabezado no dice su versión");
       }
-      for (const anterior of ["2026-10-29_profile-update", "2026-10-30_seguimiento"]) {
+      for (const anterior of ["2026-10-29_profile-update", "2026-10-30_seguimiento", "2026-10-31_profile-update", "2026-10-31_seguimiento"]) {
         assert.ok(existsSync(path.join(process.cwd(), "prompts", `${anterior}.md`)), `se borró ${anterior}: hay eventos con esa versión`);
       }
       for (const p of [systemPromptProfileUpdate(), systemPromptSeguimiento([])]) {
@@ -2945,7 +3027,8 @@ const PRUEBAS: Prueba[] = [
         assert.ok(p.includes("`cambio` no quiere decir mejora ni retroceso"));
         assert.ok(p.includes("nunca es `apoyo`"));
         assert.ok(p.includes("Las citas siempre se copian de la nota de esta sesión"));
-        assert.ok(/no copies citas de la nota ni de las observaciones previas/.test(p));
+        assert.ok(/no copies citas ni pedazos de la nota o de las observaciones previas: nunca 6 o más palabras seguidas/.test(p));
+        assert.ok(p.includes("no nombres condiciones, terapias ni medicamentos"));
       }
     },
   },
@@ -3000,7 +3083,7 @@ const PRUEBAS: Prueba[] = [
       assert.deepEqual(bloqueosDeCambios(sinId, { cambios: [0], ediciones: [] }, []), []);
       assert.deepEqual(bloqueosDeCambios(sinId, { cambios: [0], ediciones: [{ indice: 0, resumen: "Sobre tu funcion-ejecutiva." }] }, []).map((b) => b.motivo), ["termino_interno"]);
       // El plan usa la misma búsqueda.
-      assert.ok(readFileSync(path.join(process.cwd(), "lib/plan/validate.ts"), "utf8").includes('buscarInternos(item.textoPersona)'));
+      assert.ok(readFileSync(path.join(process.cwd(), "lib/plan/validate.ts"), "utf8").includes('revisarTextoPersona(item.textoPersona'));
     },
   },
   {
@@ -5130,12 +5213,12 @@ const PRUEBAS: Prueba[] = [
     },
   },
   {
-    nombre: "010 · los términos clínicos viven en lib/profile/terminos y revisarTextoPersona no cambió (R-010.15, CA-010.15)",
+    nombre: "010 · los términos clínicos viven en lib/profile/terminos y revisarTextoPersona también los revisa (R-010.15, CA-010.15, R-004.59)",
     correr: () => {
       assert.equal(buscarClinicosDePerfil, buscarClinicos, "lib/guia/terminos no reexporta la misma función");
       assert.equal(TERMINOS_CLINICOS_DE_PERFIL, TERMINOS_CLINICOS_GUIA);
-      assert.deepEqual(revisarTextoPersona("Como tienes TDAH", []), [], "003 y 004 no cambian");
-      assert.deepEqual(revisarTextoPersona("Va a terapia", []), []);
+      assert.deepEqual(revisarTextoPersona("Como tienes TDAH", []), [{ termino: "TDAH", motivo: "mencion_condicion" }]);
+      assert.deepEqual(revisarTextoPersona("Va a terapia", []), [{ termino: "terapia", motivo: "mencion_condicion" }]);
       assert.deepEqual(buscarClinicos("Como tienes TDAH"), ["TDAH"]);
     },
   },
@@ -5195,7 +5278,7 @@ const PRUEBAS: Prueba[] = [
       }
       // Un paso con estos textos tampoco pasa.
       assert.ok(problemasD(pasoD("Pide que te diagnostiquen")).includes("texto_no_permitido"));
-      // En 009 lo que escribe la persona sigue igual: "planeación" sola solo la revisa 010, y revisarTextoPersona no cambia para 003 y 004.
+      // En 009 lo que escribe la persona sigue igual: "planeación" sola solo la revisa 010, y revisarTextoPersona no la busca ni separa sus palabras con "/".
       assert.deepEqual(revisarTextoPropio("Quiero ordenar mi planeación"), []);
       assert.deepEqual(revisarTextoPersona("Tu planeación", []), []);
       assert.deepEqual(revisarTextoPersona("memoria/de/trabajo", []), []);

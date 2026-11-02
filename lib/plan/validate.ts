@@ -24,7 +24,7 @@ import {
   type TipoItemPlan,
 } from "@/lib/plan/schema";
 import { DOMINIOS_FE } from "@/lib/profile/schema";
-import { buscarCondiciones, buscarInternos, buscarTerminos, citasCopiadas, TERMINOS_CONDICION } from "@/lib/profile/terminos";
+import { buscarCondiciones, buscarTerminos, citasCopiadas, revisarTextoPersona, TERMINOS_CONDICION } from "@/lib/profile/terminos";
 
 export { TERMINOS_CONDICION };
 
@@ -52,13 +52,10 @@ export function banderasDeItem(
     agregar("descripcion", "cita_en_texto_lider", citasCopiadas(item.descripcion, ctx.citas));
   }
 
-  // textoPersona: lo lee la persona. Además de lo anterior, nada interno ni citas (R-003.17, R-003.46).
+  // textoPersona: lo lee la persona. La misma revisión que el resumen del perfil: además de lo anterior, términos
+  // clínicos, nada interno, citas ni pedazos de citas (R-003.17, R-003.46, R-004.59).
   if (item.textoPersona !== null) {
-    const enTexto = buscarTerminos(item.textoPersona);
-    agregar("textoPersona", "termino_no_permitido", enTexto);
-    agregar("textoPersona", "mencion_condicion", buscarCondiciones(item.textoPersona, enTexto));
-    agregar("textoPersona", "termino_interno", buscarInternos(item.textoPersona));
-    agregar("textoPersona", "cita_en_texto_persona", citasCopiadas(item.textoPersona, ctx.citas));
+    for (const { termino, motivo } of revisarTextoPersona(item.textoPersona, ctx.citas)) agregar("textoPersona", motivo, [termino]);
   }
 
   return banderas;

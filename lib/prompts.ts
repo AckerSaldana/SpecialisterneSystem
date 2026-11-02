@@ -38,12 +38,12 @@ import {
 
 // Nombre del archivo sin ".md". Se guarda en profile_events.prompt_version y en audit_log.
 // Spec 008: la versión anterior se queda en prompts/, porque hay eventos con ella.
-export const PROMPT_VERSION = "2026-10-31_profile-update";
+export const PROMPT_VERSION = "2026-11-01_profile-update";
 // Spec 003 (R-003.43). Se guarda en plans.prompt_version y en audit_log.
 export const PROMPT_VERSION_PLAN = "2026-10-29_plan-acompanamiento";
 // Spec 004. Se guarda en profile_events.prompt_version y en audit_log. Spec 008: la versión anterior
 // se queda en prompts/, porque hay eventos con ella.
-export const PROMPT_VERSION_SEGUIMIENTO = "2026-10-31_seguimiento";
+export const PROMPT_VERSION_SEGUIMIENTO = "2026-11-01_seguimiento";
 // Spec 008 (R-008.39). Se guarda en la fila del resumen y en audit_log.
 export const PROMPT_VERSION_RESUMEN_DOMINIO = "2026-11-01_resumen-dominio";
 // Spec 009 (R-009.16). Se guarda en shared_guides.prompt_version y en audit_log.

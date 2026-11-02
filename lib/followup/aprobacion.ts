@@ -69,11 +69,12 @@ export function bloqueosDeCambios(
   update: Pick<ProfileUpdate, "cambios">,
   seleccion: Pick<Aprobacion, "cambios" | "ediciones">,
   citas: string[],
+  notas: string[] = [],
 ): BloqueoCambio[] {
   return [...new Set(seleccion.cambios)].flatMap((indice) => {
     const cambio = update.cambios[indice];
     const texto = seleccion.ediciones.find((e) => e.indice === indice)?.resumen ?? cambio.resumen;
-    return revisarTextoPersona(texto, citas).map(({ termino, motivo }) => ({
+    return revisarTextoPersona(texto, citas, notas).map(({ termino, motivo }) => ({
       indice,
       ruta: `cambios[${indice}].resumen`,
       dimension: cambio.dimension,

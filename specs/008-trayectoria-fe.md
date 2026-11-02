@@ -517,6 +517,8 @@ Punto de corte del plan: si el 2 nov se va tarde, se recorta con decisión de Ac
 
 ## Cambios
 
+1 nov: `PROMPT_VERSION` y `PROMPT_VERSION_SEGUIMIENTO` pasan a `2026-11-01_profile-update` y `2026-11-01_seguimiento`, por R-004.59. Las etiquetas de esta spec no cambian. Las mediciones de abajo son de las versiones anteriores.
+
 Medición de R-008.48 con el modelo real, 1 nov (`eval/resultados/2026-11-01_eval_2.md` y `_3.md`): 4 citas críticas en cada corrida con la opción B. La de "Anota en su libreta cada instrucción que le dan de palabra" salió crítica en las dos corridas. CA-008.47 queda medido, y el eval no sale en verde.
 
 Versión 1 · 2026-10-31 · primera versión, con Acker autorizando la construcción en el plan del 31 oct y su revisión pendiente.

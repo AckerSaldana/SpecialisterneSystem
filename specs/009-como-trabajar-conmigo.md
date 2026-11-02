@@ -622,6 +622,8 @@ Cada tarea es un commit pequeño con sus R-IDs, la herramienta y quién lo revis
 
 ## Cambios
 
+1 nov: `revisarLineaIa` usa `revisarTextoPersona`, que ahora también marca pedazos de 6 o más palabras de una cita (R-004.59). Una línea de la IA con un pedazo así se descarta. `revisarTextoPropio` no cambia y sigue sin buscar citas (R-009.25).
+
 Versión 1 · 2026-10-31: primera versión, con la propuesta de Acker y el plan del 31 oct. Lo que no estaba en la propuesta y se agrega: el estado `pendiente`, las columnas `documento`, `descartes`, `perfil_version`, `guia_base_id`, `generada_por`, `nombre_a_mostrar`, `prompt_version` y `model`, el estado `descartada`, "Hacer cambios", el trigger de transiciones, la función `private.app_guia_insumos` y la lista de términos clínicos. No se ha construido nada ni se ha probado.
 
 Misma versión, revisión del 31 oct (la spec sigue en borrador, sin implementar): `hayBorrador` y `hayVersiones` en `app_guia_insumos`; la regeneración solo la pide la persona (decisión abierta 10); descarte `solo_participacion` en `cuesta_y_pido`; una sola frase general en el aviso para 009 y 010; `TABLAS_PURGA` en `scripts/tablas-purga.ts`; tope de 20 al decidir y en el trigger; el coach ve fechas sin número de versión (decisión abierta 11); R-009.63 con sus dos funciones; `MENSAJES_GUIA`; CA-009.53 a CA-009.59.

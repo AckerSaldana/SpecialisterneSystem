@@ -179,21 +179,64 @@ export function citasCopiadas(texto: string, citas: string[]): string[] {
   });
 }
 
+// R-004.59: cuántas palabras seguidas iguales a una fuente cuentan como copiadas. Con 5 ya caen frases comunes
+// que no delatan la nota, como "la causa de una falla". Un parafraseo o un orden distinto no se detecta.
+export const MIN_PALABRAS_COPIADAS = 6;
+
+const palabrasDe = (texto: string) => normalizar(texto).match(/[\p{L}\p{N}]+/gu) ?? [];
+
+// Los tramos de MIN_PALABRAS_COPIADAS o más palabras seguidas que el texto comparte con alguna fuente, como están
+// escritos en el texto. Cruza puntuación: "se queda en silencio, aprieta las manos" cuenta como una sola frase.
+export function pedazosCopiados(texto: string, fuentes: string[]): string[] {
+  const clave = (palabras: string[], i: number) => palabras.slice(i, i + MIN_PALABRAS_COPIADAS).join(" ");
+  const enFuentes = new Set<string>();
+  for (const fuente of fuentes) {
+    const palabras = palabrasDe(fuente);
+    for (let i = 0; i + MIN_PALABRAS_COPIADAS <= palabras.length; i++) enFuentes.add(clave(palabras, i));
+  }
+
+  const palabras = palabrasDe(texto);
+  const pedazos: string[] = [];
+  let i = 0;
+  while (i + MIN_PALABRAS_COPIADAS <= palabras.length) {
+    if (!enFuentes.has(clave(palabras, i))) {
+      i++;
+      continue;
+    }
+    // Junta los tramos que se enciman en uno solo, también si vienen de fuentes distintas.
+    let fin = i + MIN_PALABRAS_COPIADAS;
+    for (let j = i + 1; j < fin; j++) if (enFuentes.has(clave(palabras, j))) fin = j + MIN_PALABRAS_COPIADAS;
+    pedazos.push(tramoEscrito(texto, palabras.slice(i, fin).join(" ")));
+    i = fin;
+  }
+  return [...new Set(pedazos)];
+}
+
 // ---------------------------------------------------------------------------
 // Texto que llega a la persona
 // ---------------------------------------------------------------------------
 
 export type MotivoTexto = "termino_no_permitido" | "mencion_condicion" | "termino_interno" | "cita_en_texto_persona";
 
-// Lo que impide que un texto llegue a la persona (R-004.59). "citas" son las de la propuesta y las
-// del último snapshot. Una cita copiada se devuelve completa, para que el coach la encuentre.
-export function revisarTextoPersona(texto: string, citas: string[]): { termino: string; motivo: MotivoTexto }[] {
+// Lo que impide que un texto llegue a la persona (R-004.59, R-003.30). "citas" son las de la propuesta y las
+// del último snapshot; "notas", el texto completo que recibió el modelo, porque también copia lo que no citó.
+// Una cita copiada se devuelve completa y un pedazo tal como se lee, para que el coach lo encuentre.
+// Un término clínico (TDAH, dislexia, terapia) cuenta como mención de una condición.
+export function revisarTextoPersona(texto: string, citas: string[], notas: string[] = []): { termino: string; motivo: MotivoTexto }[] {
   const terminos = buscarTerminos(texto);
+  const condiciones = buscarCondiciones(texto, terminos);
+  const clinicos = buscarClinicos(texto).filter((t) => !terminos.includes(t) && !condiciones.includes(t));
+  // Lo mismo copiado no se reporta dos veces: se queda lo más largo, para que el coach vea todo lo que tiene que cambiar.
+  const plano = (t: string) => ` ${palabrasDe(t).join(" ")} `;
+  const todasCopiadas = citasCopiadas(texto, citas);
+  const todosPedazos = pedazosCopiados(texto, [...citas, ...notas]);
+  const copiadas = todasCopiadas.filter((c) => !todosPedazos.some((p) => plano(p) !== plano(c) && plano(p).includes(plano(c))));
+  const pedazos = todosPedazos.filter((p) => !todasCopiadas.some((c) => plano(c).includes(plano(p))));
   return [
     ...terminos.map((termino) => ({ termino, motivo: "termino_no_permitido" as const })),
-    ...buscarCondiciones(texto, terminos).map((termino) => ({ termino, motivo: "mencion_condicion" as const })),
+    ...[...condiciones, ...clinicos].map((termino) => ({ termino, motivo: "mencion_condicion" as const })),
     ...buscarInternos(texto).map((termino) => ({ termino, motivo: "termino_interno" as const })),
-    ...citasCopiadas(texto, citas).map((termino) => ({ termino, motivo: "cita_en_texto_persona" as const })),
+    ...[...copiadas, ...pedazos].map((termino) => ({ termino, motivo: "cita_en_texto_persona" as const })),
   ];
 }
 
@@ -203,7 +246,7 @@ export function revisarTextoPersona(texto: string, citas: string[]): { termino: 
 
 // normalizar no quita separadores, y \b trata "_" como letra: "mi_TDAH", "neuro-divergente", "T.D.A.H.", un carácter
 // invisible en medio o las formas de ancho completo lo esquivarían. Vive aparte de normalizar porque las citas y
-// las banderas de seguimiento comparan con guiones y puntos tal cual, y revisarTextoPersona no cambia para 003 y 004.
+// las banderas de seguimiento comparan con guiones y puntos tal cual.
 const GUIONES = /[‐-―−﹘﹣－]/gu;
 const PUNTO_ENTRE_LETRAS = /(?<=[\p{L}\p{N}])\.(?=[\p{L}\p{N}])/gu;
 const LETRAS_SUELTAS = /(?<![\p{L}\p{N}])\p{L}(?: \p{L})+(?![\p{L}\p{N}])/gu;
@@ -242,7 +285,7 @@ export function formasDeComparacion(texto: string): { limpia: string; todas: str
 export const enCadaForma = (texto: string, buscar: (forma: string) => string[]) => [...new Set(formasDeComparacion(texto).todas.flatMap(buscar))];
 
 // ---------------------------------------------------------------------------
-// Términos clínicos (R-009.24, R-010.15). revisarTextoPersona no los busca.
+// Términos clínicos (R-009.24, R-010.15, R-004.59, R-003.30).
 // ---------------------------------------------------------------------------
 
 // R-009.24 (decisión abierta 3, opción A): TERMINOS_CONDICION no cubre TDAH ni dislexia. Se buscan sobre el

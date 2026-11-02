@@ -2,7 +2,7 @@
 
 # 004 · Sesiones de seguimiento y señales
 
-- Estado: Implementada · Versión 7 · 2026-10-30 (código pendiente de revisión de Acker)
+- Estado: Implementada · Versión 8 · 2026-11-01 (código pendiente de revisión de Acker)
 - Fuentes: F-005 (23:31, 45:53, 13:12), F-012, F-018, D-015, D-016, D-021, D-058, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3 y §6, CONTEXTO §4, §5 y §6 (roles y pasos 4 y 5). Reglas de la constitución: C-01, C-03, C-04, C-05, C-06, C-07, C-08, C-09, C-10, C-11, C-12, C-13, C-14, C-16, C-17, C-18
 - Depende de: 001 (pipeline nota → propuesta → aprobación y sus huecos H-1, H-3, H-5, H-9 y H-11), 002 (consentimiento vigente, bloqueo por retiro, aviso de privacidad, lista de lo que escribe la persona y `scripts/rls-check.ts`), 003 (plan aprobado con sus ítems, `origen_item_id` entre versiones, fichas verificadas y la tabla de transiciones que pasa el acompañamiento a `seguimiento`), 005 ("esto no me representa"). Sus migraciones corren después de las de 002 y 003.
 
@@ -119,7 +119,7 @@ Entra:
 | R-004.31 | La página del acompañamiento lista las sesiones que no tienen propuesta de la IA, con la opción de pedirla. | Interpretación del equipo |
 | R-004.43 | Antes de aprobar, el coach puede cambiar el tipo de un cambio propuesto (`fortaleza`, `area_de_apoyo` o `contexto`). La evidencia no cambia, y la decisión guarda el tipo que propuso la IA y el que eligió el coach. Aplica a la revisión de 001 y a la de esta etapa, que son la misma pantalla. | H-5 de 001; C-04, C-08 |
 | R-004.44 | Antes de aprobar, el coach puede editar el texto del resumen de un cambio propuesto. Las citas no se editan. La decisión guarda el texto de la IA y el editado. Aplica a 001 y a esta etapa. | H-9 de 001; C-01, C-04, C-05 |
-| R-004.59 | El resumen de un cambio llega tal cual a `persona_profiles`, así que la ruta de decisión revisa en el servidor el texto final de cada cambio seleccionado, editado o de la IA. Busca términos no permitidos, menciones de una condición, etiquetas de función ejecutiva o de señales, y citas copiadas de la evidencia de la propuesta o del último snapshot. Si encuentra algo, responde 400 con la ruta del cambio, no escribe nada y el evento sigue `proposed`. Ninguna confirmación del coach lo salta. La pantalla muestra la misma revisión y deshabilita aprobar mientras un cambio seleccionado tenga bandera. Los cambios no seleccionados no bloquean. | C-01, C-09; misma regla que R-003.30, R-005.18 y R-006.13; Propuesta (Claude), decide Acker |
+| R-004.59 | El resumen de un cambio llega tal cual a `persona_profiles`, así que la ruta de decisión revisa en el servidor el texto final de cada cambio seleccionado, editado o de la IA. Busca términos no permitidos, menciones de una condición, términos clínicos (R-009.24), etiquetas de función ejecutiva o de señales, citas copiadas de la evidencia de la propuesta o del último snapshot, y pedazos de 6 o más palabras seguidas iguales a esas citas o a la nota de la sesión. Si encuentra algo, responde 400 con la ruta del cambio, no escribe nada y el evento sigue `proposed`. Ninguna confirmación del coach lo salta. La pantalla muestra la misma revisión y deshabilita aprobar mientras un cambio seleccionado tenga bandera. Los cambios no seleccionados no bloquean. | C-01, C-09; misma regla que R-003.30, R-005.18 y R-006.13; Propuesta (Claude), decide Acker |
 | R-004.45 | Una llamada exitosa al modelo queda en `audit_log` aunque después falle el guardado de la propuesta: la fila de auditoría se escribe en su propia transacción, separada de la del evento. Aplica a la ruta de 001 y a las de esta etapa. | H-11 de 001; C-17 |
 | R-004.46 | Si la respuesta del modelo no pasa `PayloadPropuestaIA.parse` u otra validación del servidor, la ruta responde 502 con el texto de 001, deja la nota guardada y escribe una fila en `audit_log` con `ok = false`. | H-11 de 001; C-17 |
 | R-004.47 | El campo `audit_log.error` y los logs del servidor solo guardan la clase y el código del error, nunca el mensaje libre de un error desconocido, para que no lleven texto de la nota. Si la fila de error no se puede escribir, el log del servidor registra solo la acción y el código. | H-11 de 001; C-17 |
@@ -204,6 +204,8 @@ Entra:
 | CA-004.60 | Dada una señal activa con 10 citas, cuando el coach aprueba otra del mismo tipo con una cita nueva, entonces conserva `detectadaEn`, toma la descripción nueva y se queda con las 10 citas más recientes. | R-004.55 | prueba offline (`applyApproval`) |
 | CA-004.61 | Dado un siguiente paso con `itemRef` y `fichaId` nulos, o con los dos llenos, cuando se limpia la propuesta, entonces la propuesta se guarda, el siguiente paso aparece en descartados con `siguiente_paso_sin_destino` y no hay 502. | R-004.24 | prueba offline |
 | CA-004.62 | Dada una propuesta de seguimiento, cuando el coach aprueba solo un avance y una pregunta en la pantalla, entonces ve "Listo. Se guardó lo que aprobaste. El perfil no cambió.". | R-004.56 | navegador |
+| CA-004.63 | Dado un resumen con "sus compañeros la buscan cuando un error se repite", que es un pedazo de una cita más larga, o con 6 palabras seguidas de la nota que el modelo no citó, cuando revisa la propuesta, entonces aparece el pedazo como bandera y no puede aprobar, y la ruta responde 400. Con 5 palabras seguidas, otro orden o un parafraseo se aprueba. | R-004.59 | prueba offline + navegador |
+| CA-004.64 | Dado un resumen con "TDAH", "disléxica", "T.D.A.H." o "terapia", cuando revisa la propuesta, entonces hay una bandera `mencion_condicion` y no puede aprobar. | R-004.59, R-009.24 | prueba offline |
 
 ## Datos
 
@@ -389,6 +391,8 @@ Línea de tiempo: las propuestas de seguimiento se muestran como "Propuesta de l
 
 ## Prompts
 
+Versiones vigentes desde el 1 nov: `2026-11-01_seguimiento` y `2026-11-01_profile-update` (ver Cambios, versión 8).
+
 Archivo nuevo en `prompts/`, `2026-10-30_seguimiento.md`, con su propia `prompt_version` (C-18). El prompt de 001 conserva su nombre `2026-10-29_profile-update` porque ya hay eventos con esa versión. Recibe la nota, el nombre de pila, el tipo de sesión, la configuración del tipo de acompañamiento, el perfil previo, los ítems de la versión vigente del plan con su último estado, las señales activas, el contexto guardado y las fichas verificadas con el mismo filtro de 003. No recibe datos de la verificación (C-03) ni notas completas de sesiones anteriores. Se llama con `generateText` y `Output.object` (D-031 propuesta) y se audita con `accion = 'propose_followup_update'`. Mantiene las reglas del prompt de 001 y agrega: no proponer señal ni "Necesita ajuste" por hablar poco, no convertir un asunto personal en señal salvo un cambio de vida concreto, y no proponer ítems nuevos del plan. No se activa hasta que el aviso de privacidad suba de versión (R-004.49).
 
 ## Decisiones abiertas
@@ -458,6 +462,14 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 - ¿La persona debería ver el avance de sus objetivos?
 
 ## Cambios
+
+Versión 8 · 2026-11-01 · huecos del filtro de lo que lee la persona
+
+Decide Acker (1 nov), a partir del recorrido en capturas. Renata leía "sus compañeros la buscan cuando un error se repite", igual que en la nota, porque solo se bloqueaban citas completas. TDAH y dislexia tampoco se revisaban en el perfil.
+
+- R-004.59: también bloquea términos clínicos (R-009.24), como `mencion_condicion`, y pedazos de 6 o más palabras seguidas iguales a una cita o a la nota de la sesión, como `cita_en_texto_persona`. La bandera muestra el pedazo. Un parafraseo o un orden distinto no se detecta, y es a propósito. Nuevos CA-004.63 y CA-004.64.
+- Prompts: `2026-11-01_profile-update` y `2026-11-01_seguimiento` piden lo mismo. Las versiones anteriores se quedan porque hay eventos con ellas. Reducen las copias, pero no las quitan: en `eval/resultados/2026-11-01_eval_5.md`, 23 cambios de perfil en 9 corridas siguen bloqueados, y el coach los corrige. Es el bloqueo el que protege a la persona, no el prompt.
+- Decisión abierta 12: la opción A ya se aplicó en `2026-10-31_profile-update`, y estas versiones la amplían.
 
 Versión 7 · 2026-10-30 · construcción y revisión del código
 
