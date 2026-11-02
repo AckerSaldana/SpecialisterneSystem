@@ -13,6 +13,7 @@ import { withRls } from "@/lib/db/rls";
 import { normalizarCodigo } from "@/lib/invitations/code";
 import { logError } from "@/lib/log";
 import { ERROR_VENCIDO, leerInvitacion, type EstadoInvitacion } from "@/lib/persona/puerta";
+import { authNoRespondio, resumenAuth } from "@/lib/supabase/errores";
 import { createClient } from "@/lib/supabase/server";
 
 // Solo el correo vuelve al formulario, para no escribirlo otra vez. El código nunca.
@@ -30,6 +31,12 @@ export async function entrarConCodigo(_prev: InvitacionState, formData: FormData
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password: codigo });
+  // Sin red, un 5xx o el límite de intentos: el código pudo estar bien. Decir que no coincide la mandaría a pedir otro, y
+  // eso invalidaría este (R-002.15, R-002.17). Solo se registra el código de error de Supabase, nunca su mensaje.
+  if (error && authNoRespondio(error)) {
+    logError("invitacion: Auth no respondió", resumenAuth(error));
+    return { error: ERROR_SERVIDOR, email };
+  }
   // Mismo mensaje si falla el correo o el código (R-002.17). Un código reemplazado ya no es la
   // contraseña, así que también cae aquí (CA-002.13). El error de Supabase no se registra.
   if (error) return { error: ERROR_NO_COINCIDEN, email };

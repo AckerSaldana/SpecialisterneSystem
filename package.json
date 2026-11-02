@@ -12,9 +12,14 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "seed": "tsx scripts/seed.ts",
+    "seed-demo": "tsx --conditions=react-server scripts/seed-demo.ts",
     "eval": "tsx --conditions=react-server eval/compare.ts",
     "rls-check": "tsx scripts/rls-check.ts",
     "followup-check": "tsx --conditions=react-server scripts/followup-check.ts",
+    "persona-check": "tsx --conditions=react-server scripts/persona-check.ts",
+    "trayectoria-check": "tsx --conditions=react-server scripts/trayectoria-check.ts",
+    "guia-check": "tsx --conditions=react-server scripts/guia-check.ts",
+    "desglose-check": "tsx --conditions=react-server scripts/desglose-check.ts",
     "purge-retirados": "tsx scripts/purge-retirados.ts"
   },
   "dependencies": {

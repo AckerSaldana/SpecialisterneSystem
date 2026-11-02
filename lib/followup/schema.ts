@@ -11,7 +11,16 @@
 //
 // Este archivo importa valores de lib/profile/schema.ts; ese archivo solo importa de aquí tipos.
 import { z } from "zod";
-import { Bandera, Descartado, ListaEvidencia, ProfileUpdate } from "@/lib/profile/schema";
+import {
+  Bandera,
+  Descartado,
+  EntradaIndiceObservacion,
+  ListaEvidencia,
+  ListaEvidenciaEtiquetada,
+  ListaEvidenciaFE,
+  ProfileUpdate,
+  ProfileUpdateEtiquetado,
+} from "@/lib/profile/schema";
 
 // Etiquetas de R-004.6.
 export const ESTADOS_AVANCE = [
@@ -35,7 +44,8 @@ export const AvancePropuesto = z.strictObject({
   itemRef: z.string().describe("ID corto del punto del plan, por ejemplo P-01. Solo de la lista que recibes."),
   estado: EstadoAvance,
   resumen: z.string().min(1).max(400).describe("Una o dos frases literales sobre qué pasó con este punto."),
-  evidencia: ListaEvidencia,
+  // Spec 008 (R-008.5): se lee con o sin etiquetas. Contexto y siguiente paso no llevan (R-008.3).
+  evidencia: ListaEvidenciaFE,
 });
 export type AvancePropuesto = z.infer<typeof AvancePropuesto>;
 
@@ -60,6 +70,14 @@ export const FollowupUpdate = ProfileUpdate.extend({
 });
 export type FollowupUpdate = z.infer<typeof FollowupUpdate>;
 
+// Lo que le pide lib/ai al modelo y lo que valida lib/sessions/proponer.ts (spec 008). FollowupUpdate
+// es el esquema de lectura y también aceptaría una cita sin etiquetas (R-008.4).
+export const FollowupUpdateEtiquetado = FollowupUpdate.extend({
+  cambios: ProfileUpdateEtiquetado.shape.cambios,
+  avance: z.array(AvancePropuesto.extend({ evidencia: ListaEvidenciaEtiquetada })),
+});
+export type FollowupUpdateEtiquetado = z.infer<typeof FollowupUpdateEtiquetado>;
+
 // Índice P-nn → plan_item_id (R-004.54). El modelo no ve ni escribe el id real.
 export const EntradaIndicePlan = z.strictObject({
   ref: z.string(),
@@ -74,5 +92,7 @@ export const PayloadSeguimientoIA = z.strictObject({
   descartados: z.array(Descartado),
   banderas: z.array(Bandera),
   indicePlan: z.array(EntradaIndicePlan),
+  // Los eventos anteriores a 008 no lo traen (R-008.5).
+  indiceObservaciones: z.array(EntradaIndiceObservacion).default([]),
 });
 export type PayloadSeguimientoIA = z.infer<typeof PayloadSeguimientoIA>;

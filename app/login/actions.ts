@@ -6,6 +6,7 @@
 import { redirect } from "next/navigation";
 import { getSessionUser, HOME_BY_ROLE } from "@/lib/auth";
 import { logError } from "@/lib/log";
+import { authNoRespondio, resumenAuth } from "@/lib/supabase/errores";
 import { createClient } from "@/lib/supabase/server";
 
 // email se devuelve para no obligar a escribirlo de nuevo si hubo un error.
@@ -26,6 +27,11 @@ export async function login(_prev: LoginState, formData: FormData): Promise<Logi
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
+    // Sin red, un 5xx o el límite de intentos: la contraseña pudo estar bien, así que no se dice que no coincide.
+    if (authNoRespondio(error)) {
+      logError("login: Auth no respondió", resumenAuth(error));
+      return { error: ERROR_SERVIDOR, email };
+    }
     // Mismo mensaje para correo inexistente y contraseña incorrecta: no revelamos cuál falló.
     return { error: ERROR_CREDENCIALES, email };
   }

@@ -127,13 +127,14 @@ values (
 )
 on conflict do nothing;
 
--- Consentimiento del acompañamiento de demo, con la versión del aviso (R-002.34).
--- "where not exists" lo mantiene idempotente: el seed se puede correr varias veces.
+-- Consentimiento del acompañamiento de demo, con la versión vigente del aviso (R-002.34, AVISO_VERSION).
+-- "where not exists" lo mantiene idempotente sin mirar la versión: una base ya sembrada con otra
+-- versión no recibe un segundo "otorgado" (CA-002.27).
 insert into app.consent_events (engagement_id, user_id, tipo, version_aviso)
-select '44444444-4444-4444-8444-444444444444', '33333333-3333-4333-8333-333333333333', 'otorgado', '2026-10-29'
+select '44444444-4444-4444-8444-444444444444', '33333333-3333-4333-8333-333333333333', 'otorgado', '2026-11-03'
 where not exists (
   select 1 from app.consent_events
-  where engagement_id = '44444444-4444-4444-8444-444444444444' and version_aviso = '2026-10-29'
+  where engagement_id = '44444444-4444-4444-8444-444444444444' and tipo = 'otorgado'
 );
 
 -- ---------------------------------------------------------------------------

@@ -2,19 +2,23 @@
 //
 // Casilla y botón del consentimiento (spec 002, R-002.22, R-002.26). La casilla viene desmarcada
 // y el servidor la vuelve a revisar (./actions.ts). El error queda en texto junto a la casilla y
-// recibe el foco. "No por ahora" es un enlace a su pantalla: no registra nada.
+// recibe el foco. Después de un error del sistema, la casilla se queda como ella la dejó: el mensaje le pide intentar de
+// nuevo, y desmarcarla sin avisar la haría chocar con otro error (enviarSinReiniciar). "No por ahora" es un enlace a su
+// pantalla: no registra nada.
 "use client";
 
 import Link from "next/link";
 import { useActionState, useEffect, useRef } from "react";
+import { conFalloDeRed, enviarSinReiniciar, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { otorgarConsentimiento, type ConsentimientoState } from "./actions";
 
 const estadoInicial: ConsentimientoState = { error: null, campo: null };
+const otorgar = conFalloDeRed<ConsentimientoState>(otorgarConsentimiento, () => ({ error: ERROR_SIN_RESPUESTA, campo: null }));
 
 export function FormularioConsentimiento() {
-  const [state, formAction, pending] = useActionState(otorgarConsentimiento, estadoInicial);
+  const [state, formAction, pending] = useActionState(otorgar, estadoInicial);
   const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -24,7 +28,7 @@ export function FormularioConsentimiento() {
   const errorCasilla = state.error !== null && state.campo === "casilla";
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
+    <form action={formAction} onSubmit={enviarSinReiniciar(formAction)} className="flex flex-col gap-4" noValidate>
       <label
         htmlFor="acepto"
         className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-checked:border-2 has-checked:border-primary"

@@ -19,6 +19,7 @@ import {
   strongAlerts,
   users,
 } from "@/lib/db/schema";
+import { leerAtorados, type FilaAtorado } from "@/lib/desglose/lectura";
 import { citasDePropuesta, comoFollowup } from "@/lib/followup/aprobacion";
 import { historialDeItem, itemEquivalente, itemsFueraDelPlan, ultimoEstado, type FilaAvance, type ItemCadena } from "@/lib/followup/avance";
 import { PayloadSeguimientoIA, type EntradaIndicePlan, type FollowupUpdate, type TipoSesion } from "@/lib/followup/schema";
@@ -147,6 +148,9 @@ export type DatosSeguimiento = {
   pendientes: { id: string; fecha: Date | null }[];
   sinPropuesta: { id: string; fecha: Date }[];
   hayPlanVigente: boolean;
+  // "Me atoré aquí" sin revisar, aparte de las señales: no entra a senales, a signal_states ni al mensaje de
+  // seguimiento, y no se cuenta (R-010.30, R-010.31).
+  atorados: FilaAtorado[];
 };
 
 export async function leerSeguimiento(tx: Tx, engagementId: string, perfil: Perfil | null): Promise<DatosSeguimiento> {
@@ -253,6 +257,7 @@ export async function leerSeguimiento(tx: Tx, engagementId: string, perfil: Perf
     pendientes,
     sinPropuesta,
     hayPlanVigente: plan.vigente !== null,
+    atorados: await leerAtorados(tx, engagementId),
   };
 }
 
@@ -278,7 +283,8 @@ export type VistaPropuesta = {
   // Índices de update.avance cuyo ítem ya no tiene equivalente en la versión vigente (R-004.41).
   avanceSinEquivalente: number[];
   pasoSinEquivalente: boolean;
-  // Citas de la propuesta y del último snapshot, para revisar el texto en pantalla (R-004.59).
+  // Citas de la propuesta, del último snapshot y de las observaciones previas, para revisar el texto
+  // en pantalla (R-004.59, R-008.6).
   citasBase: string[];
   fichas: Record<string, string>;
 };
@@ -359,7 +365,7 @@ export async function leerVistaPropuesta(tx: Tx, engagementId: string, eventId: 
     avisoPlan,
     avanceSinEquivalente,
     pasoSinEquivalente,
-    citasBase: [...citasDePropuesta(update), ...citasDelPerfil(ultimo?.perfil ?? PERFIL_VACIO)],
+    citasBase: [...citasDePropuesta(update), ...citasDelPerfil(ultimo?.perfil ?? PERFIL_VACIO), ...payload.indiceObservaciones.map((e) => e.cita)],
     fichas,
   };
 }

@@ -26,6 +26,11 @@ export function normalizarCodigo(entrada: string): string {
   return entrada.replace(/[\s-]/g, "").toUpperCase();
 }
 
+// La contraseña temporal siempre tiene esta forma exacta, ya normalizada. /bienvenida/contrasena la usa para no aceptar el
+// código como contraseña nueva (R-002.18).
+const FORMA_DEL_CODIGO = new RegExp(`^[${ALFABETO}]{${LONGITUD_CODIGO}}$`);
+export const tieneFormaDeCodigo = (texto: string) => FORMA_DEL_CODIGO.test(texto);
+
 export function venceEn(desde: Date = new Date()): Date {
   return new Date(desde.getTime() + VIGENCIA_DIAS * 24 * 60 * 60 * 1000);
 }

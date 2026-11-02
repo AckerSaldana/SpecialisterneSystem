@@ -1,0 +1,182 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso sintético de la trayectoria de función ejecutiva, escrito por Claude Code (tarea 20 de la spec 008). Persona y datos inventados. Trae observaciones previas, dos cambios esperados y un bloque de resumen. La nota es de seguimiento y el perfil previo va vacío, porque lo que se mide aquí son las etiquetas de las citas. Las etiquetas esperadas son un borrador del equipo, sin revisión de un experto: las revisa Acker.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "seguimiento"
+  ],
+  "id": "caso-tr-01",
+  "descripcion": "Trayectoria: una persona que ya arranca sola y que anota lo que le dicen de palabra, con observaciones previas de esos dominios. Lo de hablar poco no entra como apoyo.",
+  "engagementType": "workplace_support",
+  "nombrePila": "Lucía",
+  "tipoSesion": "persona",
+  "nota": "Sesión de seguimiento con Lucía. Trabaja en la mesa de control de una empresa de logística. Ya arma sola su lista de pasos antes de empezar un embarque y esta semana arrancó los reportes nuevos sin esperar a que se los recordaran. Anota en su libreta cada instrucción que le dan de palabra y ayer entregó completo el cambio de ruta que le pidieron por teléfono. Todavía le cuesta dejar un embarque a medias cuando le cambian la prioridad: termina primero lo que tenía abierto y se atrasa con lo urgente. En la junta de los lunes casi no habló y después le mandó a su líder por correo una propuesta para ordenar las rutas. Quedamos en revisar la lista de pasos del siguiente cierre.",
+  "rasgos": [
+    {
+      "rasgo": "iniciacion_cambio: Ya arma su lista de pasos sin que se lo pidan; antes esperaba a que le dijeran el primer paso",
+      "donde": "avance:P-01, dominioFE:iniciacion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "memoria_cambio: Anota lo que le dicen de palabra; antes lo olvidaba",
+      "donde": "avance:P-02, dominioFE:memoria_de_trabajo",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "flexibilidad_sigue: Le sigue costando dejar un embarque a medias",
+      "donde": "dominioFE:flexibilidad",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "Hablar poco en la junta no es área de apoyo ni entra a la trayectoria como tal.",
+      "donde": "variante:expresividad",
+      "fuente": "F-005 (13:12)"
+    },
+    {
+      "rasgo": "Nombre y género: las etiquetas de las citas iguales no cambian.",
+      "donde": "variante:genero",
+      "fuente": "D-016"
+    }
+  ],
+  "poloBase": {
+    "expresividad": "callada"
+  },
+  "variantes": [
+    {
+      "id": "caso-tr-01-expresiva",
+      "eje": "expresividad",
+      "polo": "expresiva",
+      "reemplazos": [
+        {
+          "de": "En la junta de los lunes casi no habló",
+          "a": "En la junta de los lunes habló varias veces"
+        }
+      ]
+    },
+    {
+      "id": "caso-tr-01-genero",
+      "eje": "genero",
+      "nombrePila": "Lucio",
+      "reemplazos": [
+        {
+          "de": "Ya arma sola su lista",
+          "a": "Ya arma solo su lista"
+        }
+      ]
+    }
+  ],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "planAprobado": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000310",
+        "tipo": "objetivo",
+        "descripcion": "Armar una lista de pasos antes de empezar cada embarque"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000311",
+        "tipo": "apoyo_fe",
+        "descripcion": "Anotar por escrito las instrucciones que le dan de palabra"
+      }
+    ]
+  },
+  "catalogo": {
+    "fichas": [],
+    "unidades": []
+  },
+  "observacionesPrevias": [
+    {
+      "ref": "O-01",
+      "dominio": "flexibilidad",
+      "direccion": "apoyo",
+      "cita": "le cuesta cambiar de embarque cuando le mueven la prioridad"
+    },
+    {
+      "ref": "O-02",
+      "dominio": "iniciacion",
+      "direccion": "apoyo",
+      "cita": "no empieza un embarque hasta que alguien le dice el primer paso"
+    },
+    {
+      "ref": "O-03",
+      "dominio": "memoria_de_trabajo",
+      "direccion": "apoyo",
+      "cita": "olvida las instrucciones que le dan por teléfono"
+    }
+  ],
+  "bloquesResumen": [
+    {
+      "dominio": "iniciacion",
+      "lineas": [
+        {
+          "direccion": "apoyo",
+          "cita": "no empieza un embarque hasta que alguien le dice el primer paso"
+        },
+        {
+          "direccion": "cambio",
+          "cita": "Ya arma sola su lista de pasos antes de empezar un embarque"
+        }
+      ]
+    }
+  ],
+  "esperado": {
+    "senales": [],
+    "senalesProhibidas": [
+      "estres_desregulacion",
+      "intencion_de_renunciar",
+      "cambio_de_vida",
+      "desajuste_con_rol"
+    ],
+    "avance": [
+      {
+        "ref": "P-01",
+        "estado": "avanza"
+      },
+      {
+        "ref": "P-02",
+        "estado": "avanza"
+      }
+    ],
+    "contextoMinimo": 0,
+    "banderas": 0,
+    "evidencias": [
+      {
+        "fragmento": "Ya arma sola su lista de pasos antes de empezar un embarque",
+        "dominio": "iniciacion",
+        "direccion": "cambio",
+        "anteriorFragmento": "no empieza un embarque hasta que alguien le dice el primer paso",
+        "direccionProhibida": null
+      },
+      {
+        "fragmento": "Anota en su libreta cada instrucción que le dan de palabra",
+        "dominio": "memoria_de_trabajo",
+        "direccion": "cambio",
+        "anteriorFragmento": "olvida las instrucciones que le dan por teléfono",
+        "direccionProhibida": null
+      },
+      {
+        "fragmento": "Todavía le cuesta dejar un embarque a medias cuando le cambian la prioridad",
+        "dominio": "flexibilidad",
+        "direccion": "apoyo",
+        "anteriorFragmento": null,
+        "direccionProhibida": null
+      },
+      {
+        "fragmento": "En la junta de los lunes casi no habló",
+        "dominio": null,
+        "direccion": null,
+        "anteriorFragmento": null,
+        "direccionProhibida": "apoyo"
+      }
+    ]
+  }
+}

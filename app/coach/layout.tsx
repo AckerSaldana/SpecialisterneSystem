@@ -8,6 +8,8 @@ import { requireRole } from "@/lib/auth";
 
 const links: NavLink[] = [
   { href: "/coach", label: "Mis acompañamientos" },
+  // Spec 010 (R-010.41).
+  { href: "/coach/plantillas", label: "Plantillas" },
   { href: "/preferencias", label: "Preferencias" },
 ];
 

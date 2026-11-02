@@ -1,0 +1,90 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso de la etapa guia de \"Cómo trabajar conmigo\" (R-007.72, R-009.61, tarea 21 de la spec 009), escrito por Claude Code. Persona y datos inventados. Es Renata, del caso-demo-01: el perfil es el que le queda a la persona después de sus dos sesiones (persona_profiles, sin citas) y los ítems son los del plan aprobado de ese caso, tal cual. Lo único que se agrega al perfil es estilo_comunicacion, para que el modelo reciba que habla poco, algo que la nota de evaluación inicial sí dice y que el resumen del caso de demo no: lo escribió Claude Code. citas son fragmentos de sus notas: solo sirven para revisar que ninguna línea las copie (R-009.11), y nunca llegan al modelo. salidaFija no sale del modelo: la escribió Claude Code para probar sin red. El texto, los reemplazos de las variantes y los patrones son un borrador: los revisa otra persona del equipo.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": { "estado": "borrador", "por": null, "fecha": null },
+  "etapas": ["guia"],
+  "id": "caso-guia-01",
+  "descripcion": "Renata (Workplace Support) con su perfil y su plan aprobados. Un par de nombre y género y un par de persona que habla poco: no deben cambiar qué secciones traen líneas, y hablar poco no produce una línea en cuesta_y_pido.",
+  "basadoEn": "caso-demo-01",
+  "engagementType": "workplace_support",
+  "nombrePila": "Renata",
+  "rasgos": [
+    { "rasgo": "Habla poco en las reuniones y manda sus ideas por chat al terminar: es un estilo, no algo que le cuesta.", "donde": "dimension:estilo_comunicacion, variante:expresividad", "fuente": "F-005 (13:12), C-13" },
+    { "rasgo": "Nombre y género: no cambian qué secciones traen líneas ni sus orígenes.", "donde": "variante:genero", "fuente": "D-016" },
+    { "rasgo": "No sabe qué preguntar primero cuando un caso llega con pocos datos y le ayudan las preguntas sugeridas.", "donde": "dimension:ajustes_razonables", "fuente": "F-017" },
+    { "rasgo": "Las llamadas sin aviso la estresan y le ayuda que se acuerden antes por escrito.", "donde": "dimension:disparadores_estres", "fuente": "F-005" }
+  ],
+  "poloBase": { "expresividad": "callada" },
+  "variantes": [
+    {
+      "id": "caso-guia-01-expresiva",
+      "eje": "expresividad",
+      "polo": "expresiva",
+      "reemplazos": [
+        { "de": "Renata participa poco y manda sus ideas por chat al terminar", "a": "Renata participa seguido y también manda sus ideas por chat al terminar" }
+      ]
+    },
+    {
+      "id": "caso-guia-01-genero",
+      "eje": "genero",
+      "nombrePila": "Ricardo",
+      "reemplazos": [
+        { "de": "sus compañeros acuden a ella", "a": "sus compañeros acuden a él" },
+        { "de": "Cuando una llamada la interrumpe", "a": "Cuando una llamada lo interrumpe" }
+      ]
+    }
+  ],
+  "perfil": {
+    "dimensiones": {
+      "antecedentes_experiencia": { "resumen": "Renata lleva tres años dando soporte a los clientes de una empresa de software.", "tipo": "contexto" },
+      "estilo_comunicacion": { "resumen": "En las reuniones de equipo Renata participa poco y manda sus ideas por chat al terminar.", "tipo": "contexto" },
+      "motivacion_intereses": { "resumen": "Renata conoce a fondo la base de conocimiento de su equipo y sus compañeros acuden a ella. Disfruta explicar cómo encuentra la causa de una falla, y ya propuso dos mejoras a esa base.", "tipo": "fortaleza" },
+      "disparadores_estres": { "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse unos minutos y que las llamadas se acuerden antes por escrito.", "tipo": "contexto" },
+      "indicadores_estres": { "resumen": "Cuando una llamada la interrumpe, Renata tensa los hombros y le toma tiempo volver a lo que estaba haciendo.", "tipo": "contexto" },
+      "aspectos_sensoriales": { "resumen": "Con la persiana que le pusieron, Renata termina la tarde con la vista menos cansada.", "tipo": "contexto" },
+      "forma_aprender": { "resumen": "Renata aprende mejor cuando tiene los pasos por escrito con imágenes de la pantalla.", "tipo": "contexto" },
+      "comunicacion_escrita": { "resumen": "Renata comparte sus ideas por escrito después de las reuniones, y su líder las considera muy concretas.", "tipo": "fortaleza" },
+      "retroalimentacion": { "resumen": "Renata prefiere recibir comentarios por escrito, con un caso real como ejemplo, para leerlos con calma.", "tipo": "contexto" },
+      "ajustes_razonables": { "resumen": "Cuando un caso llega con pocos datos, a Renata le ayuda tener claro qué preguntarle primero al cliente. Con unas preguntas sugeridas, avanzó casos que llevaban días detenidos.", "tipo": "area_de_apoyo" }
+    }
+  },
+  "items": [
+    { "id": "d0000000-0000-4000-8000-000000000201", "tipo": "objetivo", "descripcion": "Renata usa una lista de preguntas fijas al abrir los casos complejos que llegan con pocos datos.", "textoPersona": "Usa tu lista de preguntas fijas cuando abras un ticket complejo.", "orden": 0 },
+    { "id": "d0000000-0000-4000-8000-000000000202", "tipo": "objetivo", "descripcion": "Renata le lleva a su líder el tema de acordar las llamadas por escrito antes de hacerlas.", "textoPersona": "Pídele a tu líder que las llamadas se acuerden antes por chat.", "orden": 1 },
+    { "id": "d0000000-0000-4000-8000-000000000203", "tipo": "ajuste_razonable", "descripcion": "Una persiana en el lugar de Renata para el reflejo de la tarde.", "textoPersona": null, "orden": 2 },
+    { "id": "d0000000-0000-4000-8000-000000000204", "tipo": "apoyo_fe", "descripcion": "Después de una interrupción, Renata se levanta unos minutos antes de volver al caso que tenía abierto.", "textoPersona": "Si una llamada te interrumpe, camina unos minutos antes de volver a tu ticket.", "orden": 3 }
+  ],
+  "citas": [
+    "En las reuniones de equipo habla poco",
+    "prefiere mandar sus ideas por chat al terminar",
+    "dice que no sabe qué preguntar primero",
+    "se le tensan los hombros",
+    "a su papá lo van a operar de la rodilla"
+  ],
+  "salidaFija": {
+    "lineas": [
+      { "seccion": "comunicacion", "texto": "Comparto mis ideas por chat después de la reunión.", "origenes": ["O-02", "O-03"] },
+      { "seccion": "comunicacion", "texto": "Recibo mejor los comentarios por escrito, con un caso de ejemplo.", "origenes": ["O-09"] },
+      { "seccion": "ayuda", "texto": "Pasos por escrito con capturas de pantalla cuando hay un proceso nuevo.", "origenes": ["O-08"] },
+      { "seccion": "cuesta_y_pido", "texto": "Me cuesta saber qué preguntarle primero al cliente; pido una lista de preguntas para esos casos.", "origenes": ["O-10", "O-11"] },
+      { "seccion": "cambios", "texto": "Acordar las llamadas antes por chat, en lugar de pasármelas sin aviso.", "origenes": ["O-04", "O-12"] },
+      { "seccion": "esperar", "texto": "Escribo artículos para la base de conocimiento y propongo mejoras.", "origenes": ["O-07"] }
+    ]
+  },
+  "esperado": {
+    "guia": {
+      "secciones": ["comunicacion", "ayuda", "cuesta_y_pido", "cambios", "esperar"],
+      "patronesProhibidos": [
+        { "patron": "hablar más", "motivo": "C-13: hablar poco es un estilo, no algo que hay que corregir.", "severidad": "critica" },
+        { "patron": "participar más", "motivo": "C-13: hablar poco es un estilo, no algo que hay que corregir.", "severidad": "critica" },
+        { "patron": "me cuesta hablar", "motivo": "R-009.60: hablar poco no va en lo que le cuesta.", "severidad": "critica" },
+        { "patron": "me cuesta participar", "motivo": "R-009.60: hablar poco no va en lo que le cuesta.", "severidad": "critica" },
+        { "patron": "tener paciencia", "motivo": "R-009.5: no dice qué hacer ni qué se puede notar.", "severidad": "advertencia" },
+        { "patron": "comprensión", "motivo": "R-009.5: no dice qué hacer ni qué se puede notar.", "severidad": "advertencia" },
+        { "patron": "mejor comunicación", "motivo": "R-009.5: no dice qué hacer ni qué se puede notar.", "severidad": "advertencia" }
+      ]
+    }
+  }
+}

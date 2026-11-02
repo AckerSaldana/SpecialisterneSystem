@@ -1,10 +1,11 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
 //
 // Flujo de una sesión y de su propuesta (spec 001 y spec 004). Lo usan POST /sessions y el reintento.
-//   1. tx1 (con RLS): engagement (404), consentimiento (409, R-004.2) y lo que va al modelo. La
-//      etapa decide el flujo (R-004.57).
+//   1. tx1 (con RLS): engagement (404), consentimiento (409, R-004.2) y lo que va al modelo, con las
+//      observaciones previas de la trayectoria (R-008.6). La etapa decide el flujo (R-004.57).
 //   2. Fuera de cualquier transacción: el modelo (puede tardar varios segundos).
-//   3. Limpieza con código. Si la salida no cumple el contrato: 502 y ok = false (R-004.46).
+//   3. Limpieza con código, y después las etiquetas (R-008.7). Si la salida no cumple el contrato: 502
+//      y ok = false (R-004.46, R-008.4).
 //   4. La auditoría va en su propia transacción: una llamada exitosa queda registrada aunque después
 //      falle el guardado (R-004.45). audit_log.error solo lleva clase y código (R-004.47).
 //   5. tx2 (con RLS): guarda la propuesta con perfil_version_base y plan_base_id (R-004.27, R-004.41).
@@ -25,14 +26,24 @@ import { engagements, followupContext, knowledgeCards, profileEvents, sessions, 
 import { armarIndicePlan, ultimoEstado } from "@/lib/followup/avance";
 import { aRealizadaEn, esFechaFutura, hoyEnMonterrey } from "@/lib/followup/fecha";
 import { leerEstadosSenales, leerPlanConAvance, leerUltimoSnapshot } from "@/lib/followup/lectura";
-import { FollowupUpdate, PayloadSeguimientoIA, type EntradaIndicePlan, type TipoSesion } from "@/lib/followup/schema";
+import { FollowupUpdateEtiquetado, PayloadSeguimientoIA, type EntradaIndicePlan, type TipoSesion } from "@/lib/followup/schema";
 import { sanitizeFollowup } from "@/lib/followup/validate";
 import { logError, resumirError } from "@/lib/log";
 import { violaUnico } from "@/lib/plan/server";
-import { PayloadPropuestaIA, PERFIL_VACIO, ProfileUpdate, type Perfil, type ProfileEventPayload } from "@/lib/profile/schema";
+import {
+  PayloadPropuestaIA,
+  PERFIL_VACIO,
+  ProfileUpdateEtiquetado,
+  type EntradaIndiceObservacion,
+  type Perfil,
+  type ProfileEventPayload,
+} from "@/lib/profile/schema";
 import { perfilConSenalesVigentes } from "@/lib/profile/senales";
 import { sanitizeUpdate } from "@/lib/profile/validate";
-import { PROMPT_VERSION, PROMPT_VERSION_SEGUIMIENTO, type FichaPrompt, type ItemPrompt } from "@/lib/prompts";
+import { PROMPT_VERSION, PROMPT_VERSION_SEGUIMIENTO, type FichaPrompt, type ItemPrompt, type ObservacionPrompt } from "@/lib/prompts";
+import { leerTrayectoria } from "@/lib/trayectoria/lectura";
+import { indiceObservaciones } from "@/lib/trayectoria/lineas";
+import { limpiarEtiquetas } from "@/lib/trayectoria/validate";
 
 const ACCION_PERFIL = "propose_profile_update";
 const ACCION_SEGUIMIENTO = "propose_followup_update";
@@ -71,6 +82,9 @@ type EntradaModelo = {
   itemsPlan: ItemPrompt[];
   contextoGuardado: { tipo: "pregunta" | "contexto" | "siguiente_paso"; texto: string }[];
   fichas: FichaPrompt[];
+  // R-008.6: el modelo ve "observacionesPrevias"; el payload guarda "indiceObservaciones".
+  observacionesPrevias: ObservacionPrompt[];
+  indiceObservaciones: EntradaIndiceObservacion[];
 };
 
 async function leerEngagement(tx: Tx, engagementId: string): Promise<Engagement | null> {
@@ -126,6 +140,9 @@ async function leerEntradaModelo(tx: Tx, engagement: Engagement): Promise<Entrad
         .orderBy(knowledgeCards.id)
     : [];
 
+  const { lineas } = await leerTrayectoria(tx, engagementId);
+  const { indice, observaciones } = indiceObservaciones(lineas);
+
   return {
     seguimiento,
     engagementType: engagement.type,
@@ -138,6 +155,8 @@ async function leerEntradaModelo(tx: Tx, engagement: Engagement): Promise<Entrad
     itemsPlan,
     contextoGuardado,
     fichas,
+    observacionesPrevias: observaciones,
+    indiceObservaciones: indice,
   };
 }
 
@@ -195,12 +214,14 @@ async function proponerYGuardar(
           itemsPlan: entrada.itemsPlan,
           contextoGuardado: entrada.contextoGuardado,
           fichas: entrada.fichas,
+          observacionesPrevias: entrada.observacionesPrevias,
         })
       : await modelo.proponerPerfil({
           nota: sesion.nota,
           nombrePila: entrada.nombrePila,
           engagementType: entrada.engagementType,
           perfilPrevio: entrada.perfilPrevio,
+          observacionesPrevias: entrada.observacionesPrevias,
         });
   } catch (e) {
     logError(`${accion}: error del modelo`, e);
@@ -228,18 +249,27 @@ async function proponerYGuardar(
 
   // Validación final antes de escribir: si algo no cumple el contrato, falla aquí y no en la UI.
   // El esquema estricto va primero: sanitize arma objetos nuevos y dejaría fuera una llave extra,
-  // como un puntaje o una severidad, sin que nadie se entere (R-004.14).
+  // como un puntaje o una severidad, sin que nadie se entere (R-004.14). Es el etiquetado, no el de
+  // lectura, porque el de lectura también aceptaría una cita sin etiquetas (R-008.4).
+  const { indiceObservaciones: indice } = entrada;
+  const citasPrevias = indice.map((e) => e.cita);
   let payload: ProfileEventPayload;
   try {
     if (entrada.seguimiento) {
-      const limpio = sanitizeFollowup(FollowupUpdate.parse(resultado.update), sesion.nota, {
+      const limpio = sanitizeFollowup(FollowupUpdateEtiquetado.parse(resultado.update), sesion.nota, {
         indicePlan: entrada.indicePlan,
         fichasVerificadas: entrada.fichas.map((f) => f.id),
+        citasPrevias,
       });
-      payload = PayloadSeguimientoIA.parse({ tipo: "propuesta_seguimiento", ...limpio, indicePlan: entrada.indicePlan });
+      payload = PayloadSeguimientoIA.parse({
+        tipo: "propuesta_seguimiento",
+        ...limpiarEtiquetas(limpio, indice),
+        indicePlan: entrada.indicePlan,
+        indiceObservaciones: indice,
+      });
     } else {
-      const limpio = sanitizeUpdate(ProfileUpdate.parse(resultado.update), sesion.nota);
-      payload = PayloadPropuestaIA.parse({ tipo: "propuesta_ia", ...limpio });
+      const limpio = sanitizeUpdate(ProfileUpdateEtiquetado.parse(resultado.update), sesion.nota, citasPrevias);
+      payload = PayloadPropuestaIA.parse({ tipo: "propuesta_ia", ...limpiarEtiquetas(limpio, indice), indiceObservaciones: indice });
     }
   } catch (e) {
     logError(`${accion}: la salida del modelo no cumple el contrato`, e);

@@ -15,12 +15,17 @@ Las fuentes viven en `00 Admin / Lectura` del Drive. Los IDs `F-0xx` son fuentes
 | [002](002-alta-y-consentimiento.md) | Alta y consentimiento | Detallada con tareas | Implementada (código pendiente de revisión) |
 | [003](003-plan-de-acompanamiento.md) | Plan de acompañamiento | Detallada con tareas | Implementada (código pendiente de revisión) |
 | [004](004-seguimiento-y-senales.md) | Sesiones de seguimiento y señales | Detallada con tareas | Implementada |
-| [005](005-vista-persona-y-recursos.md) | Vista de la persona y recursos | Requisitos | Borrador |
+| [005](005-vista-persona-y-recursos.md) | Vista de la persona y recursos | Requisitos, con tareas para la fase del 31 oct | Implementada solo en la parte de la fase del 31 oct; el resto en Borrador |
 | [006](006-cierre.md) | Cierre | Requisitos | Borrador |
-| [007](007-evaluacion-y-sesgo.md) | Evaluación con casos sintéticos y prueba de sesgo | Requisitos | Borrador |
+| [007](007-evaluacion-y-sesgo.md) | Evaluación con casos sintéticos y prueba de sesgo | Requisitos, con tareas para la fase del 31 oct | Implementada solo en la parte de la fase del 31 oct; el resto en Borrador |
+| [008](008-trayectoria-fe.md) | Trayectoria de función ejecutiva | Detallada con tareas | Implementada (revisión de Acker pendiente) |
+| [009](009-como-trabajar-conmigo.md) | Cómo trabajar conmigo | Detallada con tareas | Implementada (revisión de Acker pendiente) |
+| [010](010-desglose-de-tareas.md) | Desglose de tareas | Detallada con tareas | Implementada (revisión de Acker pendiente) |
 | [Preguntas](preguntas-partner.md) | Lo que solo Specialisterne puede responder | Lista | Borrador |
 
-Orden de construcción (fechas de CONTEXTO §11; meta interna 5 nov, 8 pm): 002 → 003 → 004 → 005 → 007 → 006.
+Orden de construcción (fechas de CONTEXTO §11; meta interna 5 nov, 8 pm): 002 → 003 → 004 → 005 → 007 → 008 → 009 → 010 → 006.
+
+Fase del 31 oct (D-073): de 005 y 007 solo se construye su parte "Entra a la fase del 31 oct", y 006 queda fuera. Acker autorizó construir eso y 008, 009 y 010 en el plan del 31 oct, y su revisión de esas specs sigue pendiente. Esta autorización es la excepción a la regla "No se programa una etapa sin que su spec esté al menos en 'revisada por Acker'".
 
 ## Estados
 

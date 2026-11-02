@@ -99,6 +99,104 @@
       "when": 1793401630636,
       "tag": "0013_permisos_seguimiento",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1793512775669,
+      "tag": "0014_comentarios_persona",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1793512779965,
+      "tag": "0015_permisos_comentarios_persona",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1793517026980,
+      "tag": "0016_comentario_persona_sin_decision",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1793519614676,
+      "tag": "0017_funciones_trayectoria",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793519625230,
+      "tag": "0018_trayectoria_fe",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793519627263,
+      "tag": "0019_permisos_trayectoria",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1793531911049,
+      "tag": "0020_funciones_guia",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1793531987399,
+      "tag": "0021_como_trabajar_conmigo",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1793531988783,
+      "tag": "0022_permisos_guia",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1793543560573,
+      "tag": "0023_guia_revisada",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1793543562613,
+      "tag": "0024_permisos_guia_revisada",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1793549164382,
+      "tag": "0025_funciones_desglose",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1793549165715,
+      "tag": "0026_desglose_de_tareas",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1793549167061,
+      "tag": "0027_permisos_desglose",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,121 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Evaluación inicial de Tomás, del documento 2026-10-30_casos-sinteticos-evaluacion de Beta. Persona y datos inventados. Las notas y las fuentes van tal cual; lo único que cambia es la forma. Fuentes: F-005 es la transcripción de la reunión del 27 oct y el minuto es el del inicio de la intervención donde está el dato (las dimensiones salen de la intervención que empieza en 40:05 y la autorización para usarlas está en 45:53). F-017 es el BRIEF-A y solo se usan los nombres de los dominios.",
+  "_esperadoBeta": {
+    "deben": "Antecedentes y experiencia; Motivación, habilidades e intereses (Fortaleza); Disparadores de estrés y qué le ayuda; Indicadores observables de estrés; Aspectos sensoriales; Conflictos; Trato uno a uno; Cómo prefiere recibir retroalimentación. Dominios: Monitoreo de tareas y Organización de materiales, como áreas de apoyo.",
+    "pueden": "Estilo de comunicación como fortaleza; Ajustes razonables (calendario impreso, lugar lejos de la cocina).",
+    "noDeben": "Forma de aprender ni Concentración (la nota no lo dice). Ninguna señal de riesgo. El conflicto no se presenta como problema de carácter: es una conducta concreta con lo que él mismo dijo después."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "perfil"
+  ],
+  "id": "caso-ws-02",
+  "descripcion": "Tomás (Workplace Support). Auxiliar contable en cuentas por pagar de una cadena regional de farmacias; lleva un año y medio. Él y su líder pidieron el acompañamiento porque en los cierres de mes le regresan conciliaciones con pasos que se le pasaron (desempeño, F-005, 00:00).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Tomás",
+  "nota": "Sesión de evaluación inicial con Tomás. Trabaja hace un año y medio como auxiliar contable en cuentas por pagar de una cadena regional de farmacias. El acompañamiento lo pidió él junto con su líder: en los cierres de mes, su líder le regresa conciliaciones con pasos que se le pasaron. Llegó puntual y con la laptop abierta en su hoja de conciliación para enseñarme cómo la arma.\n\nTomás es muy exacto con las cifras. Cuando una factura no cuadra por unos centavos, lo nota antes que nadie y no la deja pasar hasta encontrar la diferencia. Le gusta el trabajo repetitivo con reglas claras y dice que el cierre es su semana favorita del mes.\n\nLas conciliaciones largas las hace de corrido y no revisa el resultado antes de mandarlo. Los pasos que se le pasan suelen ser los del final, como adjuntar el soporte o marcar la póliza. Guarda todos sus archivos en el escritorio de la computadora, sin carpetas, y en la sesión tardó varios minutos en encontrar el del mes pasado.\n\nLos cambios de fecha del cierre sin aviso lo estresan. Cuando pasa, pregunta la nueva fecha varias veces y pide que se la confirmen por correo. Le ayuda tener el calendario de cierre impreso en su lugar.\n\nSu lugar está junto a la cocina compartida y a mediodía el olor de la comida le molesta mucho; se pone audífonos o se va a la sala de juntas si está libre.\n\nEn las juntas habla con soltura y explica sus ideas con ejemplos. Hace un mes un compañero modificó su archivo sin avisarle y Tomás se lo reclamó frente al equipo; después me dijo que hubiera preferido hablarlo a solas con él.\n\nLa retroalimentación la prefiere en el momento y en persona, y después un resumen corto por correo.\n\nPara la siguiente sesión acordamos armar una lista de revisión para el final de cada conciliación y probar una carpeta por mes.",
+  "rasgos": [
+    {
+      "rasgo": "antecedentes: Año y medio como auxiliar contable en cuentas por pagar",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "activacion_por_desempeno: Él y su líder lo piden porque le regresan conciliaciones",
+      "donde": "contexto:Disparador de Workplace Support",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "exacto_con_cifras: Nota diferencias de centavos; disfruta el trabajo con reglas claras y el cierre",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "no_revisa_al_final: Hace las conciliaciones de corrido y se le pasan los pasos finales",
+      "donde": "dominioFE:monitoreo_de_tareas",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "archivos_en_escritorio: Todo en el escritorio, sin carpetas; tarda en encontrar el archivo del mes pasado",
+      "donde": "dominioFE:organizacion_de_materiales",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "cambios_de_fecha: Los cambios de fecha sin aviso lo estresan; le ayuda el calendario impreso",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "confirma_por_correo: Pregunta la fecha varias veces y pide que se la confirmen por correo",
+      "donde": "dimension:indicadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "olor_de_cocina: El olor de la cocina compartida le molesta; audífonos o sala de juntas",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "habla_con_soltura: En juntas explica sus ideas con ejemplos",
+      "donde": "dimension:estilo_comunicacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "reclamo_frente_al_equipo: Reclamó frente al equipo un cambio a su archivo",
+      "donde": "dimension:conflictos",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "prefiere_a_solas: Después dijo que hubiera preferido hablarlo a solas",
+      "donde": "dimension:trato_uno_a_uno",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "retro_inmediata: Retroalimentación en el momento, en persona, y luego un resumen por correo",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    }
+  ],
+  "variantes": [],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "disparadores_estres",
+      "indicadores_estres",
+      "aspectos_sensoriales",
+      "conflictos",
+      "trato_uno_a_uno",
+      "retroalimentacion"
+    ],
+    "dominiosFE": [
+      "monitoreo_de_tareas",
+      "organizacion_de_materiales"
+    ],
+    "senales": [],
+    "senalesProhibidas": [
+      "estres_desregulacion",
+      "intencion_de_renunciar",
+      "cambio_de_vida",
+      "desajuste_con_rol"
+    ],
+    "tipoNoPermitido": [],
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "Las conciliaciones largas las hace de corrido y no revisa el resultado antes de mandarlo", "dominio": "monitoreo_de_tareas", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "Los pasos que se le pasan suelen ser los del final", "dominio": "monitoreo_de_tareas", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "Guarda todos sus archivos en el escritorio de la computadora, sin carpetas", "dominio": "organizacion_de_materiales", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null}
+    ]
+  }
+}

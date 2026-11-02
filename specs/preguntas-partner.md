@@ -2,9 +2,9 @@
 
 # Preguntas para Specialisterne
 
-- Estado: Borrador · Versión 1 · 2026-10-29
-- Fuentes: secciones "Preguntas para el partner" y "Decisiones abiertas" de las specs 001 a 007 (versión 2, consolidadas el 29 oct); CONTEXTO §7 (sesión de validación del 2 al 4 de nov), §8 (citas candidatas), §11 (pendientes y preguntas para el partner)
-- Depende de: 001, 002, 003, 004, 005, 006, 007
+- Estado: Borrador · Versión 3 · 2026-11-01
+- Fuentes: secciones "Preguntas para el partner" y "Decisiones abiertas" de las specs 001 a 007 (versión 2, consolidadas el 29 oct); CONTEXTO §7 (sesión de validación del 2 al 4 de nov), §8 (citas candidatas), §11 (pendientes y preguntas para el partner); D-069 a D-073 (por registrar en CONTEXTO §9) y plan del 31 oct, para P-55 a P-83
+- Depende de: 001, 002, 003, 004, 005, 006, 007, 008, 009, 010
 
 Esta lista junta en un solo lugar lo que solo Specialisterne puede responder. Cada pregunta dice qué requisito (R-ID) o decisión abierta de qué spec queda bloqueada hasta tener la respuesta. Mientras no contesten, cada spec sigue con la propuesta que ya tiene escrita.
 
@@ -21,6 +21,8 @@ Dentro de cada tema, las preguntas van en el orden en que se construyen las spec
 ## Primero
 
 Estas bloquean lo que se construye antes, 002 y 003, o tienen fecha cercana. Conviene mandarlas en el primer mensaje: P-01 a P-08 (alta, 002), P-09 y P-10 (perfil, porque tocan los ajustes razonables del plan y los casos del 31 oct), P-12 a P-20 (plan, 003), P-42 (retención, que el aviso de 002 tiene que decir) y P-45 (pedir la sesión).
+
+Desde el 31 oct, lo más urgente son P-55 a P-58, P-80 y P-82, porque cambian el diseño de lo que se construye del 2 al 4 de nov y varias tocan reglas de la constitución (C-04, C-11, C-12). Conviene mandarlas en el mismo mensaje que P-45. Mientras no contesten, se sigue con lo que decidió Acker (D-069 a D-071). Esas decisiones se presentan como propuesta nuestra, sin decir que Specialisterne ya las aceptó.
 
 ## Alta y diagnóstico
 
@@ -111,6 +113,59 @@ Estas bloquean lo que se construye antes, 002 y 003, o tienen fecha cercana. Con
 | P-53 | ¿Podemos decir en el pitch que Specialisterne revisó los casos? ¿Con qué palabras? | 007 R-007.44, R-007.2 | 007 | No | No |
 | P-54 | ¿Podemos usar en el pitch algunas frases suyas de la reunión del 27 oct, atribuidas a "Specialisterne LATAM"? Les mandamos la lista. | 007 R-007.40; CONTEXTO §8 (citas candidatas) | CONTEXTO §11 | Sí | No |
 
+## Las tres capacidades de la fase del 31 oct
+
+Los R-ID son de la versión 1 de 008, 009 y 010, que siguen en borrador. Esta sección junta también las preguntas de esas tres specs; si dos preguntaban lo mismo, queda una sola fila.
+
+### Primero: las que cambian el diseño
+
+| ID | Pregunta | Desbloquea | Sale de | §11 | Sesión |
+|---|---|---|---|---|---|
+| P-55 | "Cómo trabajar conmigo" es una guía que la persona aprueba línea por línea para compartirla con su líder. En nuestra propuesta el coach no la revisa antes y el sistema no la envía: la comparte ella. ¿Les parece aceptable que no pase por el coach? Si no, ¿qué revisión pedirían? | 009 R-009.20, R-009.28, R-009.34, R-009.35, R-009.37; C-04, C-11, D-069 y D-070. Si dicen que no, se cambia la constitución otra vez | 009 | No | Sí |
+| P-56 | Hoy revisan el perfil con la persona y lo firman los dos. ¿Esta guía reemplazaría ese documento o lo complementaría? ¿Alguna parte de lo que firman no debería estar en la guía? | 009 (alcance), R-009.41; 005 dec. 5 | 009 | No | Sí |
+| P-57 | En el desglose de tareas, la persona puede marcar "Me atoré aquí". En nuestra propuesta el coach lo lee en su panel antes de la sesión y la pantalla se lo avisa a ella antes de que lo escriba. ¿Quieren que le llegue al coach? ¿O prefieren que se quede con ella salvo que decida compartirlo? | 010 R-010.28, R-010.30, R-010.31; D-071 | 010 | No | Sí |
+| P-58 | Nuestros filtros bloquean los términos clínicos en la guía, también en las líneas que escribe la persona. Si una persona quiere decir su diagnóstico a su líder en esa guía, porque es su decisión, ¿debería poder? ¿O prefieren que eso se hable fuera del sistema? ¿Cómo la acompañan hoy cuando quiere contarlo? | 009 R-009.24, R-009.25; C-01, C-11. Si dicen que sí, se cambia la segunda parte de C-11 con una decisión registrada | 009 | No | Sí |
+| P-80 | El desglose le llega a la persona sin que el coach lo revise antes, con filtros de código. ¿Les parece aceptable que la IA le escriba pasos así? | 010 R-010.10, R-010.12 a R-010.17; C-04, D-070 | 010 | No | Sí |
+| P-82 | Si alguien escribe en "Me atoré aquí" algo que indica riesgo, el coach lo lee hasta preparar su sesión. ¿Qué protocolo esperan? ¿Es suficiente el aviso de que no se lee en ese momento? | 010 R-010.28, R-010.30, R-010.31; C-12; 004 R-004.19 y P-22 | 010 | No | No |
+
+### Cómo trabajar conmigo
+
+| ID | Pregunta | Desbloquea | Sale de | §11 | Sesión |
+|---|---|---|---|---|---|
+| P-59 | ¿Quién debería recibir esta guía: el líder directo, el mentor, recursos humanos? ¿Cambia entre inclusión y Workplace Support? | 009 R-009.41, R-009.45 | 009 | No | No |
+| P-60 | ¿Qué secciones esperarían en una guía así? Nuestra propuesta tiene cinco fijas. ¿Cuál le sirve más a un líder? ¿Falta o sobra algo? ¿Hay algo que nunca le dirían a un líder? | 009 R-009.4; P-17 de 003 (lo que se comunica al líder) | 009 | No | Sí |
+| P-61 | ¿Han visto casos en que compartir esta información le haya traído un problema a la persona? ¿Qué aviso debería leer antes de compartirla? | 009 R-009.28, R-009.30 | 009 | No | No |
+| P-62 | Si la persona retira una versión de su guía, el sistema no puede recuperar la copia que ya imprimió o mandó. ¿Cómo lo manejarían con la empresa? | 009 R-009.38, R-009.39 | 009 | No | No |
+| P-63 | ¿Los puntos del plan que hoy son solo para el coach, como los ajustes razonables o cómo darle instrucciones, se pueden usar para proponerle líneas de la guía a la persona? | 009 R-009.7, R-009.54; P-13 de 003 | 009 | No | No |
+| P-74 | ¿Hoy le entregan algo parecido al líder? ¿Es lo que le venden a la empresa? | 009 (alcance), R-009.41; 006 R-006.9 | 009 | No | No |
+| P-75 | ¿El coach debería leer lo que la persona quitó de la propuesta de la IA? | 009 R-009.30, R-009.36 | 009 | No | No |
+| P-76 | ¿Qué términos no deben aparecer nunca en una hoja para el líder? ¿"Ansiedad" y "depresión" también? | 009 R-009.24; P-16 de 003 | 009 | No | No |
+| P-83 | Si la persona retira una versión de la hoja, ¿es un problema que su coach pueda notarlo? | 009 R-009.35, R-009.38, dec. 11 | 009 | No | No |
+
+### Trayectoria de función ejecutiva
+
+| ID | Pregunta | Desbloquea | Sale de | §11 | Sesión |
+|---|---|---|---|---|---|
+| P-64 | ¿Sus coaches hablan de función ejecutiva? ¿Con qué nombres? Usamos los 9 nombres de dominio de BRIEF-A como títulos, sin sus ítems y sin aplicar el instrumento. ¿Es aceptable? ¿Les sirven o usarían otros? | 008 R-008.2, R-008.22; `DOMINIOS_FE` de `lib/profile/schema.ts` | 008 | No | Sí |
+| P-65 | ¿Les serviría ver, por cada dominio, las observaciones con fecha y cita, marcadas como apoyo, fortaleza o cambio? ¿Esas tres palabras les hacen sentido? ¿Quién de su equipo podría revisar las etiquetas esperadas de los casos? | 008 R-008.1, R-008.22, R-008.46 | 008 | No | Sí |
+| P-66 | Proponemos un resumen de una oración por dominio, que el coach aprueba. ¿Lo usarían o prefieren solo la línea de tiempo? | 008 R-008.33 a R-008.38 (es parte del primer recorte de esa etapa) | 008 | No | Sí |
+| P-67 | Hoy la persona no ve citas, señales ni nombres de dominios. ¿Les parece bien que esta pantalla sea solo para el coach? | 008 R-008.40; C-09, que no cambia en esta fase; P-28 | 008 | No | No |
+| P-77 | ¿Qué lenguaje de etiquetas sobre la persona deberíamos bloquear además de nuestra lista corta? | 008 R-008.18, R-008.36 | 008 | No | No |
+| P-78 | ¿Cómo prefieren que el aviso le explique esto a la persona, sin mostrarle nombres de funciones ejecutivas? | 008 R-008.44; 002 R-002.43 | 008 | No | No |
+| P-79 | ¿Un coach debería poder marcar como área de apoyo algo cuya única evidencia es hablar poco? | 008 R-008.8, R-008.31; C-13 | 008 | No | Sí |
+
+### Desglose de tareas
+
+| ID | Pregunta | Desbloquea | Sale de | §11 | Sesión |
+|---|---|---|---|---|---|
+| P-68 | ¿Sus coaches ya dividen tareas con las personas? ¿Cómo lo hacen y qué hace que un paso sirva? ¿Les hace sentido nuestra tabla de dominios a adaptaciones (iniciar, ordenar, estimar, cambiar de tarea)? | 010 R-010.6, R-010.12, R-010.13 | 010 | No | Sí |
+| P-69 | La persona escribiría la tarea de su trabajo y eso llega a un proveedor de IA. ¿Les preocupa que incluya información de la empresa? ¿Qué le dirían a la persona antes de escribirla? | 010 R-010.1, R-010.17, R-010.50; 002 R-002.43; C-10 | 010 | No | No |
+| P-70 | La estimación de tiempo por paso sería opcional y se apaga en modo Calma. ¿Ayuda, o ponerle tiempo a un paso puede presionar a la persona? | 010 R-010.25; C-14 | 010 | No | No |
+| P-71 | Un coach podría guardar un desglose como plantilla y aplicarlo a otra persona, sin las notas de apoyo de la primera. ¿Lo harían? ¿Hay algo que no debería pasar de una persona a otra? ¿Qué puestos o tareas sirven como primeras plantillas? ¿Se pueden compartir entre coaches? | 010 R-010.39 a R-010.43; C-07 | 010 | No | No |
+| P-72 | Si una persona se atora varias veces en el mismo punto, ¿qué esperarían que hiciera el coach? No lo contamos ni lo marcamos como riesgo. ¿Les parece bien? | 010 R-010.31, R-010.33; 004 R-004.14; C-13 | 010 | No | Sí |
+| P-81 | ¿La persona debería poder retirar lo que escribió en "Me atoré aquí"? | 010 R-010.27 | 010 | No | No |
+| P-73 | ¿Alguna de estas tres capacidades les parece que no usarían, o que falta probarla con personas antes de mostrarla como útil? | D-073; lo que se dice en el pitch (007 R-007.39, R-007.45) | 008, 009, 010 | No | Sí |
+
 ## Duplicados que se juntaron
 
 - Qué partes del perfil ve la persona: 001 y 005 (P-28).
@@ -124,3 +179,17 @@ Estas bloquean lo que se construye antes, 002 y 003, o tienen fecha cercana. Con
 ## Al recibir respuestas
 
 Propuesta (Claude), decide Acker: la respuesta se registra como fuente en CONTEXTO §10 y cada spec actualiza el requisito o la decisión que aparece en "Desbloquea", con versión nueva. Las notas con lo que dijo el partner van al Drive, en `01 Partner Specialisterne / Notas de reuniones`, y no al repo, como ya pide R-007.40 para la sesión; las citas solo se usan con permiso (P-54).
+
+Tres preguntas ya tienen una respuesta de trabajo mientras el partner contesta (005, tabla de decisiones del plan anterior): P-28 (se ven las 15 dimensiones), P-29 (resumen tal cual, etiquetas en segunda persona) y P-31 (el cambio llega al aprobar). Si contestan otra cosa, se reabre esa decisión. Las preguntas no cambian.
+
+## Cambios
+
+Versión 2 · 2026-10-31 · fase del 31 oct
+
+- Nueva sección "Las tres capacidades de la fase del 31 oct": P-55 a P-82, con los R-ID de 008, 009 y 010 (R-009.55). Incluye si aceptan que el coach no revise la guía (P-55), si la guía reemplaza o complementa el documento que firman (P-56), si "me atoré" llega al coach (P-57) y si la persona puede decir su diagnóstico en la guía (P-58).
+- "Primero" suma P-55 a P-58, P-80 y P-82. Ninguna pregunta usa citas nuevas del partner. Lo que se dice de cómo trabajan hoy es lo que ya estaba en CONTEXTO §4.
+- Sin cambios en P-01 a P-54.
+
+Versión 3 · 2026-11-01 · "Cómo trabajar conmigo" (R-009.55)
+
+- P-83 es la única pregunta de la sección "Preguntas para el partner" de 009 que no tenía fila. Las demás ya estaban: P-55, P-58, P-60, P-74, P-75 y P-76. Los R-ID de P-55 a P-63 ya apuntaban a 009 y se revisaron sin cambios.

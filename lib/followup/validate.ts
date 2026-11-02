@@ -10,7 +10,7 @@
 //   - Bandera de participación (R-004.33): una señal o un avance "Necesita ajuste" cuya única
 //     evidencia es que la persona habla o participa poco. No bloquea; avisa al coach.
 // Igual que en sanitizeUpdate, las rutas de "descartados" son sobre la respuesta ORIGINAL del modelo
-// y las de "banderas", sobre la propuesta YA LIMPIA.
+// y las de "banderas", sobre la propuesta YA LIMPIA. "citasPrevias" (R-008.6) solo agrega banderas.
 import type { AvancePropuesto, EntradaIndicePlan, FollowupUpdate, NotaContextoPropuesta, SiguientePasoPropuesto } from "@/lib/followup/schema";
 import type { Bandera, Descartado } from "@/lib/profile/schema";
 import { buscarTerminos, citaEnNota, normalizar } from "@/lib/profile/terminos";
@@ -41,7 +41,11 @@ export type ResultadoSeguimiento = {
 export function sanitizeFollowup(
   update: FollowupUpdate,
   nota: string,
-  { indicePlan, fichasVerificadas }: { indicePlan: EntradaIndicePlan[]; fichasVerificadas: string[] },
+  {
+    indicePlan,
+    fichasVerificadas,
+    citasPrevias = [],
+  }: { indicePlan: EntradaIndicePlan[]; fichasVerificadas: string[]; citasPrevias?: string[] },
 ): ResultadoSeguimiento {
   const base = sanitizeUpdate(
     {
@@ -51,6 +55,7 @@ export function sanitizeFollowup(
       preguntasParaSiguienteSesion: update.preguntasParaSiguienteSesion,
     },
     nota,
+    citasPrevias,
   );
   const descartados = [...base.descartados];
   const notaNormal = normalizar(nota);

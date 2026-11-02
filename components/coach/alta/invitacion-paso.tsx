@@ -8,6 +8,7 @@
 
 import { useActionState, useEffect, useRef, useState } from "react";
 import { generarInvitacion, type InvitacionState } from "@/app/coach/engagements/[id]/actions";
+import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -36,7 +37,10 @@ const estadoInicial: InvitacionState = { error: null, resultado: null };
 export function InvitacionPaso({ engagementId, nombre, estado }: Props) {
   // El estado anterior (con el código) no se manda al servidor: la action solo recibe el FormData.
   const [state, formAction, pending] = useActionState(
-    (_prev: InvitacionState, formData: FormData) => generarInvitacion(formData),
+    conFalloDeRed<InvitacionState>(
+      (_prev, formData) => generarInvitacion(formData),
+      (previo) => ({ ...previo, error: ERROR_SIN_RESPUESTA }),
+    ),
     estadoInicial,
   );
   const [confirmando, setConfirmando] = useState(false);

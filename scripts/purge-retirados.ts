@@ -16,35 +16,15 @@
 //   npm run purge-retirados -- --test                → prueba de CA-002.42 en una transacción con rollback
 //
 // El resumen solo dice ids, fechas y cuántas filas se borraron por tabla. Nunca imprime notas.
+import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 import postgres, { type TransactionSql } from "postgres";
+import { columnaDe, TABLAS_PURGA } from "./tablas-purga";
 
 config({ path: resolve(process.cwd(), ".env.local"), quiet: true });
 
 type Tx = TransactionSql;
-
-// Orden de borrado según las llaves foráneas de lib/db/schema.ts:
-// recommendations → plan_items → plans; persona_profiles → profile_snapshots → profile_events → sessions.
-// 003 a 006 agregan aquí las tablas de su lista de bloqueo (R-002.44), respetando sus llaves.
-// Todas tienen columna engagement_id. engagements y consent_events no se tocan nunca.
-// Orden por llaves foráneas: lo que apunta a otra tabla se borra antes. persona_plans y
-// plan_items van antes que plans, y plans antes que profile_snapshots (plans.profile_snapshot_id).
-// Spec 004: sus cuatro tablas apuntan a plan_items, sessions y profile_events, así que van primero.
-const TABLAS_PURGA = [
-  "plan_item_updates",
-  "followup_context",
-  "signal_states",
-  "strong_alerts",
-  "recommendations",
-  "persona_plans",
-  "plan_items",
-  "plans",
-  "persona_profiles",
-  "profile_snapshots",
-  "profile_events",
-  "sessions",
-] as const;
 
 const PLAZO = "6 months";
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -78,7 +58,7 @@ async function contar(tx: Tx | postgres.Sql, engagementId: string): Promise<Cont
   const conteo = {} as Conteo;
   for (const tabla of TABLAS_PURGA) {
     // tabla viene de la constante de arriba, nunca de una entrada.
-    const [r] = await tx.unsafe(`select count(*)::int as n from app.${tabla} where engagement_id = $1`, [engagementId]);
+    const [r] = await tx.unsafe(`select count(*)::int as n from app.${tabla} where ${columnaDe(tabla)} = $1`, [engagementId]);
     conteo[tabla] = r.n as number;
   }
   return conteo;
@@ -87,7 +67,7 @@ async function contar(tx: Tx | postgres.Sql, engagementId: string): Promise<Cont
 async function purgar(tx: Tx, engagementId: string): Promise<Conteo> {
   const conteo = {} as Conteo;
   for (const tabla of TABLAS_PURGA) {
-    const r = await tx.unsafe(`delete from app.${tabla} where engagement_id = $1`, [engagementId]);
+    const r = await tx.unsafe(`delete from app.${tabla} where ${columnaDe(tabla)} = $1`, [engagementId]);
     conteo[tabla] = r.count ?? 0;
   }
   return conteo;
@@ -158,8 +138,17 @@ const ENG_ALTA = "46464646-4646-4646-8646-464646464646";
 const PERSONA_TEST = "79797979-7979-4979-8979-797979797979";
 const ENG_TEST = "48484848-4848-4848-8848-484848484848";
 
+// Un desglose sintético (spec 010), como owner.
+async function insertarDesglose(tx: Tx, engagementId: string, snapshotId: string, opciones: { plantillaId?: string; origenId?: string; pasoId?: string } = {}) {
+  const paso = { id: opciones.pasoId ?? randomUUID(), accion: "Abre un documento en blanco.", criterioTerminado: "El documento nuevo está abierto.", notaApoyo: null, porQue: null, origen: null, minutos: null };
+  const [d] = await tx`
+    insert into app.task_breakdowns (engagement_id, tarea_original, pasos, generado_desde, prompt_version, model, plantilla_id, origen_breakdown_id, creado_por)
+    values (${engagementId}, 'Tarea sintética', ${tx.json([paso])}, ${snapshotId}, 'purge-test', 'purge-test', ${opciones.plantillaId ?? null}, ${opciones.origenId ?? null}, ${COACH}) returning id`;
+  return d.id as string;
+}
+
 // Una fila sintética en cada tabla de TABLAS_PURGA para el acompañamiento.
-async function sembrar(tx: Tx, engagementId: string) {
+async function sembrar(tx: Tx, engagementId: string): Promise<{ snapshotId: string; plantillaId: string }> {
   const [s] = await tx`
     insert into app.sessions (engagement_id, coach_id, nota_original)
     values (${engagementId}, ${COACH}, 'Nota sintética de purge-retirados --test.') returning id`;
@@ -183,6 +172,13 @@ async function sembrar(tx: Tx, engagementId: string) {
     insert into app.persona_plans (plan_id, engagement_id, version, contenido) values (${plan.id}, ${engagementId}, ${vp}, '{"items":[]}'::jsonb)`;
   await tx`
     insert into app.recommendations (engagement_id, catalog_unit_id, plan_item_id, razon) values (${engagementId}, 'CU-001', ${item.id}, 'Razón sintética')`;
+  // Spec 005 (CA-005.36): un comentario resuelto por una propuesta y otro por una versión del plan.
+  await tx`
+    insert into app.profile_events (engagement_id, tipo, status, payload, created_by, resuelto_por_evento)
+    values (${engagementId}, 'no_me_representa', 'approved', '{}'::jsonb, ${COACH}, ${ev.id})`;
+  await tx`
+    insert into app.profile_events (engagement_id, tipo, status, payload, created_by, resuelto_por_plan)
+    values (${engagementId}, 'no_me_representa', 'approved', '{}'::jsonb, ${COACH}, ${plan.id})`;
   // Spec 004: una fila en cada tabla, y un evento con plan_base_id para cubrir el ciclo de llaves
   // plans → profile_snapshots → profile_events → plans.
   await tx`update app.profile_events set plan_base_id = ${plan.id} where id = ${ev.id}`;
@@ -199,6 +195,38 @@ async function sembrar(tx: Tx, engagementId: string) {
   await tx`
     insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por)
     values (${engagementId}, 'cambio_de_vida', ${ev.id}, ${COACH}) on conflict do nothing`;
+  // Spec 008 (CA-008.43): una corrección apunta al evento y un resumen. "do nothing" por lo mismo que la
+  // alerta: una propuesta abierta de un recorrido no debe tumbar la prueba.
+  const lineaId = `${ev.id}:cambios[0].evidencia[0]`;
+  await tx`
+    insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, created_by)
+    values (${engagementId}, ${ev.id}, ${lineaId}, 'iniciacion', 'apoyo', ${COACH})`;
+  await tx`
+    insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+    values (${engagementId}, 'iniciacion', 'Resumen sintético.', ${tx.json([lineaId])}, ${tx.json([lineaId])}, '2026-10-31_resumen-dominio', 'purge-test', ${COACH})
+    on conflict do nothing`;
+  // Spec 009 (CA-009.50): dos versiones listas, y la segunda apunta a la primera, para cubrir la llave a sí
+  // misma. Como listas, un borrador abierto de un recorrido no choca con shared_guides_un_borrador.
+  const [{ vg }] = await tx`select coalesce(max(version), 0)::int + 1 as vg from app.shared_guides where engagement_id = ${engagementId}`;
+  const guia = (version: number, base: string | null) => tx`
+    insert into app.shared_guides (engagement_id, version, estado, nombre_a_mostrar, lineas, documento, generada_desde_snapshot_id,
+      perfil_version, plan_version, guia_base_id, generada_por, aprobada_por_persona_en)
+    values (${engagementId}, ${version}, 'lista', 'Nombre sintético', '[]'::jsonb, '{"nombre":"Nombre sintético","secciones":[]}'::jsonb, ${snap.id},
+      ${v}, ${vp}, ${base}, ${COACH}, now()) returning id`;
+  const [primera] = await guia(vg as number, null);
+  await guia((vg as number) + 1, primera.id as string);
+  // Spec 010 (CA-010.52): una plantilla, un desglose hecho con ella, su repetición, para cubrir la llave a sí misma, y una marca.
+  const [plantilla] = await tx`
+    insert into app.task_templates (org_id, origen_engagement_id, puesto, titulo, tarea, pasos, creada_por)
+    values (${ORG}, ${engagementId}, 'Puesto sintético', 'Título sintético', 'Tarea sintética',
+      ${tx.json([{ id: randomUUID(), accion: "Abre un documento en blanco.", criterioTerminado: "El documento nuevo está abierto." }])}, ${COACH}) returning id`;
+  const pasoId = randomUUID();
+  const desglose = await insertarDesglose(tx, engagementId, snap.id as string, { plantillaId: plantilla.id as string, pasoId });
+  await insertarDesglose(tx, engagementId, snap.id as string, { origenId: desglose });
+  await tx`
+    insert into app.task_step_events (engagement_id, breakdown_id, paso_id, estado, texto, creado_por)
+    values (${engagementId}, ${desglose}, ${pasoId}, 'atorado', 'Texto sintético.', ${COACH})`;
+  return { snapshotId: snap.id as string, plantillaId: plantilla.id as string };
 }
 
 async function eventoConFecha(tx: Tx, engagementId: string, userId: string, tipo: "otorgado" | "retirado", hace: string) {
@@ -223,11 +251,13 @@ async function prueba(sql: postgres.Sql): Promise<boolean> {
   try {
     await sql.begin(async (tx) => {
       // 1. Demo: retirado hace 7 meses → se borra.
-      await sembrar(tx, ENG_DEMO);
+      const demoSembrado = await sembrar(tx, ENG_DEMO);
       await eventoConFecha(tx, ENG_DEMO, PERSONA, "retirado", "7 months");
       // 2. Segundo acompañamiento: retirado hace 1 mes → no se toca.
-      await sembrar(tx, ENG_ALTA);
+      const altaSembrado = await sembrar(tx, ENG_ALTA);
       await eventoConFecha(tx, ENG_ALTA, PERSONA_ALTA, "retirado", "1 month");
+      // Spec 010 (R-010.42, decisión abierta 5, opción B): un desglose de otra persona hecho con la plantilla que se va a borrar.
+      const desgloseAjeno = await insertarDesglose(tx, ENG_ALTA, altaSembrado.snapshotId, { plantillaId: demoSembrado.plantillaId });
       // 3. Acompañamiento de prueba: retirado hace 8 meses y otorgado después → no se toca.
       await tx`
         insert into auth.users (instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -268,6 +298,8 @@ async function prueba(sql: postgres.Sql): Promise<boolean> {
 
       const alta = await contar(tx, ENG_ALTA);
       revisar(resumen(alta) === resumen(antes.alta), "retirado hace 1 mes: no se tocó ninguna fila");
+      const [ajeno] = await tx`select plantilla_id from app.task_breakdowns where id = ${desgloseAjeno}`;
+      revisar(ajeno !== undefined && ajeno.plantilla_id === null, "un desglose de otra persona sigue, con plantilla_id nulo");
       const test = await contar(tx, ENG_TEST);
       revisar(resumen(test) === resumen(antes.test), "otorgado posterior: no se tocó ninguna fila");
 

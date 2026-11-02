@@ -9,7 +9,7 @@ import "server-only";
 import { generateText, Output } from "ai";
 import { MODEL_ID, modelo } from "@/lib/ai/model";
 import type { UsoTokens } from "@/lib/ai/propose-profile-update";
-import { FollowupUpdate } from "@/lib/followup/schema";
+import { FollowupUpdateEtiquetado } from "@/lib/followup/schema";
 import {
   mensajeUsuarioSeguimiento,
   PROMPT_VERSION_SEGUIMIENTO,
@@ -19,7 +19,7 @@ import {
 } from "@/lib/prompts";
 
 export type ResultadoSeguimientoModelo = {
-  update: FollowupUpdate;
+  update: FollowupUpdateEtiquetado;
   usage: UsoTokens;
   latenciaMs: number;
   modelo: string;
@@ -40,7 +40,8 @@ export async function proposeFollowup(
     },
     prompt: mensajeUsuarioSeguimiento(entrada),
     output: Output.object({
-      schema: FollowupUpdate,
+      // Esquema etiquetado (spec 008, R-008.4): toda cita de cambios y avance lleva sus tres llaves.
+      schema: FollowupUpdateEtiquetado,
       name: "FollowupUpdate",
       description: "Propuesta de una sesión de seguimiento con evidencia citada de la nota.",
     }),

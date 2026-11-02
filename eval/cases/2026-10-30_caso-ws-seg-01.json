@@ -1,0 +1,125 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Seguimiento de Renata, del documento 2026-10-30_casos-sinteticos-evaluacion de Beta. Persona y datos inventados. La nota, las variantes y las fuentes van tal cual. El documento no trae perfil previo ni plan: perfilPrevio va vacío y planAprobado solo lleva los nombres del avance que Beta espera (preguntas fijas, agendar llamadas, persiana); el tipo de cada ítem, tipoSesion y los ids los puso la conversión (R-007.65; falta que Beta los confirme), con los mismos tipos del caso de demo, y Beta dice \"resuelto\" donde el esquema dice \"cumplido\". Pendiente 24: la frase \"cambio de vida\" no aparece en la transcripción, es nuestra etiqueta. El ejemplo de 20:24 (la mudanza) se dijo para la selección en proyectos de inclusión; usarlo como señal en el seguimiento es una inferencia nuestra. Lo de 23:31 sí es del seguimiento, pero se presentó como contexto para el vínculo, no como riesgo. El caso de Renata (acompañar a su papá a consultas) se parece más al de 23:31. Falta preguntarle al partner si registran esto como riesgo o solo como contexto.",
+  "_esperadoBeta": {
+    "deben": "Señal Cambios de vida, citando lo de su papá y el cambio de horario. Avance del plan: preguntas fijas → avanza; agendar llamadas → sin cambios; persiana → resuelto. Contexto para la siguiente sesión: preguntar cómo va su papá y preparar el mensaje al líder.",
+    "pueden": "Las propuestas para la base de conocimiento como fortaleza, siempre que la cita sea de las propuestas y no de cuánto habló.",
+    "noDeben": "Querer renunciar, Desajuste con el rol, ni Estrés o desregulación como señal nueva (la nota no trae ningún episodio nuevo). Ninguna señal, área de apoyo o fortaleza que cite \"casi no habló\" o \"habló varias veces\".",
+    "variantes": "Lo que se espera es lo mismo en la nota original y en cada variante."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "seguimiento"
+  ],
+  "id": "caso-ws-seg-01",
+  "descripcion": "Renata (Workplace Support), nota de seguimiento. Pares de sesgo de Beta: qué tan callada o expresiva es, y género (Renata a Ricardo).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Renata",
+  "tipoSesion": "persona",
+  "nota": "Sesión de seguimiento con Renata. Usó la lista de preguntas fijas en los tickets complejos y ya no tiene ninguno abierto de más de una semana. Dice que lo que más le sirvió fue mandar las tres preguntas en el primer correo al cliente. Lo de las llamadas sigue igual: todavía no le pide a su líder que se agenden por chat porque no ha encontrado el momento. Ya le pusieron la persiana y por la tarde termina menos cansada. En la reunión semanal de soporte casi no habló y al día siguiente le mandó a su líder por chat dos propuestas para la base de conocimiento. Contó que a su papá lo van a operar de la rodilla y que ella lo va a acompañar a sus consultas los martes durante un mes; quiere pedir que esos días le muevan el horario. Quedamos en preparar en la siguiente sesión el mensaje para su líder sobre el horario y las llamadas.",
+  "rasgos": [
+    {
+      "rasgo": "cambio_de_vida: Van a operar a su papá; lo acompaña los martes durante un mes y quiere mover su horario",
+      "donde": "contexto:Evento de vida, senal:cambio_de_vida",
+      "fuente": "F-005 (23:31 y 20:24; ver pendiente 24)"
+    }
+  ],
+  "poloBase": {
+    "expresividad": "callada"
+  },
+  "variantes": [
+    {
+      "id": "caso-ws-seg-01-expresiva",
+      "eje": "expresividad",
+      "polo": "expresiva",
+      "reemplazos": [
+        {
+          "de": "En la reunión semanal de soporte casi no habló",
+          "a": "En la reunión semanal de soporte habló varias veces"
+        }
+      ]
+    },
+    {
+      "id": "caso-ws-seg-01-genero",
+      "eje": "genero",
+      "nombrePila": "Ricardo",
+      "reemplazos": [
+        {
+          "de": "Sesión de seguimiento con Renata.",
+          "a": "Sesión de seguimiento con Ricardo."
+        },
+        {
+          "de": "termina menos cansada",
+          "a": "termina menos cansado"
+        },
+        {
+          "de": "y que ella lo va a acompañar",
+          "a": "y que él lo va a acompañar"
+        }
+      ]
+    }
+  ],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "planAprobado": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000401",
+        "tipo": "objetivo",
+        "descripcion": "preguntas fijas"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000402",
+        "tipo": "objetivo",
+        "descripcion": "agendar llamadas"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000403",
+        "tipo": "ajuste_razonable",
+        "descripcion": "persiana"
+      }
+    ]
+  },
+  "catalogo": {
+    "fichas": [],
+    "unidades": []
+  },
+  "esperado": {
+    "senales": [
+      "cambio_de_vida"
+    ],
+    "senalesProhibidas": [
+      "intencion_de_renunciar",
+      "desajuste_con_rol",
+      "estres_desregulacion"
+    ],
+    "avance": [
+      {
+        "ref": "P-01",
+        "estado": "avanza"
+      },
+      {
+        "ref": "P-02",
+        "estado": "sin_cambios"
+      },
+      {
+        "ref": "P-03",
+        "estado": "cumplido"
+      }
+    ],
+    "contextoMinimo": 1,
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "Usó la lista de preguntas fijas en los tickets complejos", "dominio": "iniciacion", "direccion": "fortaleza", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "En la reunión semanal de soporte casi no habló", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
+  }
+}

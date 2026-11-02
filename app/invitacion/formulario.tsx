@@ -2,18 +2,22 @@
 //
 // Formulario de /invitacion. Client Component por useActionState; la revisión del código pasa
 // en el servidor (./actions.ts). Mismo manejo de errores que app/login/page.tsx: el error queda
-// en texto junto al formulario y recibe el foco.
+// en texto junto al formulario y recibe el foco. Con un error no se pierde el código: el mensaje no dice cuál campo falló
+// y se lo dio su coach (enviarSinReiniciar). Se queda en este campo y no regresa del servidor (R-002.47).
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { conFalloDeRed, enviarSinReiniciar, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { entrarConCodigo, type InvitacionState } from "./actions";
 
+const entrar = conFalloDeRed<InvitacionState>(entrarConCodigo, (previo) => ({ ...previo, error: ERROR_SIN_RESPUESTA }));
+
 export function FormularioInvitacion({ errorInicial }: { errorInicial: string | null }) {
-  const [state, formAction, pending] = useActionState<InvitacionState, FormData>(entrarConCodigo, {
+  const [state, formAction, pending] = useActionState<InvitacionState, FormData>(entrar, {
     error: errorInicial,
     email: "",
   });
@@ -27,7 +31,7 @@ export function FormularioInvitacion({ errorInicial }: { errorInicial: string | 
   const describe = state.error ? "invitacion-error" : undefined;
 
   return (
-    <form action={formAction} className="flex flex-col gap-4" noValidate>
+    <form action={formAction} onSubmit={enviarSinReiniciar(formAction)} className="flex flex-col gap-4" noValidate>
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Correo</Label>
         <Input

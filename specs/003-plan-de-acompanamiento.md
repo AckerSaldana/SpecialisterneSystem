@@ -2,7 +2,7 @@
 
 # 003 · Plan de acompañamiento
 
-- Estado: Implementada · Versión 6 · 2026-10-30 (código pendiente de revisión de Acker)
+- Estado: Implementada · Versión 8 · 2026-11-01 (código pendiente de revisión de Acker)
 - Fuentes: F-005 (13:12, 23:31, 32:01, 45:53), F-009, F-017, F-022, F-023, D-015, D-016, D-021, D-031 a D-035 (propuestas en CONTEXTO §9), CONTEXTO §4, §5 (objetivos del equipo; dimensión 15, ajustes razonables), §6 (flujo del demo, paso 3; Valor; arquitectura), §11 (preguntas para el partner), REGLAS §2.5, §3, §4, §5, §6, §7; constitución C-01 a C-11, C-13 a C-18
 - Depende de: 001 (perfil aprobado en `profile_snapshots`), 002 (consentimiento vigente según `private.app_has_consent`, R-002.28; bloqueo al retirar el consentimiento, R-002.44; lista de lo que escribe la persona, R-002.45; aviso de privacidad, R-002.42 y R-002.43; paso `alta` → `evaluacion_inicial` y regla de etapas, R-002.25 y R-002.41; script `scripts/rls-check.ts`, R-002.46), 007 (formato de los casos del eval)
 
@@ -10,13 +10,13 @@ D-015, D-016 y D-021 siguen en estado propuesta en CONTEXTO §9. D-031 a D-035 t
 
 ## Problema y para quién
 
-El paso 3 del flujo del demo es el plan de acompañamiento: objetivos, apoyos de función ejecutiva, cómo darle instrucciones a la persona y qué comunicar al líder. El coach lo edita y queda el rastro (CONTEXTO §6). En la reunión, el partner contó que su coaching se enfoca en objetivos y prioridades, y en sensibilizar al equipo sobre el estilo de comunicación de la persona (F-005, 45:53). En Workplace Support, después de la evaluación corta "se trabaja con objetivos y estrategias" (CONTEXTO §4, F-005). En el seguimiento de coaching también se registran los objetivos del equipo, y el perfil cierra con los ajustes razonables (CONTEXTO §5).
+El paso 3 del flujo del demo es el plan de acompañamiento: objetivos, apoyos de función ejecutiva, cómo darle instrucciones a la persona y qué comunicar al líder. El coach lo edita y queda el rastro (CONTEXTO §6). En la reunión, el partner contó que su coaching se enfoca en objetivos y prioridades, y en sensibilizar al equipo sobre el estilo de comunicación de la persona (F-005, 45:53). En Workplace Support, después de la evaluación corta, el partner describe que trabaja por objetivos y estrategias (CONTEXTO §4, F-005). En el seguimiento de coaching también se registran los objetivos del equipo, y el perfil cierra con los ajustes razonables (CONTEXTO §5).
 
 Para quién:
 
 - Coach: hoy arma todo con sus notas y su memoria (F-005, 23:31). El plan sale del perfil que ya aprobó, con la evidencia a la vista, y el coach corrige y aprueba. Eso apunta al costo en horas que, según el partner, frena sus ventas (F-005, 32:01; CONTEXTO §6, Valor).
 - Specialisterne: cada punto del plan deja escrito de qué evidencia del perfil sale y de qué ficha verificada, para que otro coach pueda revisarlo (CONTEXTO §6, Valor, idea de Acker en F-009).
-- Persona: ve sus objetivos y los apoyos que puede pedir en lenguaje claro (CONTEXTO §6, Valor y paso 5). Lo que se le comunicaría al líder no lo ve ni sale de la app.
+- Persona: ve sus objetivos y los apoyos que puede pedir en lenguaje claro (CONTEXTO §6, Valor y paso 5). Lo que se le comunicaría al líder no lo ve tal cual ni sale de la app. La IA puede usarlo para proponerle líneas de "Cómo trabajar conmigo" (009), y ella decide si las comparte (D-069, D-070).
 
 ## Alcance
 
@@ -36,7 +36,7 @@ Lo que define esta spec lo usan 004 (ítems aprobados y `origen_item_id` para el
 
 **Fuera de alcance:**
 
-- Enviar algo a la empresa o al líder. "Qué comunicar al líder" y los ajustes razonables son borrador interno (C-11). Cualquier salida hacia la empresa va en 006 o en "What's next".
+- Enviar algo a la empresa o al líder. "Qué comunicar al líder" y los ajustes razonables son borrador interno (C-11). Cualquier salida hacia la empresa va en 006 o en "What's next". La excepción es "Cómo trabajar conmigo" (009): los cuatro tipos internos alimentan líneas que la persona lee y aprueba, el sistema no las envía y las comparte ella si quiere (C-11, D-069, D-070, R-009.7).
 - Avance de los ítems del plan en sesiones de seguimiento: 004.
 - Recursos del catálogo (corpus 2) y módulo corto para la persona: 005.
 - La sección "Tu plan" de `/persona`, con sus textos: 005 es su única dueña y la arma con `persona_plans` (R-005.6). Esta spec solo escribe la copia para la persona.
@@ -100,7 +100,7 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 |---|---|---|
 | R-003.28 | El plan se aprueba solo con el botón "Aprobar plan" y su confirmación. La aprobación pasa en una transacción con RLS: bloquea el plan, revisa que siga en `borrador`, vuelve a validar fichas, citas y `origen_item_id`, asigna `version` = última versión aprobada + 1, pone `status = 'aprobado'`, `approved_by`, `approved_at` y escribe la copia para la persona. | C-04, C-14; patrón de `app/api/profile-events/[id]/decision/route.ts` |
 | R-003.29 | No se aprueba un plan sin al menos un ítem `objetivo`. Un `objetivo_equipo` no cuenta para esta regla. | F-005 (45:53); interpretación del equipo |
-| R-003.30 | No se aprueba un plan con banderas `termino_no_permitido` o `mencion_condicion` en cualquier ítem, ni con banderas `termino_interno` o `cita_en_texto_persona` en un `textoPersona`. El servidor responde 400 con la ruta del ítem. Solo `cita_en_texto_lider` avisa sin bloquear, porque ese texto no lo ve la persona ni sale de la app. | C-01, C-08, C-09 |
+| R-003.30 | No se aprueba un plan con banderas `termino_no_permitido` o `mencion_condicion` en cualquier ítem, ni con banderas `termino_interno` o `cita_en_texto_persona` en un `textoPersona`. El servidor responde 400 con la ruta del ítem. Solo `cita_en_texto_lider` avisa sin bloquear, porque ese texto no lo ve la persona tal cual ni sale de la app. Si un ítem copia una cita, tampoco entra al modelo de "Cómo trabajar conmigo" (R-009.9). | C-01, C-08, C-09 |
 | R-003.31 | Si dos solicitudes aprueban el mismo borrador al mismo tiempo, el bloqueo `for update` hace esperar a la segunda, que ve el plan ya aprobado y responde 409. Si aun así dos planes llegan a guardar la misma versión, la restricción única `plans_engagement_version` rechaza el segundo y el sistema responde 409. | Patrón de la ruta de decisión del perfil |
 | R-003.32 | Un plan aprobado o descartado no se edita: ni el plan ni sus ítems aceptan UPDATE, INSERT o DELETE. Para cambiarlo, el coach pide una propuesta nueva, que crea otra versión. | C-04; interpretación del equipo a partir de REGLAS §3 y §4 |
 | R-003.33 | El plan vigente es el aprobado con la versión más alta. Las versiones anteriores se conservan y el coach las puede abrir. | REGLAS §3, §4 |
@@ -118,7 +118,7 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 | R-003.48 | Un ítem `objetivo` o `apoyo_fe` sin `textoPersona` se puede aprobar, pero no pasa a `persona_plans`. En el borrador, el coach ve un aviso en ese ítem. | R-005.6 de 005 (un apoyo sin texto para la persona no aparece) |
 | R-003.38 | La persona no debe poder leer `app.plans` ni `app.plan_items`. Se quitan las políticas `plans_select_persona_approved` y `plan_items_select_persona_approved`, con lo que se cierra el choque con C-09 del hallazgo de la sección Datos. | C-09, C-16, D-032 (propuesta) |
 | R-003.39 | La persona solo lee su plan desde `persona_plans`, y solo la versión vigente aparece en su pantalla. | C-09 |
-| R-003.40 | Los ítems `comunicacion_lider` y `ajuste_razonable` no salen de la app: no hay ruta, exportación ni vista para la empresa o el líder en esta etapa. La pantalla del coach los marca como borrador interno. | C-11, D-015 |
+| R-003.40 | Los ítems `comunicacion_lider` y `ajuste_razonable` no salen de la app tal cual: no hay ruta, exportación ni vista para la empresa o el líder en esta etapa. La pantalla del coach los marca como borrador interno. Con `objetivo_equipo` e `instruccion`, son entrada del modelo de "Cómo trabajar conmigo" (R-009.7): la persona lee lo que la IA escriba a partir de ellos y decide si lo comparte. La pantalla del coach lo dice (R-009.54). | C-11, D-015, D-069, D-070 |
 | R-003.41 | `knowledge_cards` solo la puede leer el coach. Se cambia la política `knowledge_cards_select_all` por una que exige rol `coach`. | C-09 (la ficha lleva `dominio_fe`); interpretación del equipo |
 | R-003.52 | La persona no escribe en ninguna tabla de esta spec: la base le rechaza INSERT, UPDATE y DELETE sobre `plans`, `plan_items`, `persona_plans` y `knowledge_cards`. Lo que la persona sí escribe está en la lista de 002 (R-002.45); el "esto no me representa" sobre el plan lo suma 005. | C-04, C-16; R-002.45 de 002 |
 | R-003.61 | Cada ítem de `PlanPersona` lleva `itemsAnteriores` (uuid[]): los IDs de sus equivalentes en las versiones aprobadas anteriores, del más reciente al más viejo. La aprobación (R-003.28) arma la lista con código en la misma transacción, siguiendo `plan_items.origen_item_id` hacia atrás hasta un ítem con `origen_item_id` nulo. La cadena incluye ítems que no llegaron a `persona_plans` por no tener `textoPersona`. Un punto nuevo lleva la lista vacía. Con este campo 005 sabe si una recomendación, un paso del módulo o un comentario ligados a un ítem de otra versión siguen vigentes (R-005.35, R-005.38, R-005.39), sin que la persona lea `plan_items` (R-003.38). Propuesta (Claude), decide Acker; alternativas en la decisión abierta 7. | C-09, C-16; interpretación del equipo |
@@ -320,9 +320,8 @@ Borrador:
 - Encabezado: "Borrador del plan · basado en el perfil versión {n}".
 - Texto fijo: "La persona no ve nada de esto hasta que apruebes el plan. Cada cambio se guarda en cuanto lo confirmas."
 - Grupos, en este orden: "Objetivos", "Objetivos del equipo", "Apoyos de función ejecutiva", "Ajustes razonables", "Cómo darle instrucciones", "Qué comunicar al líder".
-- Debajo de "Objetivos del equipo": "{nombre} no ve este grupo."
-- Debajo de "Ajustes razonables": "Borrador interno. La app no lo envía a la empresa y {nombre} no ve este grupo."
-- Debajo de "Qué comunicar al líder": "Borrador interno. La app no lo envía a la empresa y la persona no lo ve."
+- Debajo de "Objetivos del equipo" y de "Cómo darle instrucciones": "{nombre} no ve este grupo tal cual. La IA puede usarlo para proponerle líneas de "Cómo trabajar conmigo"."
+- Debajo de "Ajustes razonables" y de "Qué comunicar al líder": "Borrador interno. La app no lo envía a la empresa. {nombre} no lo ve tal cual, pero la IA puede usarlo para proponerle líneas de "Cómo trabajar conmigo", y {nombre} decide si las comparte."
 - Etiqueta por ítem: "Propuesto por la IA", "Editado por ti" o "Escrito por ti".
 - Ficha: "Ficha {id}: {título}". Sin ficha: "Sin ficha".
 - Evidencia: título "Evidencia del perfil"; cada cita entre comillas y "Sesión del {fecha}". Sin evidencia: "Sin evidencia: lo escribiste tú."
@@ -332,7 +331,7 @@ Borrador:
 - Al final de cada grupo: "Agregar objetivo", "Agregar objetivo del equipo", "Agregar apoyo", "Agregar ajuste razonable", "Agregar instrucción", "Agregar punto para el líder".
 - Avisos de la validación: "La IA citó una ficha que no existe. Quitamos ese punto." / "La IA citó evidencia que no está en el perfil. Quitamos esa cita." / "Revisa esta palabra: «{término}». No usamos ese lenguaje." / "Este texto lo verá {nombre} y nombra una función ejecutiva: «{término}». Escríbelo con palabras de todos los días." / "Este texto lo verá {nombre} y copia una cita de tus notas. Escríbelo con tus palabras." / "Este punto nombra una condición: «{término}». El plan describe conductas, no condiciones." / "Este punto copia una cita de tus notas. Tus notas son privadas; escríbelo con tus palabras."
 - Botones al final: "Aprobar plan" y "Descartar borrador".
-- Diálogo de aprobar: "¿Aprobar este plan? {nombre} va a ver sus objetivos y apoyos. Los objetivos del equipo, los ajustes razonables, las instrucciones y lo del líder se quedan solo para ti. Después de aprobarlo ya no se edita; para cambiarlo pides una propuesta nueva." Botones "Sí, aprobar plan" y "Volver al borrador".
+- Diálogo de aprobar: "¿Aprobar este plan? {nombre} va a ver sus objetivos y apoyos. Los objetivos del equipo, los ajustes razonables, las instrucciones y lo del líder no los ve tal cual, pero la IA puede usarlos para proponerle líneas de "Cómo trabajar conmigo". {nombre} sí lee esas líneas y decide si las comparte. Después de aprobarlo ya no se edita; para cambiarlo pides una propuesta nueva." Botones "Sí, aprobar plan" y "Volver al borrador".
 - Diálogo de descartar: "¿Descartar este borrador? Se queda en el historial, pero no se usa." Botones "Sí, descartar" y "Volver al borrador".
 - Errores al aprobar: "El plan necesita al menos un objetivo." / "Hay una palabra que no usamos en {grupo}: «{término}». Corrígela para aprobar." / "Lo que verá {nombre} en {grupo} nombra una función ejecutiva o copia una cita de tus notas. Corrígelo para aprobar." / "Un punto sigue a otro que no es del plan vigente o es de otro tipo. Revisa «Sigue al punto»." / "Este plan ya fue revisado. Recarga la página para ver su estado." / "Otra aprobación se guardó al mismo tiempo. Recarga la página y revisa de nuevo."
 
@@ -521,3 +520,14 @@ Versión 5 · 2026-10-29 · implementación
 Versión 6 · 2026-10-30 · registro en CONTEXTO
 
 - Las notas que decían que estas decisiones y el handoff faltaban por registrar ahora remiten a CONTEXTO v5. Las notas de versiones anteriores de esta sección conservan lo que decían entonces.
+
+Versión 7 · 2026-11-01 · "Cómo trabajar conmigo" (R-009.55, D-069, D-070)
+
+- R-003.40, R-003.30, "Para quién" y "Fuera de alcance": los cuatro tipos internos ya no son "solo para el coach". No salen tal cual, pero la IA puede usarlos para proponerle líneas de "Cómo trabajar conmigo" a la persona, y ella decide si las comparte.
+- Textos literales del diálogo de aprobar y de las notas de grupo, igual que 009 ("Textos que se corrigen en `components/coach/plan/textos.ts`"). "Cómo darle instrucciones" ahora lleva nota.
+- Sin R-IDs nuevos ni retirados. Cambia solo el texto de `textos.ts` y un comentario de `lib/plan/validate.ts`.
+
+Versión 8 · 2026-11-01 · revisión cruzada de la fase del 31 oct
+
+- "Problema y para quién": la frase del partner se parafrasea, sin comillas (R-007.40, CA-007.24). Sigue en el historial de `origin/main`.
+- Sin R-IDs nuevos ni retirados.

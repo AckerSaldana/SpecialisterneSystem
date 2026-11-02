@@ -1,0 +1,190 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso de la etapa desglose (R-007.73, R-010.53, tarea 26 de la spec 010), escrito por Claude Code. Persona y datos inventados. Es Renata, del caso-demo-01: el perfil es el de su último snapshot y el plan es lo que ve en persona_plans, los dos tal cual; si cambian allá, este caso queda inválido. Sus dominios activan R-010.14. La tarea y salidaFija no salen del modelo: las escribió Claude Code para probar sin red. Los patrones son un borrador: los revisa otra persona del equipo.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "desglose"
+  ],
+  "id": "caso-desglose-01",
+  "descripcion": "Renata pide los pasos de una tarea real. Tiene iniciacion en un área de apoyo, así que el primer paso tiene que ser concreto y apuntar a un apoyo con iniciar (R-010.14).",
+  "rasgos": [
+    {
+      "rasgo": "Con un caso de pocos datos no sabe qué preguntar primero y le ayudan unas preguntas sugeridas.",
+      "donde": "dimension:ajustes_razonables, dominioFE:iniciacion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "Conoce a fondo la base de conocimiento de su equipo.",
+      "donde": "dimension:motivacion_intereses, dominioFE:organizacion_de_materiales",
+      "fuente": "F-005 (40:05)"
+    }
+  ],
+  "basadoEn": "caso-demo-01",
+  "nombrePila": "Renata",
+  "perfil": [
+    {
+      "dimension": "antecedentes_experiencia",
+      "tipo": "contexto",
+      "resumen": "Renata lleva tres años dando soporte a los clientes de una empresa de software.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "motivacion_intereses",
+      "tipo": "fortaleza",
+      "resumen": "Renata conoce a fondo la base de conocimiento de su equipo y sus compañeros acuden a ella. Disfruta explicar cómo encuentra la causa de una falla, y ya propuso dos mejoras a esa base.",
+      "dominiosFe": [
+        "organizacion_de_materiales"
+      ]
+    },
+    {
+      "dimension": "disparadores_estres",
+      "tipo": "contexto",
+      "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse unos minutos y que las llamadas se acuerden antes por escrito.",
+      "dominiosFe": [
+        "control_emocional"
+      ]
+    },
+    {
+      "dimension": "indicadores_estres",
+      "tipo": "contexto",
+      "resumen": "Cuando una llamada la interrumpe, Renata tensa los hombros y le toma tiempo volver a lo que estaba haciendo.",
+      "dominiosFe": [
+        "control_emocional"
+      ]
+    },
+    {
+      "dimension": "aspectos_sensoriales",
+      "tipo": "contexto",
+      "resumen": "Con la persiana que le pusieron, Renata termina la tarde con la vista menos cansada.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "forma_aprender",
+      "tipo": "contexto",
+      "resumen": "Renata aprende mejor cuando tiene los pasos por escrito con imágenes de la pantalla.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "comunicacion_escrita",
+      "tipo": "fortaleza",
+      "resumen": "Renata comparte sus ideas por escrito después de las reuniones, y su líder las considera muy concretas.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "retroalimentacion",
+      "tipo": "contexto",
+      "resumen": "Renata prefiere recibir comentarios por escrito, con un caso real como ejemplo, para leerlos con calma.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "ajustes_razonables",
+      "tipo": "area_de_apoyo",
+      "resumen": "Cuando un caso llega con pocos datos, a Renata le ayuda tener claro qué preguntarle primero al cliente. Con unas preguntas sugeridas, avanzó casos que llevaban días detenidos.",
+      "dominiosFe": [
+        "iniciacion"
+      ]
+    }
+  ],
+  "plan": {
+    "items": [
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000201",
+        "tipo": "objetivo",
+        "texto": "Usa tu lista de preguntas fijas cuando abras un ticket complejo.",
+        "orden": 0,
+        "itemsAnteriores": []
+      },
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000202",
+        "tipo": "objetivo",
+        "texto": "Pídele a tu líder que las llamadas se acuerden antes por chat.",
+        "orden": 1,
+        "itemsAnteriores": []
+      },
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000204",
+        "tipo": "apoyo_fe",
+        "texto": "Si una llamada te interrumpe, camina unos minutos antes de volver a tu ticket.",
+        "orden": 3,
+        "itemsAnteriores": []
+      }
+    ]
+  },
+  "pedido": {
+    "quien": "persona",
+    "tarea": "Responder un ticket complejo de un cliente que mandó pocos datos.",
+    "contexto": {
+      "herramienta": "el sistema de tickets"
+    }
+  },
+  "salidaFija": {
+    "pasos": [
+      {
+        "accion": "Abre el ticket del cliente.",
+        "criterioTerminado": "El ticket se ve completo en tu pantalla.",
+        "notaApoyo": "Ten a la mano tu lista de preguntas.",
+        "apoyoRef": "A-03",
+        "minutos": 2
+      },
+      {
+        "accion": "Copia tu lista de preguntas fijas en una respuesta nueva.",
+        "criterioTerminado": "La respuesta nueva tiene todas las preguntas de tu lista.",
+        "notaApoyo": "Es la lista que ya usas en los tickets complejos.",
+        "apoyoRef": "A-04",
+        "minutos": 5
+      },
+      {
+        "accion": "Borra las preguntas que el ticket ya contesta.",
+        "criterioTerminado": "En la respuesta solo quedan preguntas sin contestar.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": 5
+      },
+      {
+        "accion": "Manda la respuesta al cliente.",
+        "criterioTerminado": "El ticket muestra la respuesta como enviada.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": 2
+      }
+    ]
+  },
+  "esperado": {
+    "desglose": {
+      "exigeInicio": true,
+      "enLaEntrada": [
+        "a Renata le ayuda tener claro qué preguntarle primero",
+        "Usa tu lista de preguntas fijas",
+        "el sistema de tickets"
+      ],
+      "patronesProhibidos": [
+        {
+          "patron": "excel",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "jira",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "nomina",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "aguinaldo",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        }
+      ]
+    }
+  }
+}

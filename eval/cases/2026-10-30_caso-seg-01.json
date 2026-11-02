@@ -137,6 +137,10 @@
       }
     ],
     "contextoMinimo": 0,
-    "banderas": 0
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "la lista de pasos le ayudó a arrancar", "dominio": "iniciacion", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "En la reunión de equipo de esta semana Mateo casi no habló", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
   }
 }

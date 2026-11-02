@@ -7,6 +7,7 @@
 
 import { useActionState, useEffect, useRef } from "react";
 import { crearAcompanamiento, type NuevoAcompanamientoState } from "@/app/coach/engagements/nuevo/actions";
+import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +25,19 @@ const ORDEN = ["type", "nombrePila", "email", "general"] as const;
 
 export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
   // El estado anterior (con el correo) no se manda al servidor: la action solo recibe el FormData.
+  // Lo escrito regresa por el estado, igual que con un error del servidor.
   const [state, formAction, pending] = useActionState(
-    (_prev: NuevoAcompanamientoState, formData: FormData) => crearAcompanamiento(formData),
+    conFalloDeRed<NuevoAcompanamientoState>(
+      (_prev, formData) => crearAcompanamiento(formData),
+      (_prev, formData) => ({
+        errores: { general: ERROR_SIN_RESPUESTA },
+        valores: {
+          type: String(formData.get("type") ?? ""),
+          nombrePila: String(formData.get("nombrePila") ?? ""),
+          email: String(formData.get("email") ?? ""),
+        },
+      }),
+    ),
     estadoInicial,
   );
   const refs = useRef<Partial<Record<(typeof ORDEN)[number], HTMLElement | null>>>({});

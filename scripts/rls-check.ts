@@ -16,9 +16,12 @@
 //
 // Para 003 a 006: agreguen sus casos al final de CASOS (mismo formato) y sus tablas con datos
 // derivados de las notas a TABLAS_BLOQUEO (R-002.44). No hagan un script propio.
+import { randomUUID } from "node:crypto";
 import { resolve } from "node:path";
 import { config } from "dotenv";
 import postgres, { type PostgresError, type Row, type TransactionSql } from "postgres";
+import { InsumosGuia } from "@/lib/guia/schema";
+import { columnaDe } from "./tablas-purga";
 
 config({ path: resolve(process.cwd(), ".env.local"), quiet: true });
 
@@ -49,7 +52,7 @@ const AVISO = "2026-10-29";
 
 // Tablas con datos derivados de las notas que dejan de verse sin consentimiento vigente
 // (decisión b, R-002.30, R-002.44). 003 agrega plans, plan_items y persona_plans (R-003.53);
-// 004 a 006 agregan las suyas. Todas deben tener columna engagement_id.
+// 004 a 006 agregan las suyas. Todas deben tener columna engagement_id, salvo las de COLUMNA_ACOMPANAMIENTO.
 const TABLAS_BLOQUEO = [
   "sessions",
   "profile_events",
@@ -64,7 +67,19 @@ const TABLAS_BLOQUEO = [
   "followup_context",
   "signal_states",
   "strong_alerts",
+  // Spec 008 (R-008.42).
+  "fe_corrections",
+  "fe_domain_summaries",
+  // Spec 009 (R-009.51, R-009.57).
+  "shared_guides",
+  // Spec 010 (R-010.45, R-010.52). task_templates va por decisión abierta 5, opción B, y se liga por origen_engagement_id.
+  "task_breakdowns",
+  "task_step_events",
+  "task_templates",
 ];
+
+// Tablas de la trayectoria de función ejecutiva (spec 008).
+const TABLAS_TRAYECTORIA = ["fe_corrections", "fe_domain_summaries"];
 
 // Tablas de seguimiento (spec 004).
 const TABLAS_SEGUIMIENTO = ["plan_item_updates", "followup_context", "signal_states", "strong_alerts"];
@@ -72,6 +87,7 @@ const TABLAS_SEGUIMIENTO = ["plan_item_updates", "followup_context", "signal_sta
 // Tablas del plan (spec 003). knowledge_cards no tiene engagement_id: se cuenta aparte.
 const TABLAS_PLAN = ["plans", "plan_items", "persona_plans"];
 const PROMPT_PLAN = "2026-10-29_plan-acompanamiento";
+const PROMPT_RESUMEN = "2026-10-31_resumen-dominio";
 
 // ---------------------------------------------------------------------------
 // Utilidades
@@ -166,7 +182,7 @@ async function acepta(tx: Tx, que: string, consulta: (sp: Tx) => Promise<postgre
 
 async function contar(tx: Tx, tabla: string, engagementId: string, extra = ""): Promise<number> {
   // tabla siempre viene de una constante de este archivo, nunca de una entrada.
-  const [r] = await tx.unsafe(`select count(*)::int as n from app.${tabla} where engagement_id = $1 ${extra}`, [engagementId]);
+  const [r] = await tx.unsafe(`select count(*)::int as n from app.${tabla} where ${columnaDe(tabla)} = $1 ${extra}`, [engagementId]);
   return r.n as number;
 }
 
@@ -215,6 +231,16 @@ type DatosDemo = {
   planItemId: string;
   contextoId: string;
   alertaId: string;
+  lineaId: string;
+  resumenId: string;
+  guiaListaId: string;
+  guiaListaVersion: number;
+  guiaBorradorId: string;
+  desgloseId: string;
+  pasoId: string;
+  pasoLibreId: string;
+  marcaId: number;
+  plantillaId: string;
 };
 
 // Una fila sintética en cada tabla del acompañamiento de demo, para que las lecturas en 0 signifiquen algo.
@@ -262,6 +288,24 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
   await tx`
     insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
     values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${JSON.stringify(nmr)}::jsonb, ${PERSONA})`;
+  // Spec 008: una corrección y un resumen ya aprobado.
+  const lineaId = `${ev.id}:cambios[0].evidencia[0]`;
+  await tx`
+    insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, created_by)
+    values (${ENG_DEMO}, ${ev.id}, ${lineaId}, 'iniciacion', 'apoyo', ${COACH})`;
+  const [resumen] = await tx`
+    insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, estado, prompt_version, model, created_by, decided_by, decided_at)
+    values (${ENG_DEMO}, 'iniciacion', 'Resumen sintético de rls-check.', ${tx.json([lineaId])}, ${tx.json([lineaId])}, 'aprobado',
+      ${PROMPT_RESUMEN}, 'rls-check', ${COACH}, ${COACH}, now()) returning id`;
+  // Spec 009: una versión lista y un borrador abierto.
+  const guiaLista = await crearGuia(tx, ENG_DEMO, snap.id as string, "lista");
+  const guiaBorrador = await crearGuia(tx, ENG_DEMO, snap.id as string, "borrador");
+  // Spec 010: una plantilla, un desglose de dos pasos y una marca "Me atoré aquí" en el primero.
+  const plantillaId = await crearPlantilla(tx, { origen: ENG_DEMO });
+  const desglose = await crearDesglose(tx, ENG_DEMO, snap.id as string, { creadoPor: PERSONA });
+  const [marca] = await tx`
+    insert into app.task_step_events (engagement_id, breakdown_id, paso_id, estado, texto, creado_por)
+    values (${ENG_DEMO}, ${desglose.id}, ${desglose.pasos[0]}, 'atorado', 'Texto sintético de rls-check.', ${PERSONA}) returning id`;
   return {
     sessionId: s.id as string,
     eventoId: ev.id as string,
@@ -271,6 +315,16 @@ async function prepararDatosDemo(tx: Tx): Promise<DatosDemo> {
     planItemId: plan.itemId,
     contextoId: ctx.id as string,
     alertaId: alerta.id as string,
+    lineaId,
+    resumenId: resumen.id as string,
+    guiaListaId: guiaLista.id,
+    guiaListaVersion: guiaLista.version as number,
+    guiaBorradorId: guiaBorrador.id,
+    desgloseId: desglose.id,
+    pasoId: desglose.pasos[0],
+    pasoLibreId: desglose.pasos[1],
+    marcaId: Number(marca.id),
+    plantillaId,
   };
 }
 
@@ -373,6 +427,194 @@ async function etapa(tx: Tx, engagementId: string): Promise<string> {
 async function contarKnowledgeCards(tx: Tx): Promise<number> {
   const [r] = await tx`select count(*)::int as n from app.knowledge_cards`;
   return r.n as number;
+}
+
+// ----- Spec 009: "Cómo trabajar conmigo" -----
+
+type EstadoLineaGuia = "pendiente" | "incluida" | "editada" | "quitada" | "propia";
+
+// Una línea como la guarda la app (LineaGuia de lib/guia/schema.ts). Sintética.
+function lineaGuia(estado: EstadoLineaGuia, extra: Record<string, unknown> = {}) {
+  const propia = estado === "propia";
+  return {
+    id: randomUUID(),
+    seccion: "comunicacion",
+    texto: "Instrucciones por escrito después de la reunión.",
+    estado,
+    textoIa: propia ? null : "Instrucciones por escrito después de la reunión.",
+    origenes: propia ? [] : [{ tipo: "dimension", dimension: "retroalimentacion" }],
+    orden: 0,
+    lineaAnteriorId: null,
+    cambio: null,
+    ...extra,
+  };
+}
+
+const DOCUMENTO_GUIA = { nombre: "Nombre sintético", secciones: [{ id: "comunicacion", lineas: ["Instrucciones por escrito después de la reunión."] }] };
+
+// jsonb de verdad. Con JSON.stringify(x)::jsonb el driver guarda un texto, y jsonb_path no ve sus llaves.
+const json = (sql: Tx, valor: unknown) => sql.json(valor as postgres.JSONValue);
+
+type EstadoGuia = "borrador" | "lista" | "retirada" | "descartada";
+
+async function siguienteVersionGuia(tx: Tx, engagementId: string): Promise<number> {
+  const [r] = await tx`select coalesce(max(version), 0)::int + 1 as v from app.shared_guides where engagement_id = ${engagementId}`;
+  return r.v as number;
+}
+
+// Una guía en cualquier estado, como owner. Sin trigger: es un INSERT. Lista y retirada llevan versión.
+async function crearGuia(
+  tx: Tx,
+  engagementId: string,
+  snapshotId: string,
+  estado: EstadoGuia,
+  opciones: { lineas?: unknown[]; base?: string | null; generadaPor?: string } = {},
+): Promise<{ id: string; version: number | null }> {
+  const conVersion = estado === "lista" || estado === "retirada";
+  const version = conVersion ? await siguienteVersionGuia(tx, engagementId) : null;
+  const lineas = json(tx, opciones.lineas ?? [lineaGuia("incluida")]);
+  const [g] = await tx`
+    insert into app.shared_guides (engagement_id, version, estado, nombre_a_mostrar, lineas, documento, generada_desde_snapshot_id,
+      perfil_version, plan_version, guia_base_id, generada_por, aprobada_por_persona_en, retirada_en, descartada_en)
+    values (${engagementId}, ${version}, ${estado}, 'Nombre sintético', ${lineas}, ${conVersion ? json(tx, DOCUMENTO_GUIA) : null}, ${snapshotId},
+      1, 1, ${opciones.base ?? null}, ${opciones.generadaPor ?? PERSONA},
+      ${conVersion ? tx`now()` : tx`null`}, ${estado === "retirada" ? tx`now()` : tx`null`}, ${estado === "descartada" ? tx`now()` : tx`null`})
+    returning id`;
+  return { id: g.id as string, version };
+}
+
+// Un borrador como lo inserta la ruta (R-009.13): el id lo genera el servidor y no usa returning.
+function pedirBorrador(sp: Tx, g: { engagementId: string; snapshotId: string; generadaPor: string; base?: string | null; id?: string }) {
+  return sp`
+    insert into app.shared_guides (id, engagement_id, nombre_a_mostrar, lineas, generada_desde_snapshot_id, perfil_version, plan_version, guia_base_id, generada_por, prompt_version, model)
+    values (${g.id ?? randomUUID()}, ${g.engagementId}, 'Nombre sintético', ${json(sp, [lineaGuia("pendiente")])}, ${g.snapshotId}, 1, 1, ${g.base ?? null}, ${g.generadaPor}, 'rls-check', 'rls-check')`;
+}
+
+// Lo que hace "Listo" (R-009.29): la base pone aprobada_por_persona_en.
+function marcarLista(sp: Tx, id: string, version: number) {
+  return sp`update app.shared_guides set estado = 'lista', version = ${version}, documento = ${json(sp, DOCUMENTO_GUIA)} where id = ${id}`;
+}
+
+async function insumosDeGuia(tx: Tx, engagementId: string, planVersionBase: number | null = null) {
+  const [r] = await tx`select private.app_guia_insumos(${engagementId}::uuid, ${planVersionBase}::integer) as insumos`;
+  return r.insumos as Record<string, unknown> | null;
+}
+
+// ----- Spec 010: desglose de tareas -----
+
+const ACCION_DESGLOSE = "Abre un documento en blanco.";
+const CRITERIO_DESGLOSE = "El documento nuevo está abierto en tu pantalla.";
+
+// Un paso como lo guarda la app (PasoDesglose de lib/desglose/schema.ts). Sintético, sin nota.
+function pasoDesglose(id: string = randomUUID()) {
+  return { id, accion: ACCION_DESGLOSE, criterioTerminado: CRITERIO_DESGLOSE, notaApoyo: null, porQue: null, origen: null, minutos: null };
+}
+
+type FilaDesglose = {
+  id?: string;
+  engagementId: string;
+  snapshotId: string;
+  creadoPor: string;
+  pasos?: unknown[];
+  plantillaId?: string | null;
+  origenId?: string | null;
+  ajustes?: unknown[] | null;
+  decididosEn?: boolean;
+  archivadoPor?: string | null;
+};
+
+// Un desglose como lo inserta la ruta. Sin returning, igual que el borrador de una guía: el id lo genera el servidor.
+function insertarDesglose(sp: Tx, d: FilaDesglose) {
+  return sp`
+    insert into app.task_breakdowns (id, engagement_id, tarea_original, pasos, generado_desde, prompt_version, model, plantilla_id, origen_breakdown_id,
+      ajustes, ajustes_decididos_en, creado_por, archivado_por)
+    values (${d.id ?? randomUUID()}, ${d.engagementId}, 'Tarea sintética de rls-check.', ${json(sp, d.pasos ?? [pasoDesglose()])}, ${d.snapshotId}, 'rls-check', 'rls-check',
+      ${d.plantillaId ?? null}, ${d.origenId ?? null}, ${d.ajustes === undefined || d.ajustes === null ? null : json(sp, d.ajustes)}, ${d.decididosEn ? sp`now()` : sp`null`}, ${d.creadoPor}, ${d.archivadoPor ?? null})`;
+}
+
+// Como owner. Devuelve su id y el de sus dos pasos.
+async function crearDesglose(
+  tx: Tx,
+  engagementId: string,
+  snapshotId: string,
+  opciones: { creadoPor?: string; plantillaId?: string; ajustes?: unknown[] } = {},
+): Promise<{ id: string; pasos: [string, string] }> {
+  const id = randomUUID();
+  const pasos: [string, string] = [randomUUID(), randomUUID()];
+  await insertarDesglose(tx, { id, engagementId, snapshotId, creadoPor: opciones.creadoPor ?? PERSONA, pasos: pasos.map(pasoDesglose), plantillaId: opciones.plantillaId, ajustes: opciones.ajustes });
+  return { id, pasos };
+}
+
+function marcarPaso(sp: Tx, m: { engagementId?: string; desgloseId: string; pasoId: string; estado?: "hecho" | "atorado" | "pendiente"; texto?: string | null; creadoPor?: string; revisadoPor?: string }) {
+  return sp`
+    insert into app.task_step_events (engagement_id, breakdown_id, paso_id, estado, texto, creado_por, revisado_por)
+    values (${m.engagementId ?? ENG_DEMO}, ${m.desgloseId}, ${m.pasoId}, ${m.estado ?? "hecho"}, ${m.texto ?? null}, ${m.creadoPor ?? PERSONA}, ${m.revisadoPor ?? null})`;
+}
+
+function insertarPlantilla(sp: Tx, t: { id?: string; orgId?: string; origen: string; creadaPor: string; archivadaPor?: string | null }) {
+  return sp`
+    insert into app.task_templates (id, org_id, origen_engagement_id, puesto, titulo, tarea, pasos, creada_por, archivada_por)
+    values (${t.id ?? randomUUID()}, ${t.orgId ?? ORG}, ${t.origen}, 'Pruebas de software', 'Título sintético', 'Tarea sintética de rls-check.',
+      ${json(sp, [{ id: randomUUID(), accion: ACCION_DESGLOSE, criterioTerminado: CRITERIO_DESGLOSE }])}, ${t.creadaPor}, ${t.archivadaPor ?? null})`;
+}
+
+// Como owner.
+async function crearPlantilla(tx: Tx, t: { orgId?: string; origen: string; creadaPor?: string }): Promise<string> {
+  const id = randomUUID();
+  await insertarPlantilla(tx, { id, orgId: t.orgId, origen: t.origen, creadaPor: t.creadaPor ?? COACH });
+  return id;
+}
+
+// Una organización y un coach que solo existen dentro de la transacción (R-010.41). Como owner. También un
+// acompañamiento de esa organización, porque una plantilla siempre sale de uno.
+const ORG_OTRA = "79797979-1111-4111-8111-111111111111";
+const COACH_OTRA = "79797979-2222-4222-8222-222222222222";
+const PERSONA_OTRA = "79797979-3333-4333-8333-333333333333";
+const ENG_OTRA = "79797979-4444-4444-8444-444444444444";
+
+async function crearOtraOrganizacion(tx: Tx) {
+  await tx`insert into app.organizations (id, nombre) values (${ORG_OTRA}, 'Organización sintética de rls-check')`;
+  for (const [id, email, rol, nombre] of [
+    [COACH_OTRA, "coach-otra-org@caja-mex.test", "coach", "Otra Coach"],
+    [PERSONA_OTRA, "persona-otra-org@caja-mex.test", "persona", "Otra Persona"],
+  ] as const) {
+    await crearUsuario(tx, id, email, rol, nombre);
+    await tx`update app.users set org_id = ${ORG_OTRA} where id = ${id}`;
+  }
+  await tx`
+    insert into app.engagements (id, org_id, type, stage, coach_id, persona_id, diagnostico_verificado, cedula_profesional, diagnostico_verificado_por, diagnostico_verificado_en)
+    values (${ENG_OTRA}, ${ORG_OTRA}, 'workplace_support', 'evaluacion_inicial', ${COACH_OTRA}, ${PERSONA_OTRA}, true, '1234567', ${COACH_OTRA}, now())`;
+  await evento(tx, ENG_OTRA, PERSONA_OTRA, "otorgado");
+}
+
+// Un perfil con citas, señales y dominios, para ver qué sale de private.app_perfil_para_desglose (R-010.4). Sintético.
+const CITA_PERFIL = "Cita sintética que nunca debe salir de esta función";
+const DESCRIPCION_SENAL = "Señal sintética que nunca debe salir de esta función";
+
+function perfilConDimensiones(eventoId: string, sessionId: string) {
+  const dimension = (resumen: string, tipo: string, dominiosFE: string[]) => ({
+    resumen,
+    tipo,
+    dominiosFE,
+    evidencia: [{ cita: CITA_PERFIL, sessionId }],
+    actualizadoEn: "2026-10-01T10:00:00.000Z",
+    eventoId,
+  });
+  return {
+    dimensiones: {
+      concentracion: dimension("Se concentra mejor con una lista.", "area_de_apoyo", ["iniciacion"]),
+      forma_aprender: dimension("Aprende mejor con ejemplos.", "fortaleza", []),
+      antecedentes_experiencia: dimension("Trabajó en un archivo.", "contexto", []),
+    },
+    senalesActivas: [{ tipo: "cambio_de_vida", descripcion: DESCRIPCION_SENAL, evidencia: [{ cita: CITA_PERFIL, sessionId }], detectadaEn: "2026-10-01T10:00:00.000Z", eventoId }],
+  };
+}
+
+const perfilParaDesglose = (sp: Tx, engagementId: string) => sp`select * from private.app_perfil_para_desglose(${engagementId}::uuid)`;
+
+async function decidirAjustes(tx: Tx, desgloseId: string, pasos: unknown[], aceptados: string[]): Promise<boolean> {
+  const [r] = await tx`select private.app_decidir_ajustes(${desgloseId}::uuid, ${json(tx, pasos)}, ${json(tx, aceptados)}) as escribio`;
+  return r.escribio as boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -740,6 +982,21 @@ const CASOS: Caso[] = [
           insert into app.signal_states (engagement_id, tipo, estado, created_by) values (${ENG_DEMO}, 'cambio_de_vida', 'cerrada', ${PERSONA})`],
         ["strong_alerts", "rls", (sp) => sp`
           insert into app.strong_alerts (engagement_id, tipo_senal, event_id, marcada_por) values (${ENG_DEMO}, 'cambio_de_vida', ${d.eventoId}, ${PERSONA})`],
+        ["fe_corrections", "rls", (sp) => sp`
+          insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, created_by)
+          values (${ENG_DEMO}, ${d.eventoId}, ${d.lineaId}, 'flexibilidad', ${PERSONA})`],
+        ["fe_domain_summaries", "rls", (sp) => sp`
+          insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+          values (${ENG_DEMO}, 'flexibilidad', 'Sintético.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${PERSONA})`],
+        // La persona sí escribe su guía (R-002.45), pero solo un borrador suyo, sin versión ni documento.
+        ["shared_guides (ya lista)", "rls", (sp) => sp`
+          insert into app.shared_guides (engagement_id, version, estado, nombre_a_mostrar, lineas, documento, generada_desde_snapshot_id, perfil_version, plan_version, generada_por, aprobada_por_persona_en)
+          values (${ENG_DEMO}, 999999, 'lista', 'Nombre', '[]'::jsonb, ${json(sp, DOCUMENTO_GUIA)}, ${d.snapshotId}, 1, 1, ${PERSONA}, now())`],
+        ["shared_guides (a nombre de otro)", "rls", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, generadaPor: COACH })],
+        // La persona sí escribe sus desgloses y sus marcas (R-010.51), pero solo a su nombre. Plantillas, ninguna.
+        ["task_breakdowns (a nombre de otro)", "rls", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: COACH })],
+        ["task_step_events (a nombre de otro)", "rls", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, creadoPor: COACH })],
+        ["task_templates", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: PERSONA })],
       ];
       for (const [tabla, tipo, consulta] of intentos) await rechaza(tx, `INSERT en ${tabla}`, tipo, consulta);
       // Si una spec agrega una tabla al esquema app, este caso tiene que probarla.
@@ -765,8 +1022,17 @@ const CASOS: Caso[] = [
       const columnas = await tx`
         select table_name as tabla, min(column_name) as columna from information_schema.columns
         where table_schema = 'app' group by table_name`;
+      // La guía sí está en la lista (R-002.45). Su permiso por columna es exacto, y sus casos van en
+      // "la persona sí escribe su guía" y en CA-009.32.
+      const deGuia = conPermiso.filter((c) => c.tabla === "shared_guides").map((c) => c.columna).join(",");
+      revisar(deGuia === "documento,estado,lineas,nombre_a_mostrar,revisada_sin_cambios,version", `columnas de UPDATE en shared_guides: ${deGuia}`);
+      // Spec 010: el permiso por columna es exacto. La persona archiva lo suyo (R-010.29, CA-010.29). pasos no está.
+      const deTabla = (tabla: string) => conPermiso.filter((c) => c.tabla === tabla).map((c) => c.columna).join(",");
+      revisar(deTabla("task_breakdowns") === "archivado_en,archivado_por", `columnas de UPDATE en task_breakdowns: ${deTabla("task_breakdowns")}`);
+      revisar(deTabla("task_step_events") === "revisado_en,revisado_por", `columnas de UPDATE en task_step_events: ${deTabla("task_step_events")}`);
+      revisar(deTabla("task_templates") === "archivada_en,archivada_por", `columnas de UPDATE en task_templates: ${deTabla("task_templates")}`);
       await como(tx, PERSONA);
-      for (const tabla of tablas) {
+      for (const tabla of tablas.filter((t) => t !== "shared_guides")) {
         const permitidas = conPermiso.filter((c) => c.tabla === tabla);
         if (permitidas.length === 0) {
           const col = columnas.find((c) => c.tabla === tabla)?.columna as string;
@@ -814,6 +1080,65 @@ const CASOS: Caso[] = [
         insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
         values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA})`);
       await acepta(tx, "audit_log propio", (sp) => sp`insert into app.audit_log (user_id, engagement_id, accion, ok) values (${PERSONA}, ${ENG_DEMO}, 'rls_check', true)`);
+    },
+  },
+  {
+    id: "CA-002.38",
+    descripcion: "la persona sí escribe su guía: pedir, decidir, nombre, listo, retirar, copiar y descartar; otra persona no",
+    correr: async (tx) => {
+      await asegurarConsentimientoDemo(tx);
+      const { id: snapshotId } = await crearSnapshot(tx, ENG_DEMO);
+      const version = await siguienteVersionGuia(tx, ENG_DEMO);
+      const id = randomUUID();
+      await como(tx, PERSONA);
+      await pedirBorrador(tx, { id, engagementId: ENG_DEMO, snapshotId, generadaPor: PERSONA });
+      const decididas = [lineaGuia("incluida"), lineaGuia("propia", { orden: 1 })];
+      await acepta(tx, "decidir líneas", (sp) => sp`update app.shared_guides set lineas = ${json(sp, decididas)} where id = ${id}`);
+      await tx`update app.shared_guides set lineas = ${json(tx, decididas)}, nombre_a_mostrar = 'Otro nombre' where id = ${id}`;
+      await como(tx, PERSONA_ALTA);
+      await ceroFilas(tx, "otra persona decide líneas", (sp) => sp`update app.shared_guides set lineas = '[]'::jsonb where id = ${id}`);
+      await como(tx, PERSONA);
+      await marcarLista(tx, id, version);
+      const [lista] = await tx`select estado::text as estado, version, aprobada_por_persona_en from app.shared_guides where id = ${id}`;
+      revisar(lista?.estado === "lista" && lista.version === version && lista.aprobada_por_persona_en !== null, "no quedó lista con versión y fecha");
+      // "Hacer cambios" copia con la versión lista como base (R-009.32), y ese borrador se descarta.
+      const copia = randomUUID();
+      await pedirBorrador(tx, { id: copia, engagementId: ENG_DEMO, snapshotId, generadaPor: PERSONA, base: id });
+      await tx`update app.shared_guides set estado = 'descartada' where id = ${copia}`;
+      const [descartada] = await tx`select estado::text as estado, descartada_en from app.shared_guides where id = ${copia}`;
+      revisar(descartada?.estado === "descartada" && descartada.descartada_en !== null, "no quedó descartada con fecha");
+      await tx`update app.shared_guides set estado = 'retirada' where id = ${id}`;
+      const [retirada] = await tx`select estado::text as estado, retirada_en from app.shared_guides where id = ${id}`;
+      revisar(retirada?.estado === "retirada" && retirada.retirada_en !== null, "no quedó retirada con fecha");
+    },
+  },
+  {
+    id: "CA-002.44",
+    descripcion: "con el consentimiento retirado la persona no inserta un no_me_representa, una guía, un desglose ni una marca; con otorgado sí, y no los de otro acompañamiento",
+    correr: async (tx) => {
+      await asegurarConsentimientoDemo(tx);
+      const { id: snapshotId } = await crearSnapshot(tx, ENG_DEMO);
+      const desglose = await crearDesglose(tx, ENG_DEMO, snapshotId);
+      const pedirDesglose = (sp: Tx, engagementId: string) => insertarDesglose(sp, { engagementId, snapshotId, creadoPor: PERSONA });
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      await como(tx, PERSONA);
+      const nmr = (sp: Tx, engagementId: string) => sp`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${engagementId}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA})`;
+      await rechaza(tx, "no_me_representa con el retiro vigente", "rls", (sp) => nmr(sp, ENG_DEMO));
+      await rechaza(tx, "guía con el retiro vigente", "rls", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId, generadaPor: PERSONA }));
+      await rechaza(tx, "desglose con el retiro vigente", "rls", (sp) => pedirDesglose(sp, ENG_DEMO));
+      await rechaza(tx, "marca con el retiro vigente", "rls", (sp) => marcarPaso(sp, { desgloseId: desglose.id, pasoId: desglose.pasos[0] }));
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      await como(tx, PERSONA);
+      await acepta(tx, "no_me_representa con otorgado", (sp) => nmr(sp, ENG_DEMO));
+      await acepta(tx, "guía con otorgado", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId, generadaPor: PERSONA }));
+      await acepta(tx, "desglose con otorgado", (sp) => pedirDesglose(sp, ENG_DEMO));
+      await acepta(tx, "marca con otorgado", (sp) => marcarPaso(sp, { desgloseId: desglose.id, pasoId: desglose.pasos[0] }));
+      await rechaza(tx, "no_me_representa de otro acompañamiento", "rls", (sp) => nmr(sp, ENG_ALTA));
+      await rechaza(tx, "guía de otro acompañamiento", "rls", (sp) => pedirBorrador(sp, { engagementId: ENG_ALTA, snapshotId, generadaPor: PERSONA }));
+      await rechaza(tx, "desglose de otro acompañamiento", "rls", (sp) => pedirDesglose(sp, ENG_ALTA));
     },
   },
 
@@ -1328,6 +1653,925 @@ const CASOS: Caso[] = [
       }
     },
   },
+
+  // ----- 005: vista de la persona y "Esto no me representa" (R-005.42) -----
+  {
+    id: "CA-005.1",
+    descripcion: "la persona lee 0 filas de profile_snapshots, sessions y profile_events propuesta_ia, y sí su propio comentario",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      revisar((await contar(tx, "profile_snapshots", ENG_DEMO)) === 0, "la persona ve snapshots");
+      revisar((await contar(tx, "sessions", ENG_DEMO)) === 0, "la persona ve sesiones");
+      revisar((await contar(tx, "profile_events", ENG_DEMO, "and tipo = 'propuesta_ia'")) === 0, "la persona ve propuestas de la IA");
+      revisar((await contar(tx, "profile_events", ENG_DEMO, "and tipo = 'no_me_representa'")) > 0, "la persona no ve su comentario (control)");
+    },
+  },
+  {
+    id: "CA-005.2",
+    descripcion: "con plan vigente la persona lee 0 filas de plans y plan_items, y persona_plans no tiene columnas de evidencia, dominio ni fichas",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const [{ columnas }] = await tx`
+        select string_agg(column_name, ',' order by column_name) as columnas
+        from information_schema.columns where table_schema = 'app' and table_name = 'persona_plans'`;
+      revisar(columnas === "contenido,created_at,engagement_id,plan_id,version", `columnas de persona_plans: ${columnas}`);
+      await como(tx, PERSONA);
+      revisar((await contar(tx, "plans", ENG_DEMO)) === 0, "la persona ve plans");
+      revisar((await contar(tx, "plan_items", ENG_DEMO)) === 0, "la persona ve plan_items");
+      revisar((await contar(tx, "persona_plans", ENG_DEMO)) > 0, "la persona no ve persona_plans (control)");
+    },
+  },
+  {
+    id: "CA-005.20",
+    descripcion: "un comentario sobre un ítem queda en proposed sin cambiar plans ni persona_plans; en otro acompañamiento la base lo rechaza",
+    correr: async (tx) => {
+      const datos = await prepararDatosDemo(tx);
+      const antes = { plans: await contar(tx, "plans", ENG_DEMO), persona: await contar(tx, "persona_plans", ENG_DEMO) };
+      const payload = tx.json({ tipo: "no_me_representa", dimension: null, comentario: "Prueba", origen: "plan", planItemId: datos.planItemId, planVersion: 1 });
+      await como(tx, PERSONA);
+      await tx`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${payload}, ${PERSONA})`;
+      await rechaza(tx, "comentario en otro acompañamiento", "rls", (sp) => sp`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_ALTA}, 'no_me_representa', 'proposed', ${payload}, ${PERSONA})`);
+      await comoOwner(tx);
+      revisar((await contar(tx, "plans", ENG_DEMO)) === antes.plans, "cambió plans");
+      revisar((await contar(tx, "persona_plans", ENG_DEMO)) === antes.persona, "cambió persona_plans");
+      const [e] = await tx`
+        select status::text as status, payload from app.profile_events
+        where engagement_id = ${ENG_DEMO} and tipo = 'no_me_representa' and payload ->> 'origen' = 'plan' and created_by = ${PERSONA}
+        order by created_at desc limit 1`;
+      revisar(e?.status === "proposed", `el comentario quedó ${e?.status}`);
+      revisar(e.payload.planItemId === datos.planItemId, "el comentario no guarda el ítem");
+    },
+  },
+  {
+    id: "CA-005.31",
+    descripcion: "con retirado como último evento la base rechaza el no_me_representa propio; con otorgado lo acepta",
+    correr: async (tx) => {
+      await asegurarConsentimientoDemo(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      await como(tx, PERSONA);
+      await rechaza(tx, "no_me_representa con el consentimiento retirado", "rls", (sp) => sp`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA})`);
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      await como(tx, PERSONA);
+      await acepta(tx, "no_me_representa con el consentimiento vigente", (sp) => sp`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA})`);
+    },
+  },
+  {
+    id: "CA-005.38",
+    descripcion: "un UPDATE de status o resuelto_por_plan de la persona o de un coach ajeno afecta 0 filas; el del coach del acompañamiento se acepta; la persona no puede insertar un comentario con lo que decide el coach (R-005.50)",
+    correr: async (tx) => {
+      const datos = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      const [c] = await tx`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA}) returning id`;
+      for (const usuario of [PERSONA, COACH_SIN]) {
+        await como(tx, usuario);
+        await ceroFilas(tx, "UPDATE de status", (sp) => sp`update app.profile_events set status = 'rejected' where id = ${c.id}`);
+        await ceroFilas(tx, "UPDATE de resuelto_por_plan", (sp) => sp`update app.profile_events set resuelto_por_plan = ${datos.planId} where id = ${c.id}`);
+        await ceroFilas(tx, "UPDATE de resuelto_por_evento", (sp) => sp`update app.profile_events set resuelto_por_evento = ${datos.eventoId} where id = ${c.id}`);
+      }
+      // R-005.50: al insertar, la persona solo escribe el acompañamiento, el tipo, el estado, el payload y
+      // quién lo creó. Los valores son constantes de este archivo o ids sintéticos, nunca una entrada.
+      await como(tx, PERSONA);
+      const ajenas: [columna: string, valor: string][] = [
+        ["decided_by", `'${COACH}'`],
+        ["decided_at", "now()"],
+        ["approved_payload", `'{"cambios":[0]}'::jsonb`],
+        ["resuelto_por_evento", `'${datos.eventoId}'`],
+        ["resuelto_por_plan", `'${datos.planId}'`],
+        ["session_id", `'${datos.sessionId}'`],
+        ["plan_base_id", `'${datos.planId}'`],
+        ["perfil_version_base", "1"],
+        ["prompt_version", "'inventada'"],
+        ["model", "'inventado'"],
+        ["created_at", "now() - interval '30 days'"],
+      ];
+      for (const [columna, valor] of ajenas) {
+        await rechaza(tx, `INSERT de la persona con ${columna}`, "rls", (sp) =>
+          sp.unsafe(
+            `insert into app.profile_events (engagement_id, tipo, status, payload, created_by, ${columna})
+             values ('${ENG_DEMO}', 'no_me_representa', 'proposed', '${NMR("Prueba")}'::jsonb, '${PERSONA}', ${valor})`,
+          ),
+        );
+      }
+      await acepta(tx, "INSERT de la persona solo con lo suyo", (sp) => sp`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'no_me_representa', 'proposed', ${NMR("Prueba")}::jsonb, ${PERSONA})`);
+      await como(tx, COACH);
+      await acepta(tx, "UPDATE del coach", (sp) => sp`
+        update app.profile_events set status = 'approved', decided_by = ${COACH}, decided_at = now(), resuelto_por_plan = ${datos.planId} where id = ${c.id}`);
+      await acepta(tx, "UPDATE del coach con la propuesta", (sp) => sp`
+        update app.profile_events set status = 'approved', decided_by = ${COACH}, decided_at = now(), resuelto_por_evento = ${datos.eventoId} where id = ${c.id}`);
+    },
+  },
+
+  // ----- 008: trayectoria de función ejecutiva (R-008.45) -----
+  {
+    id: "CA-008.9",
+    descripcion: "como authenticated, un UPDATE de profile_events.payload es rechazado: el id de una evidencia no cambia (R-008.11)",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const [antes] = await tx`select payload from app.profile_events where id = ${d.eventoId}`;
+      await como(tx, COACH);
+      await rechaza(tx, "UPDATE de payload", "permiso", (sp) => sp`update app.profile_events set payload = '{}'::jsonb where id = ${d.eventoId}`);
+      await comoOwner(tx);
+      const [despues] = await tx`select payload from app.profile_events where id = ${d.eventoId}`;
+      revisar(JSON.stringify(despues.payload) === JSON.stringify(antes.payload), "cambió el payload");
+    },
+  },
+  {
+    id: "CA-008.39",
+    descripcion: "con una fila en cada tabla nueva, su coach las ve; la persona y un coach ajeno reciben 0 filas y no pueden insertar",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await como(tx, COACH);
+      for (const t of TABLAS_TRAYECTORIA) revisar((await contar(tx, t, ENG_DEMO)) > 0, `el coach no ve ${t}`);
+      for (const usuario of [PERSONA, COACH_SIN]) {
+        await comoOwner(tx);
+        await como(tx, usuario);
+        for (const t of TABLAS_TRAYECTORIA) revisar((await contar(tx, t, ENG_DEMO)) === 0, `${usuario} ve ${t}`);
+        await rechaza(tx, `corrección de ${usuario}`, "rls", (sp) => sp`
+          insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, created_by)
+          values (${ENG_DEMO}, ${d.eventoId}, ${d.lineaId}, 'flexibilidad', null, ${usuario})`);
+        await rechaza(tx, `resumen de ${usuario}`, "rls", (sp) => sp`
+          insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+          values (${ENG_DEMO}, 'flexibilidad', 'Sintético.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${usuario})`);
+      }
+      await comoOwner(tx);
+      await como(tx, COACH);
+      await acepta(tx, "corrección del coach", (sp) => sp`
+        insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, created_by)
+        values (${ENG_DEMO}, ${d.eventoId}, ${d.lineaId}, 'flexibilidad', null, ${COACH})`);
+      await acepta(tx, "resumen del coach", (sp) => sp`
+        insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+        values (${ENG_DEMO}, 'flexibilidad', 'Sintético.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${COACH})`);
+    },
+  },
+  {
+    id: "CA-008.40",
+    descripcion: "el coach no edita ni borra correcciones, no cambia el texto ni un resumen ya aprobado, y una corrección ajena a su evento se rechaza",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      // Un evento sin aprobar del mismo acompañamiento y uno aprobado de otro.
+      const payload = { tipo: "propuesta_ia", update: { cambios: [], senales: [], relacionesConPerfilPrevio: [], preguntasParaSiguienteSesion: [] }, descartados: [], banderas: [] };
+      const [sinAprobar] = await tx`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_DEMO}, 'propuesta_ia', 'proposed', ${tx.json(payload)}, ${COACH}) returning id`;
+      const [ajeno] = await tx`
+        insert into app.profile_events (engagement_id, tipo, status, payload, created_by)
+        values (${ENG_ALTA}, 'propuesta_ia', 'approved', ${tx.json(payload)}, ${COACH}) returning id`;
+      const [propuesto] = await tx`
+        insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+        values (${ENG_DEMO}, 'flexibilidad', 'Sintético.', ${tx.json([d.lineaId])}, ${tx.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${COACH}) returning id`;
+
+      await como(tx, COACH);
+      await rechazaOCero(tx, "UPDATE de una corrección", (sp) => sp`update app.fe_corrections set dominio = 'flexibilidad' where engagement_id = ${ENG_DEMO}`);
+      await rechazaOCero(tx, "DELETE de una corrección", (sp) => sp`delete from app.fe_corrections where engagement_id = ${ENG_DEMO}`);
+      await rechazaOCero(tx, "UPDATE de texto", (sp) => sp`update app.fe_domain_summaries set texto = 'Otro.' where id = ${propuesto.id}`);
+      await rechazaOCero(tx, "DELETE de un resumen", (sp) => sp`delete from app.fe_domain_summaries where id = ${propuesto.id}`);
+      await rechazaOCero(tx, "cambiar un resumen ya aprobado", (sp) => sp`
+        update app.fe_domain_summaries set estado = 'descartado', decided_by = ${COACH}, decided_at = now() where id = ${d.resumenId}`);
+      await rechaza(tx, "aprobar a nombre de otro", "rls", (sp) => sp`
+        update app.fe_domain_summaries set estado = 'aprobado', decided_by = ${PERSONA}, decided_at = now() where id = ${propuesto.id}`);
+      await rechaza(tx, "dejar la decisión en propuesto", "rls", (sp) => sp`
+        update app.fe_domain_summaries set estado = 'propuesto', decided_by = ${COACH} where id = ${propuesto.id}`);
+      await rechaza(tx, "insertar un resumen ya aprobado", "rls", (sp) => sp`
+        insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, estado, prompt_version, model, created_by)
+        values (${ENG_DEMO}, 'inhibicion', 'Sintético.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, 'aprobado', ${PROMPT_RESUMEN}, 'rls-check', ${COACH})`);
+      await rechaza(tx, "segunda propuesta abierta en el mismo dominio", "unique", (sp) => sp`
+        insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+        values (${ENG_DEMO}, 'flexibilidad', 'Otra.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${COACH})`);
+      await acepta(tx, "aprobar la propuesta", (sp) => sp`
+        update app.fe_domain_summaries set estado = 'aprobado', decided_by = ${COACH}, decided_at = now() where id = ${propuesto.id}`);
+
+      const correccion = (sp: Tx, eventId: string, lineaId: string, dominio: string | null = "flexibilidad", direccion: string | null = null, anterior: string | null = null) => sp`
+        insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, anterior_linea_id, created_by)
+        values (${ENG_DEMO}, ${eventId}, ${lineaId}, ${dominio}, ${direccion}, ${anterior}, ${COACH})`;
+      await rechaza(tx, "corrección con el evento de otro acompañamiento", "rls", (sp) => correccion(sp, ajeno.id as string, `${ajeno.id}:cambios[0].evidencia[0]`));
+      await rechaza(tx, "corrección de un evento sin aprobar", "rls", (sp) => correccion(sp, sinAprobar.id as string, `${sinAprobar.id}:cambios[0].evidencia[0]`));
+      await rechaza(tx, "corrección con un linea_id de otro evento", "check", (sp) => correccion(sp, d.eventoId, `${sinAprobar.id}:cambios[0].evidencia[0]`));
+      await rechaza(tx, "dirección sin dominio", "check", (sp) => correccion(sp, d.eventoId, d.lineaId, null, "apoyo"));
+      await rechaza(tx, "cambio sin la línea anterior", "check", (sp) => correccion(sp, d.eventoId, d.lineaId, "flexibilidad", "cambio"));
+      await rechaza(tx, "otra dirección con línea anterior", "check", (sp) => correccion(sp, d.eventoId, d.lineaId, "flexibilidad", "apoyo", d.lineaId));
+      await rechaza(tx, "sin dirección con línea anterior", "check", (sp) => correccion(sp, d.eventoId, d.lineaId, "flexibilidad", null, d.lineaId));
+      await acepta(tx, "corrección válida", (sp) => correccion(sp, d.eventoId, d.lineaId, "flexibilidad", "cambio", d.lineaId));
+      await acepta(tx, "corrección a Ninguno", (sp) => correccion(sp, d.eventoId, d.lineaId, null, null));
+    },
+  },
+  {
+    id: "CA-008.41",
+    descripcion: "persona_profiles no cambia de columnas, ninguna política de las tablas nuevas menciona a la persona y ella lee 0 filas",
+    correr: async (tx) => {
+      await prepararDatosDemo(tx);
+      const [{ columnas }] = await tx`
+        select string_agg(column_name, ',' order by column_name) as columnas
+        from information_schema.columns where table_schema = 'app' and table_name = 'persona_profiles'`;
+      revisar(columnas === "contenido,created_at,engagement_id,snapshot_id,version", `columnas de persona_profiles: ${columnas}`);
+      const [{ n }] = await tx`
+        select count(*)::int as n from pg_policies
+        where schemaname = 'app' and tablename = any(${TABLAS_TRAYECTORIA}::text[]) and (qual ilike '%persona_of%' or with_check ilike '%persona_of%')`;
+      revisar(n === 0, `${n} políticas de las tablas nuevas mencionan a la persona`);
+      await como(tx, PERSONA);
+      for (const t of TABLAS_TRAYECTORIA) revisar((await contar(tx, t, ENG_DEMO)) === 0, `la persona ve ${t}`);
+    },
+  },
+  {
+    id: "CA-008.43",
+    descripcion: "con el consentimiento retirado el coach recibe 0 filas de las tablas nuevas, no inserta y como owner las filas siguen",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const antes = { c: await contar(tx, "fe_corrections", ENG_DEMO), r: await contar(tx, "fe_domain_summaries", ENG_DEMO) };
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      await como(tx, COACH);
+      for (const t of TABLAS_TRAYECTORIA) revisar((await contar(tx, t, ENG_DEMO)) === 0, `el coach ve ${t} sin consentimiento`);
+      await rechaza(tx, "corrección sin consentimiento", "rls", (sp) => sp`
+        insert into app.fe_corrections (engagement_id, event_id, linea_id, dominio, direccion, created_by)
+        values (${ENG_DEMO}, ${d.eventoId}, ${d.lineaId}, 'flexibilidad', null, ${COACH})`);
+      await rechaza(tx, "resumen sin consentimiento", "rls", (sp) => sp`
+        insert into app.fe_domain_summaries (engagement_id, dominio, texto, linea_ids, bloque_ids, prompt_version, model, created_by)
+        values (${ENG_DEMO}, 'flexibilidad', 'Sintético.', ${sp.json([d.lineaId])}, ${sp.json([d.lineaId])}, ${PROMPT_RESUMEN}, 'rls-check', ${COACH})`);
+      await comoOwner(tx);
+      revisar((await contar(tx, "fe_corrections", ENG_DEMO)) === antes.c, "se borraron correcciones");
+      revisar((await contar(tx, "fe_domain_summaries", ENG_DEMO)) === antes.r, "se borraron resúmenes");
+    },
+  },
+
+  // ----- Spec 009: "Cómo trabajar conmigo" (tarea 7) -----
+  {
+    id: "CA-009.2",
+    descripcion: "el coach no lee un borrador; cuando la persona lo marca lista, recibe esa fila",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const coachLee = (sp: Tx) => sp`select id from app.shared_guides where id = ${d.guiaBorradorId}`;
+      await como(tx, COACH);
+      await ceroFilas(tx, "el coach lee el borrador", coachLee);
+      await como(tx, PERSONA);
+      await acepta(tx, "la persona lee su borrador", coachLee);
+      await marcarLista(tx, d.guiaBorradorId, d.guiaListaVersion + 1);
+      await como(tx, COACH);
+      await acepta(tx, "el coach lee la versión lista", coachLee);
+    },
+  },
+  {
+    id: "CA-009.3",
+    descripcion: "el coach no lee el borrador que él mismo insertó, y un insert suyo con returning falla",
+    correr: async (tx) => {
+      await asegurarConsentimientoDemo(tx);
+      const { id: snapshotId } = await crearSnapshot(tx, ENG_DEMO);
+      const id = randomUUID();
+      await como(tx, COACH);
+      await rechaza(tx, "insert del coach con returning", "rls", (sp) => sp`
+        insert into app.shared_guides (id, engagement_id, nombre_a_mostrar, lineas, generada_desde_snapshot_id, perfil_version, plan_version, generada_por)
+        values (${id}, ${ENG_DEMO}, 'Nombre sintético', '[]'::jsonb, ${snapshotId}, 1, 1, ${COACH}) returning id`);
+      await pedirBorrador(tx, { id, engagementId: ENG_DEMO, snapshotId, generadaPor: COACH });
+      await ceroFilas(tx, "el coach lee lo que insertó", (sp) => sp`select id from app.shared_guides where id = ${id}`);
+      await como(tx, PERSONA);
+      const filas = await tx`select generada_por from app.shared_guides where id = ${id}`;
+      revisar(filas[0]?.generada_por === COACH, "la persona no ve quién pidió el borrador");
+    },
+  },
+  {
+    id: "CA-009.6",
+    descripcion: "con el consentimiento retirado nadie ve ni escribe la guía y las filas siguen; al darlo otra vez se ven iguales",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const leer = (sp: Tx) => sp`select id, estado::text as estado, version, nombre_a_mostrar, lineas, documento from app.shared_guides where engagement_id = ${ENG_DEMO} order by id`;
+      await como(tx, PERSONA);
+      const antes = JSON.stringify(await leer(tx));
+      revisar(JSON.parse(antes).length >= 2, "la persona no ve sus guías con consentimiento (control)");
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      for (const usuario of [PERSONA, COACH]) {
+        await como(tx, usuario);
+        revisar((await contar(tx, "shared_guides", ENG_DEMO)) === 0, `${usuario} ve guías sin consentimiento`);
+      }
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona decide líneas sin consentimiento", (sp) => sp`update app.shared_guides set lineas = '[]'::jsonb where id = ${d.guiaBorradorId}`);
+      await comoOwner(tx);
+      revisar(JSON.stringify(await leer(tx)) === antes, "como owner las filas cambiaron");
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      await como(tx, PERSONA);
+      revisar(JSON.stringify(await leer(tx)) === antes, "al dar el consentimiento otra vez las filas no se ven iguales");
+      await como(tx, COACH);
+      await acepta(tx, "el coach vuelve a ver la versión lista", (sp) => sp`select id from app.shared_guides where id = ${d.guiaListaId}`);
+    },
+  },
+  {
+    id: "CA-009.12",
+    descripcion: "la persona lee 0 filas de plans, plan_items y snapshots; app_guia_insumos da lo de la spec solo a la persona y al coach con consentimiento",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      // Un perfil vigente con citas en una dimensión y en una señal, y un ítem con cita, dominio y ficha.
+      const { id: snapshotId, version: perfilVersion } = await crearSnapshot(tx, ENG_DEMO);
+      const conCitas = {
+        dimensiones: { retroalimentacion: { resumen: "Resumen.", tipo: "contexto", dominiosFE: ["iniciacion"], evidencia: [{ cita: "Cita de dimensión de rls-check", sessionId: d.sessionId }] } },
+        senalesActivas: [{ tipo: "cambio_de_vida", evidencia: [{ cita: "Cita de señal de rls-check", sessionId: d.sessionId }] }],
+      };
+      await tx`update app.profile_snapshots set perfil = ${json(tx, conCitas)} where id = ${snapshotId}`;
+      const contenido = { dimensiones: { retroalimentacion: { resumen: "Resumen.", tipo: "contexto" } } };
+      await tx`insert into app.persona_profiles (snapshot_id, engagement_id, version, contenido) values (${snapshotId}, ${ENG_DEMO}, ${perfilVersion}, ${json(tx, contenido)})`;
+      await tx`
+        update app.plan_items set dominio_fe = 'iniciacion', evidencia = ${json(tx, [{ cita: "Cita de ítem de rls-check", sessionId: d.sessionId }])}
+        where id = ${d.planItemId}`;
+
+      await como(tx, PERSONA);
+      for (const t of ["plans", "plan_items", "profile_snapshots"]) revisar((await contar(tx, t, ENG_DEMO)) === 0, `la persona lee ${t}`);
+
+      for (const usuario of [PERSONA, COACH]) {
+        await como(tx, usuario);
+        const insumos = InsumosGuia.parse(await insumosDeGuia(tx, ENG_DEMO));
+        revisar(insumos.snapshotId === snapshotId && insumos.perfilVersion === perfilVersion, "no trae el último perfil");
+        revisar(insumos.items.some((i) => i.id === d.planItemId), "no trae el ítem del plan vigente");
+        revisar(insumos.origenes.some((o) => o.id === d.planItemId), "no trae los orígenes de los planes aprobados");
+        revisar(insumos.itemsBase.length === 0, "sin versión base, itemsBase va vacío");
+        for (const cita of ["Cita de dimensión de rls-check", "Cita de señal de rls-check", "Cita de ítem de rls-check"]) revisar(insumos.citas.includes(cita), `falta: ${cita}`);
+        revisar(insumos.hayBorrador && insumos.hayVersiones, "los booleanos no reflejan el borrador y la versión");
+        const texto = JSON.stringify({ ...insumos, citas: [] });
+        for (const fuera of ["iniciacion", "dominio", "evidencia", "knowledge", "nota_original", "cedula"]) revisar(!texto.includes(fuera), `trae ${fuera}`);
+      }
+      await como(tx, COACH);
+      const conBase = InsumosGuia.parse(await insumosDeGuia(tx, ENG_DEMO, InsumosGuia.parse(await insumosDeGuia(tx, ENG_DEMO)).planVersion));
+      revisar(conBase.itemsBase.some((i) => i.id === d.planItemId), "itemsBase no trae la versión pedida");
+
+      // Null: acompañamiento ajeno, coach ajeno, sin consentimiento.
+      await comoOwner(tx);
+      await crearCoachSin(tx);
+      await como(tx, PERSONA);
+      revisar((await insumosDeGuia(tx, ENG_ALTA)) === null, "la persona recibe insumos de otro acompañamiento");
+      await como(tx, PERSONA_ALTA);
+      revisar((await insumosDeGuia(tx, ENG_DEMO)) === null, "otra persona recibe insumos");
+      await como(tx, COACH_SIN);
+      revisar((await insumosDeGuia(tx, ENG_DEMO)) === null, "un coach ajeno recibe insumos");
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      for (const usuario of [PERSONA, COACH]) {
+        await como(tx, usuario);
+        revisar((await insumosDeGuia(tx, ENG_DEMO)) === null, `${usuario} recibe insumos sin consentimiento`);
+      }
+      await como(tx, COACH);
+      revisar((await insumosDeGuia(tx, ENG_ALTA)) === null, "el coach recibe insumos del acompañamiento sin consentimiento");
+    },
+  },
+  {
+    id: "CA-009.12",
+    descripcion: "hayBorrador y hayVersiones: un descartado no cuenta y una retirada sí; las funciones no tienen execute para public ni anon",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await tx`delete from app.shared_guides where engagement_id = ${ENG_DEMO}`;
+      const booleanos = async () => {
+        await como(tx, COACH);
+        const i = InsumosGuia.parse(await insumosDeGuia(tx, ENG_DEMO));
+        await comoOwner(tx);
+        return `${i.hayBorrador},${i.hayVersiones}`;
+      };
+      // El contenido '{}' de prepararDatosDemo no es un perfil válido: aquí no importa cuál sea el perfil.
+      await tx`update app.persona_profiles set contenido = '{"dimensiones":{}}'::jsonb where engagement_id = ${ENG_DEMO}`;
+      revisar((await booleanos()) === "false,false", "sin guías");
+      await crearGuia(tx, ENG_DEMO, d.snapshotId, "descartada");
+      revisar((await booleanos()) === "false,false", "un descartado no es borrador ni versión");
+      await crearGuia(tx, ENG_DEMO, d.snapshotId, "borrador");
+      revisar((await booleanos()) === "true,false", "un borrador no es versión");
+      await crearGuia(tx, ENG_DEMO, d.snapshotId, "retirada");
+      revisar((await booleanos()) === "true,true", "una retirada cuenta como versión");
+      const permisos = await tx`
+        select grantee, routine_name from information_schema.routine_privileges
+        where routine_schema = 'private' and privilege_type = 'EXECUTE' and grantee in ('PUBLIC', 'anon')
+          and routine_name in ('app_guia_insumos', 'app_snapshot_del_acompanamiento', 'app_guia_del_acompanamiento', 'app_shared_guide_transicion')`;
+      revisar(permisos.length === 0, `con execute: ${permisos.map((p) => `${p.grantee} ${p.routine_name}`).join(", ")}`);
+    },
+  },
+  {
+    id: "CA-009.21",
+    descripcion: "un segundo borrador en el mismo acompañamiento lo rechaza el índice único (23505), también para el coach",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      await rechaza(tx, "segundo borrador de la persona", "unique", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, generadaPor: PERSONA }));
+      await como(tx, COACH);
+      await rechaza(tx, "segundo borrador del coach", "unique", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, generadaPor: COACH }));
+    },
+  },
+  {
+    id: "CA-009.22",
+    descripcion: "el trigger no deja marcar lista una guía con líneas pendientes o con un cambio sin decidir",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const cambioPendiente = { tipo: "cambia", textoAnterior: "Texto anterior.", antesQuitada: false, decision: "pendiente" };
+      const version = d.guiaListaVersion + 1;
+      await como(tx, PERSONA);
+      await tx`update app.shared_guides set lineas = ${json(tx, [lineaGuia("incluida"), lineaGuia("pendiente", { orden: 1 })])} where id = ${d.guiaBorradorId}`;
+      await rechaza(tx, "lista con una línea pendiente", "check", (sp) => marcarLista(sp, d.guiaBorradorId, version));
+      await tx`update app.shared_guides set lineas = ${json(tx, [lineaGuia("editada", { cambio: cambioPendiente })])} where id = ${d.guiaBorradorId}`;
+      await rechaza(tx, "lista con un cambio sin decidir", "check", (sp) => marcarLista(sp, d.guiaBorradorId, version));
+      await tx`update app.shared_guides set lineas = ${json(tx, [lineaGuia("editada", { cambio: { ...cambioPendiente, decision: "rechazado" } })])} where id = ${d.guiaBorradorId}`;
+      await rechaza(tx, "lista sin versión", "check", (sp) => sp`update app.shared_guides set estado = 'lista', documento = ${json(sp, DOCUMENTO_GUIA)} where id = ${d.guiaBorradorId}`);
+      await rechaza(tx, "lista sin documento", "check", (sp) => sp`update app.shared_guides set estado = 'lista', version = ${version} where id = ${d.guiaBorradorId}`);
+      await rechaza(tx, "lista cambiando también las líneas", "check", (sp) => sp`
+        update app.shared_guides set estado = 'lista', version = ${version}, documento = ${json(sp, DOCUMENTO_GUIA)}, lineas = '[]'::jsonb where id = ${d.guiaBorradorId}`);
+      await rechaza(tx, "lista con una versión que ya existe", "unique", (sp) => marcarLista(sp, d.guiaBorradorId, d.guiaListaVersion));
+      await acepta(tx, "lista con todo decidido", (sp) => marcarLista(sp, d.guiaBorradorId, version));
+    },
+  },
+  {
+    id: "CA-009.32",
+    descripcion: "una versión lista no se edita: el trigger rechaza a la persona, y el coach recibe 0 filas en cualquier UPDATE y al bloquear",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const politicas = (await tx`select policyname from pg_policies where schemaname = 'app' and tablename = 'shared_guides' order by policyname`).map((p) => p.policyname).join(",");
+      revisar(
+        politicas === "shared_guides_insert_coach,shared_guides_insert_persona,shared_guides_select_coach,shared_guides_select_persona,shared_guides_update_persona",
+        `políticas de shared_guides: ${politicas}`,
+      );
+      const id = d.guiaListaId;
+      const intentos: [string, (sp: Tx) => Promise<postgres.RowList<Row[]>>][] = [
+        ["lineas", (sp) => sp`update app.shared_guides set lineas = '[]'::jsonb where id = ${id}`],
+        ["documento", (sp) => sp`update app.shared_guides set documento = '{"nombre":"Otro","secciones":[]}'::jsonb where id = ${id}`],
+        ["nombre_a_mostrar", (sp) => sp`update app.shared_guides set nombre_a_mostrar = 'Otro' where id = ${id}`],
+        ["version", (sp) => sp`update app.shared_guides set version = 999999 where id = ${id}`],
+        ["regresar a borrador", (sp) => sp`update app.shared_guides set estado = 'borrador' where id = ${id}`],
+        ["descartar", (sp) => sp`update app.shared_guides set estado = 'descartada' where id = ${id}`],
+        ["sin cambios", (sp) => sp`update app.shared_guides set estado = 'lista' where id = ${id}`],
+        ["retirar y cambiar otra cosa", (sp) => sp`update app.shared_guides set estado = 'retirada', nombre_a_mostrar = 'Otro' where id = ${id}`],
+      ];
+      await como(tx, PERSONA);
+      for (const [que, consulta] of intentos) await rechaza(tx, `la persona cambia ${que} de una versión lista`, "check", consulta);
+      await rechaza(tx, "la persona escribe aprobada_por_persona_en", "permiso", (sp) => sp`update app.shared_guides set aprobada_por_persona_en = now() where id = ${id}`);
+      await rechaza(tx, "la persona escribe descartes", "permiso", (sp) => sp`update app.shared_guides set descartes = '{}'::jsonb where id = ${d.guiaBorradorId}`);
+      await rechaza(tx, "la persona borra su guía", "permiso", (sp) => sp`delete from app.shared_guides where id = ${id}`);
+      // R-009.46: en una versión solo cambia la huella de lo ya revisado, y sola.
+      await rechaza(tx, "la huella junto con otra columna", "check", (sp) => sp`update app.shared_guides set revisada_sin_cambios = 'otra', nombre_a_mostrar = 'Otro' where id = ${id}`);
+      await rechaza(tx, "la huella en un borrador", "check", (sp) => sp`update app.shared_guides set revisada_sin_cambios = 'una' where id = ${d.guiaBorradorId}`);
+      await acepta(tx, "la persona anota la huella de lo ya revisado", (sp) => sp`update app.shared_guides set revisada_sin_cambios = 'una' where id = ${id} returning id`);
+      // Un borrador solo cambia lineas y nombre_a_mostrar.
+      await rechaza(tx, "version en un borrador", "check", (sp) => sp`update app.shared_guides set version = 999999 where id = ${d.guiaBorradorId}`);
+      await rechaza(tx, "documento en un borrador", "check", (sp) => sp`update app.shared_guides set documento = ${json(sp, DOCUMENTO_GUIA)} where id = ${d.guiaBorradorId}`);
+
+      await como(tx, COACH);
+      await acepta(tx, "el coach lee la versión lista (control)", (sp) => sp`select id from app.shared_guides where id = ${id}`);
+      for (const [que, consulta] of intentos) await ceroFilas(tx, `el coach cambia ${que}`, consulta);
+      await ceroFilas(tx, "el coach retira", (sp) => sp`update app.shared_guides set estado = 'retirada' where id = ${id}`);
+      await ceroFilas(tx, "el coach bloquea la fila", (sp) => sp`select id from app.shared_guides where id = ${id} for update`);
+      await rechaza(tx, "el coach borra", "permiso", (sp) => sp`delete from app.shared_guides where id = ${id}`);
+
+      // El trigger también vale como owner: no es una regla solo de la sesión.
+      await comoOwner(tx);
+      await rechaza(tx, "el owner regresa una lista a borrador", "check", (sp) => sp`update app.shared_guides set estado = 'borrador' where id = ${id}`);
+    },
+  },
+  {
+    id: "CA-009.33",
+    descripcion: "un coach ajeno recibe 0 filas, también de versiones listas, y no inserta",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await como(tx, COACH_SIN);
+      await ceroFilas(tx, "el coach ajeno lee guías", (sp) => sp`select id from app.shared_guides where engagement_id = ${ENG_DEMO}`);
+      await ceroFilas(tx, "el coach ajeno actualiza", (sp) => sp`update app.shared_guides set lineas = '[]'::jsonb where id = ${d.guiaListaId}`);
+      await rechaza(tx, "el coach ajeno pide un borrador", "rls", (sp) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, generadaPor: COACH_SIN }));
+    },
+  },
+  {
+    id: "CA-009.35",
+    descripcion: "al retirar una versión el coach deja de leerla, la persona la ve como retirada, no se deshace y la fila sigue",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const id = d.guiaListaId;
+      await como(tx, PERSONA);
+      await tx`update app.shared_guides set estado = 'retirada' where id = ${id}`;
+      const [mia] = await tx`select estado::text as estado, retirada_en from app.shared_guides where id = ${id}`;
+      revisar(mia?.estado === "retirada" && mia.retirada_en !== null, "la persona no la ve como retirada con su fecha");
+      await rechaza(tx, "volver a marcarla lista", "check", (sp) => sp`update app.shared_guides set estado = 'lista' where id = ${id}`);
+      await como(tx, COACH);
+      await ceroFilas(tx, "el coach lee la retirada", (sp) => sp`select id from app.shared_guides where id = ${id}`);
+      await comoOwner(tx);
+      const [{ n }] = await tx`select count(*)::int as n from app.shared_guides where id = ${id}`;
+      revisar(n === 1, "se borró la fila");
+    },
+  },
+  {
+    id: "CA-009.36",
+    descripcion: "con dos versiones listas, si la persona retira la más alta, el coach sigue leyendo la anterior; una nueva no retira las anteriores",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const segunda = await crearGuia(tx, ENG_DEMO, d.snapshotId, "lista", { base: d.guiaListaId });
+      const versiones = async () => (await tx`select version from app.shared_guides where engagement_id = ${ENG_DEMO}`).map((r) => r.version as number);
+      await como(tx, COACH);
+      const antes = await versiones();
+      revisar(antes.includes(d.guiaListaVersion) && antes.includes(segunda.version as number), "una versión nueva retiró a la anterior");
+      await como(tx, PERSONA);
+      await tx`update app.shared_guides set estado = 'retirada' where id = ${segunda.id}`;
+      await como(tx, COACH);
+      const despues = await versiones();
+      revisar(!despues.includes(segunda.version as number), "el coach sigue leyendo la retirada");
+      revisar(Math.max(...despues) === d.guiaListaVersion, "el coach no ve la anterior como la más alta");
+    },
+  },
+  {
+    id: "CA-009.55",
+    descripcion: "el trigger no deja marcar lista una guía con más de 20 líneas incluidas; con 20 sí, y las quitadas no cuentan",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const version = d.guiaListaVersion + 1;
+      const conEstados = (estados: EstadoLineaGuia[]) => json(tx, estados.map((e, orden) => lineaGuia(e, { orden })));
+      const repetir = (e: EstadoLineaGuia, n: number) => Array<EstadoLineaGuia>(n).fill(e);
+      await como(tx, PERSONA);
+      await tx`update app.shared_guides set lineas = ${conEstados([...repetir("incluida", 19), "editada", "propia"])} where id = ${d.guiaBorradorId}`;
+      await rechaza(tx, "lista con 21 líneas", "check", (sp) => marcarLista(sp, d.guiaBorradorId, version));
+      await tx`update app.shared_guides set lineas = ${conEstados([...repetir("incluida", 19), "propia", ...repetir("quitada", 3)])} where id = ${d.guiaBorradorId}`;
+      await acepta(tx, "lista con 20 líneas y 3 quitadas", (sp) => marcarLista(sp, d.guiaBorradorId, version));
+    },
+  },
+  {
+    id: "CA-009.57",
+    descripcion: "una guía no apunta a un snapshot ni a una versión de otro acompañamiento, ni a un descartado; el coach no pone base",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const ajeno = await crearSnapshot(tx, ENG_ALTA);
+      const guiaAjena = await crearGuia(tx, ENG_ALTA, ajeno.id, "lista", { generadaPor: PERSONA_ALTA });
+      // Sin borrador abierto: lo aceptado en este caso no debe chocar con el índice único.
+      await tx`update app.shared_guides set estado = 'descartada' where id = ${d.guiaBorradorId}`;
+      const pedir = (sp: Tx, generadaPor: string, snapshotId: string, base: string | null = null) => pedirBorrador(sp, { engagementId: ENG_DEMO, snapshotId, generadaPor, base });
+
+      await como(tx, PERSONA);
+      await rechaza(tx, "la persona con un snapshot de otro acompañamiento", "rls", (sp) => pedir(sp, PERSONA, ajeno.id));
+      await rechaza(tx, "la persona con una base de otro acompañamiento", "rls", (sp) => pedir(sp, PERSONA, d.snapshotId, guiaAjena.id));
+      await rechaza(tx, "la persona con un descartado como base", "rls", (sp) => pedir(sp, PERSONA, d.snapshotId, d.guiaBorradorId));
+      await acepta(tx, "la persona con una versión suya como base", (sp) => pedir(sp, PERSONA, d.snapshotId, d.guiaListaId));
+
+      await como(tx, COACH);
+      await rechaza(tx, "el coach con un snapshot de otro acompañamiento", "rls", (sp) => pedir(sp, COACH, ajeno.id));
+      await rechaza(tx, "el coach con cualquier base", "rls", (sp) => pedir(sp, COACH, d.snapshotId, d.guiaListaId));
+      await acepta(tx, "el coach sin base", (sp) => pedir(sp, COACH, d.snapshotId));
+    },
+  },
+
+  // ----- 010: desglose de tareas -----
+  {
+    id: "CA-010.4",
+    descripcion: "app_perfil_para_desglose da las dimensiones del último snapshot, sin evidencia ni señales; la persona sigue sin leer profile_snapshots; ajenos, sin consentimiento o sin dimensiones reciben 0 filas",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      // El último snapshot manda. crearSnapshot arma uno sin dimensiones, para el último caso.
+      const [{ v }] = await tx`select coalesce(max(version), 0)::int + 1 as v from app.profile_snapshots where engagement_id = ${ENG_DEMO}`;
+      await tx`
+        insert into app.profile_snapshots (engagement_id, version, perfil, source_event_id, created_by)
+        values (${ENG_DEMO}, ${v}, ${json(tx, { dimensiones: { concentracion: { resumen: "De un snapshot anterior.", tipo: "fortaleza", dominiosFE: [] } }, senalesActivas: [] })}, ${d.eventoId}, ${COACH})`;
+      const [ultimo] = await tx`
+        insert into app.profile_snapshots (engagement_id, version, perfil, source_event_id, created_by)
+        values (${ENG_DEMO}, ${(v as number) + 1}, ${json(tx, perfilConDimensiones(d.eventoId, d.sessionId))}, ${d.eventoId}, ${COACH}) returning id, version`;
+
+      for (const usuario of [PERSONA, COACH]) {
+        await como(tx, usuario);
+        const filas = await perfilParaDesglose(tx, ENG_DEMO);
+        revisar(filas.length === 3, `recibió ${filas.length} filas`);
+        revisar(Object.keys(filas[0]).sort().join(",") === "dimension,dominios_fe,resumen,snapshot_id,tipo,version", `columnas: ${Object.keys(filas[0]).join(",")}`);
+        revisar(filas.every((f) => f.snapshot_id === ultimo.id && f.version === ultimo.version), "no es el último snapshot");
+        const texto = JSON.stringify(filas);
+        for (const prohibido of ["evidencia", "cita", CITA_PERFIL, DESCRIPCION_SENAL, "senales", "De un snapshot anterior"]) revisar(!texto.includes(prohibido), `salió ${prohibido}`);
+        const concentracion = filas.find((f) => f.dimension === "concentracion");
+        revisar(concentracion?.tipo === "area_de_apoyo" && concentracion.resumen === "Se concentra mejor con una lista.", "no devolvió la dimensión");
+        revisar(JSON.stringify(concentracion.dominios_fe) === '["iniciacion"]', "dominios_fe no es una lista jsonb");
+      }
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona lee profile_snapshots", (sp) => sp`select id from app.profile_snapshots where engagement_id = ${ENG_DEMO}`);
+      await como(tx, PERSONA_ALTA);
+      await ceroFilas(tx, "una persona ajena", (sp) => perfilParaDesglose(sp, ENG_DEMO));
+      await como(tx, COACH_SIN);
+      await ceroFilas(tx, "un coach ajeno", (sp) => perfilParaDesglose(sp, ENG_DEMO));
+
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      for (const usuario of [PERSONA, COACH]) {
+        await como(tx, usuario);
+        await ceroFilas(tx, "sin consentimiento", (sp) => perfilParaDesglose(sp, ENG_DEMO));
+      }
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      await crearSnapshot(tx, ENG_DEMO);
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "sin dimensiones", (sp) => perfilParaDesglose(sp, ENG_DEMO));
+
+      await comoOwner(tx);
+      const permisos = await tx`
+        select grantee, routine_name from information_schema.routine_privileges
+        where routine_schema = 'private' and privilege_type = 'EXECUTE' and grantee in ('PUBLIC', 'anon')
+          and routine_name in ('app_perfil_para_desglose', 'app_plantilla_de_mi_org', 'app_desglose_del_acompanamiento', 'app_paso_marcable', 'app_decidir_ajustes')`;
+      revisar(permisos.length === 0, `con execute: ${permisos.map((p) => `${p.grantee} ${p.routine_name}`).join(", ")}`);
+    },
+  },
+  {
+    id: "CA-010.26",
+    descripcion: "la persona dueña marca un paso; su coach, un coach ajeno y otra persona no",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      const marca = (sp: Tx, creadoPor: string) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, creadoPor });
+      await como(tx, PERSONA);
+      await acepta(tx, "la persona marca su paso", (sp) => marca(sp, PERSONA));
+      await rechaza(tx, "un paso que no está en el desglose", "rls", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: randomUUID() }));
+      await rechaza(tx, "una marca ya revisada", "rls", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, revisadoPor: PERSONA }));
+      await como(tx, COACH);
+      await rechaza(tx, "su coach marca", "rls", (sp) => marca(sp, COACH));
+      await rechaza(tx, "su coach marca a nombre de ella", "rls", (sp) => marca(sp, PERSONA));
+      await como(tx, COACH_SIN);
+      await rechaza(tx, "un coach ajeno marca", "rls", (sp) => marca(sp, COACH_SIN));
+      await como(tx, PERSONA_ALTA);
+      await rechaza(tx, "otra persona marca", "rls", (sp) => marca(sp, PERSONA_ALTA));
+      await rechaza(tx, "otra persona marca en su propio acompañamiento un paso ajeno", "rls", (sp) => marcarPaso(sp, { engagementId: ENG_ALTA, desgloseId: d.desgloseId, pasoId: d.pasoLibreId, creadoPor: PERSONA_ALTA }));
+    },
+  },
+  {
+    id: "CA-010.27",
+    descripcion: "marcar hecho y luego pendiente deja las dos filas y gana la de id más alto; la persona no edita ni borra una marca; el texto solo va en atorado y hasta 1000",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      await marcarPaso(tx, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "hecho" });
+      await marcarPaso(tx, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "pendiente" });
+      const filas = await tx`select estado::text as estado from app.task_step_events where breakdown_id = ${d.desgloseId} and paso_id = ${d.pasoLibreId} order by id desc`;
+      revisar(filas.map((f) => f.estado).join(",") === "pendiente,hecho", `filas: ${filas.map((f) => f.estado).join(",")}`);
+      await rechaza(tx, "la persona edita el texto", "permiso", (sp) => sp`update app.task_step_events set texto = 'Otro' where id = ${d.marcaId}`);
+      await rechaza(tx, "la persona cambia el estado", "permiso", (sp) => sp`update app.task_step_events set estado = 'hecho' where id = ${d.marcaId}`);
+      await rechaza(tx, "la persona borra una marca", "permiso", (sp) => sp`delete from app.task_step_events where id = ${d.marcaId}`);
+      await rechaza(tx, "texto en hecho", "check", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "hecho", texto: "No va aquí." }));
+      await rechaza(tx, "texto de 1001 caracteres", "check", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "atorado", texto: "x".repeat(1001) }));
+      await acepta(tx, "texto de 1000 caracteres", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "atorado", texto: "x".repeat(1000) }));
+      await acepta(tx, "atorado sin texto", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "atorado" }));
+    },
+  },
+  {
+    id: "CA-010.29",
+    descripcion: "un desglose archivado no acepta marcas y el coach lo sigue leyendo; la persona y su coach archivan, otros no, ni a nombre de otro, y no se deshace",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      const archivar = (sp: Tx, id: string, por: string) => sp`update app.task_breakdowns set archivado_por = ${por}, archivado_en = now() where id = ${id}`;
+      await como(tx, COACH_SIN);
+      await ceroFilas(tx, "un coach ajeno archiva", (sp) => archivar(sp, d.desgloseId, COACH_SIN));
+      await como(tx, PERSONA_ALTA);
+      await ceroFilas(tx, "otra persona archiva", (sp) => archivar(sp, d.desgloseId, PERSONA_ALTA));
+      await como(tx, COACH);
+      await acepta(tx, "su coach archiva", (sp) => archivar(sp, d.desgloseId, COACH));
+      await rechaza(tx, "su coach archiva a nombre de ella", "rls", (sp) => archivar(sp, d.desgloseId, PERSONA));
+      await como(tx, PERSONA);
+      await rechaza(tx, "la persona archiva a nombre de su coach", "rls", (sp) => archivar(sp, d.desgloseId, COACH));
+      await archivar(tx, d.desgloseId, PERSONA);
+      await ceroFilas(tx, "volver a archivar o deshacerlo", (sp) => sp`update app.task_breakdowns set archivado_en = null, archivado_por = ${PERSONA} where id = ${d.desgloseId}`);
+      await rechaza(tx, "una marca en un desglose archivado", "rls", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId }));
+      await como(tx, COACH);
+      const [leido] = await tx`select archivado_por from app.task_breakdowns where id = ${d.desgloseId}`;
+      revisar(leido?.archivado_por === PERSONA, "el coach ya no lee el desglose archivado");
+    },
+  },
+  {
+    id: "CA-010.33",
+    descripcion: "el coach marca \"Ya lo revisé\" una sola vez y solo en atorado; la persona y un coach ajeno no; el coach no escribe ninguna otra columna; la persona lee que ya se revisó",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      const revisarMarca = (sp: Tx, id: number, por: string) => sp`update app.task_step_events set revisado_por = ${por}, revisado_en = now() where id = ${id}`;
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona revisa", (sp) => revisarMarca(sp, d.marcaId, PERSONA));
+      await marcarPaso(tx, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId, estado: "hecho" });
+      const [hecho] = await tx`select id from app.task_step_events where breakdown_id = ${d.desgloseId} and estado = 'hecho'`;
+      await como(tx, COACH_SIN);
+      await ceroFilas(tx, "un coach ajeno revisa", (sp) => revisarMarca(sp, d.marcaId, COACH_SIN));
+      await como(tx, COACH);
+      await rechaza(tx, "el coach escribe el texto", "permiso", (sp) => sp`update app.task_step_events set texto = 'Otro' where id = ${d.marcaId}`);
+      await rechaza(tx, "el coach escribe el estado", "permiso", (sp) => sp`update app.task_step_events set estado = 'hecho' where id = ${d.marcaId}`);
+      await rechaza(tx, "el coach borra", "permiso", (sp) => sp`delete from app.task_step_events where id = ${d.marcaId}`);
+      await rechaza(tx, "el coach revisa a nombre de otro", "rls", (sp) => revisarMarca(sp, d.marcaId, PERSONA));
+      await ceroFilas(tx, "el coach revisa una marca hecho", (sp) => revisarMarca(sp, Number(hecho.id), COACH));
+      await acepta(tx, "el coach revisa", (sp) => revisarMarca(sp, d.marcaId, COACH));
+      await revisarMarca(tx, d.marcaId, COACH);
+      await ceroFilas(tx, "el coach revisa otra vez", (sp) => revisarMarca(sp, d.marcaId, COACH));
+      await como(tx, PERSONA);
+      const [leida] = await tx`select revisado_por, revisado_en from app.task_step_events where id = ${d.marcaId}`;
+      revisar(leida?.revisado_por === COACH && leida.revisado_en !== null, "la persona no lee que su coach lo revisó");
+    },
+  },
+  {
+    id: "CA-010.38",
+    descripcion: "con ajustes sin decidir no se marca; decidir escribe pasos una sola vez y solo a quien lo pidió; nadie escribe pasos directo",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const pasoOrigen = randomUUID();
+      const ajuste = { id: randomUUID(), tipo: "cambiar", pasoId: pasoOrigen, paso: pasoDesglose(), motivo: "Motivo sintético." };
+      const conAjustes = await crearDesglose(tx, ENG_DEMO, d.snapshotId, { ajustes: [ajuste] });
+      const pasoNuevo = randomUUID();
+      const nuevos = [pasoDesglose(pasoNuevo)];
+
+      await como(tx, PERSONA);
+      await rechaza(tx, "marcar con ajustes sin decidir", "rls", (sp) => marcarPaso(sp, { desgloseId: conAjustes.id, pasoId: conAjustes.pasos[0] }));
+      await rechaza(tx, "la persona escribe pasos directo", "permiso", (sp) => sp`update app.task_breakdowns set pasos = ${json(sp, nuevos)} where id = ${conAjustes.id}`);
+      await rechaza(tx, "la persona escribe ajustes_aceptados directo", "permiso", (sp) => sp`update app.task_breakdowns set ajustes_aceptados = '[]'::jsonb where id = ${conAjustes.id}`);
+      await rechaza(tx, "la persona escribe ajustes_decididos_en directo", "permiso", (sp) => sp`update app.task_breakdowns set ajustes_decididos_en = now() where id = ${conAjustes.id}`);
+      await como(tx, COACH);
+      revisar((await decidirAjustes(tx, conAjustes.id, nuevos, [ajuste.id])) === false, "el coach decide");
+      await como(tx, PERSONA_ALTA);
+      revisar((await decidirAjustes(tx, conAjustes.id, nuevos, [ajuste.id])) === false, "otra persona decide");
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "retirado");
+      await como(tx, PERSONA);
+      revisar((await decidirAjustes(tx, conAjustes.id, nuevos, [ajuste.id])) === false, "decide sin consentimiento");
+      await comoOwner(tx);
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      const [intacto] = await tx`select pasos, ajustes_decididos_en from app.task_breakdowns where id = ${conAjustes.id}`;
+      revisar(intacto.ajustes_decididos_en === null && (intacto.pasos as { id: string }[])[0].id === conAjustes.pasos[0], "los intentos cambiaron algo");
+
+      await como(tx, PERSONA);
+      revisar((await decidirAjustes(tx, conAjustes.id, "no es una lista" as unknown as unknown[], [])) === false, "pasos que no son una lista");
+      revisar((await decidirAjustes(tx, conAjustes.id, nuevos, [ajuste.id])) === true, "la persona no pudo decidir");
+      const [decidido] = await tx`select pasos, ajustes_aceptados, ajustes_decididos_en from app.task_breakdowns where id = ${conAjustes.id}`;
+      revisar((decidido.pasos as { id: string }[])[0].id === pasoNuevo, "no escribió pasos");
+      revisar(JSON.stringify(decidido.ajustes_aceptados) === JSON.stringify([ajuste.id]) && decidido.ajustes_decididos_en !== null, "no escribió la decisión");
+      revisar((await decidirAjustes(tx, conAjustes.id, [], [])) === false, "una segunda decisión escribió");
+      await acepta(tx, "marcar después de decidir", (sp) => marcarPaso(sp, { desgloseId: conAjustes.id, pasoId: pasoNuevo }));
+      await rechaza(tx, "marcar un paso que ya no está", "rls", (sp) => marcarPaso(sp, { desgloseId: conAjustes.id, pasoId: conAjustes.pasos[0] }));
+    },
+  },
+  {
+    id: "CA-010.41",
+    descripcion: "otro coach de la organización lee, aplica y archiva una plantilla; un coach de otra organización y una persona no; solo el coach del origen la guarda; pasos no se edita",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await crearOtraOrganizacion(tx);
+      const leer = (sp: Tx) => sp`select id from app.task_templates where id = ${d.plantillaId}`;
+      await como(tx, COACH_SIN);
+      await acepta(tx, "otro coach de la organización la lee", leer);
+      await rechaza(tx, "otro coach de la organización guarda con un origen que no es suyo", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: COACH_SIN }));
+      await rechaza(tx, "un UPDATE de pasos", "permiso", (sp) => sp`update app.task_templates set pasos = '[]'::jsonb where id = ${d.plantillaId}`);
+      await rechaza(tx, "un UPDATE de tarea", "permiso", (sp) => sp`update app.task_templates set tarea = 'Otra' where id = ${d.plantillaId}`);
+      await rechaza(tx, "un UPDATE de origen_engagement_id", "permiso", (sp) => sp`update app.task_templates set origen_engagement_id = ${ENG_ALTA} where id = ${d.plantillaId}`);
+      await rechaza(tx, "un DELETE", "permiso", (sp) => sp`delete from app.task_templates where id = ${d.plantillaId}`);
+      const archivar = (sp: Tx, por: string) => sp`update app.task_templates set archivada_por = ${por}, archivada_en = now() where id = ${d.plantillaId}`;
+      await rechaza(tx, "archiva a nombre de otro", "rls", (sp) => archivar(sp, COACH));
+      await acepta(tx, "otro coach de la organización la archiva", (sp) => archivar(sp, COACH_SIN));
+
+      await como(tx, COACH_OTRA);
+      await ceroFilas(tx, "un coach de otra organización la lee", leer);
+      await ceroFilas(tx, "un coach de otra organización la archiva", (sp) => archivar(sp, COACH_OTRA));
+      await rechaza(tx, "un coach de otra organización guarda en esta", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_OTRA, creadaPor: COACH_OTRA }));
+      await rechaza(tx, "un coach de otra organización guarda con un origen de esta", "rls", (sp) => insertarPlantilla(sp, { orgId: ORG_OTRA, origen: ENG_DEMO, creadaPor: COACH_OTRA }));
+      await acepta(tx, "un coach de otra organización guarda en la suya", (sp) => insertarPlantilla(sp, { orgId: ORG_OTRA, origen: ENG_OTRA, creadaPor: COACH_OTRA }));
+
+      await como(tx, PERSONA);
+      await ceroFilas(tx, "la persona la lee", leer);
+      await rechaza(tx, "la persona guarda", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: PERSONA }));
+
+      await como(tx, COACH);
+      await acepta(tx, "su coach la lee", leer);
+      await acepta(tx, "su coach guarda otra", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: COACH }));
+      await rechaza(tx, "guardar a nombre de otro", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: COACH_SIN }));
+      await rechaza(tx, "guardar ya archivada", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: COACH, archivadaPor: COACH }));
+    },
+  },
+  {
+    id: "CA-010.42",
+    descripcion: "solo el coach del acompañamiento aplica una plantilla de su organización, sin archivar y con el consentimiento de su origen vigente; la repetición solo es de la persona y de un desglose suyo",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      await crearOtraOrganizacion(tx);
+      const deOtraOrg = await crearPlantilla(tx, { orgId: ORG_OTRA, origen: ENG_OTRA, creadaPor: COACH_OTRA });
+      const archivada = await crearPlantilla(tx, { origen: ENG_DEMO });
+      await tx`update app.task_templates set archivada_por = ${COACH}, archivada_en = now() where id = ${archivada}`;
+      // ENG_ALTA no tiene consentimiento: su plantilla no se ve, y esta función tampoco la deja aplicar.
+      const oculta = await crearPlantilla(tx, { origen: ENG_ALTA });
+      const snapshotAjeno = await crearSnapshot(tx, ENG_ALTA);
+      const conPlantilla = (sp: Tx, creadoPor: string, plantillaId: string, engagementId = ENG_DEMO) => insertarDesglose(sp, { engagementId, snapshotId: d.snapshotId, creadoPor, plantillaId });
+
+      await como(tx, COACH);
+      await acepta(tx, "su coach aplica", (sp) => conPlantilla(sp, COACH, d.plantillaId));
+      await rechaza(tx, "una plantilla de otra organización", "rls", (sp) => conPlantilla(sp, COACH, deOtraOrg));
+      await rechaza(tx, "una plantilla archivada", "rls", (sp) => conPlantilla(sp, COACH, archivada));
+      await rechaza(tx, "una plantilla oculta por falta de consentimiento en su origen", "rls", (sp) => conPlantilla(sp, COACH, oculta));
+      await rechaza(tx, "el coach repite un desglose", "rls", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: COACH, origenId: d.desgloseId }));
+      await rechaza(tx, "un snapshot de otro acompañamiento", "rls", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: snapshotAjeno.id, creadoPor: COACH }));
+
+      await como(tx, COACH_SIN);
+      await rechaza(tx, "un coach ajeno aplica", "rls", (sp) => conPlantilla(sp, COACH_SIN, d.plantillaId));
+      await como(tx, PERSONA);
+      await rechaza(tx, "la persona aplica", "rls", (sp) => conPlantilla(sp, PERSONA, d.plantillaId));
+      await acepta(tx, "la persona repite un desglose suyo", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: PERSONA, origenId: d.desgloseId }));
+
+      // La plantilla oculta se vuelve a poder aplicar cuando su origen tiene consentimiento, y deja de poder con el retiro.
+      await como(tx, COACH);
+      await tx`update app.engagements set diagnostico_verificado = true, cedula_profesional = '1234567' where id = ${ENG_ALTA}`;
+      await comoOwner(tx);
+      await evento(tx, ENG_ALTA, PERSONA_ALTA, "otorgado");
+      await como(tx, COACH);
+      await acepta(tx, "con el consentimiento de su origen vigente", (sp) => conPlantilla(sp, COACH, oculta));
+      await comoOwner(tx);
+      await evento(tx, ENG_ALTA, PERSONA_ALTA, "retirado");
+      await como(tx, COACH);
+      await rechaza(tx, "con el retiro en su origen", "rls", (sp) => conPlantilla(sp, COACH, oculta));
+
+      // Un desglose ajeno no sirve de origen.
+      await comoOwner(tx);
+      const otroSnapshot = await crearSnapshot(tx, ENG_OTRA);
+      const ajeno = await crearDesglose(tx, ENG_OTRA, otroSnapshot.id, { creadoPor: PERSONA_OTRA });
+      await como(tx, PERSONA);
+      await rechaza(tx, "la persona repite un desglose ajeno", "rls", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: PERSONA, origenId: ajeno.id }));
+    },
+  },
+  {
+    id: "CA-010.45",
+    descripcion: "con el retiro, desgloses, marcas y la plantilla de ese origen dejan de verse para todos y no se borran; la plantilla no se aplica ni se archiva; un desglose ajeno hecho con ella sigue; al volver el consentimiento se ven",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await crearCoachSin(tx);
+      // Un desglose de otra persona, en otro acompañamiento, hecho con esa plantilla.
+      const snapshotAjeno = await crearSnapshot(tx, ENG_ALTA);
+      const ajeno = await crearDesglose(tx, ENG_ALTA, snapshotAjeno.id, { creadoPor: COACH, plantillaId: d.plantillaId });
+      const tablas = ["task_breakdowns", "task_step_events", "task_templates"];
+      const antes: Record<string, number> = {};
+      for (const t of tablas) antes[t] = await contar(tx, t, ENG_DEMO);
+      for (const t of tablas) revisar(antes[t] > 0, `${t} sin filas (preparación)`);
+
+      await como(tx, COACH);
+      for (const t of tablas) revisar((await contar(tx, t, ENG_DEMO)) === antes[t], `el coach no ve ${t} con consentimiento (control)`);
+      await como(tx, PERSONA);
+      await tx`insert into app.consent_events (engagement_id, user_id, tipo, version_aviso) values (${ENG_DEMO}, ${PERSONA}, 'retirado', ${AVISO})`;
+      for (const t of tablas) revisar((await contar(tx, t, ENG_DEMO)) === 0, `la persona lee ${t} sin consentimiento`);
+      for (const coach of [COACH, COACH_SIN]) {
+        await como(tx, coach);
+        for (const t of tablas) revisar((await contar(tx, t, ENG_DEMO)) === 0, `${coach} lee ${t} sin consentimiento`);
+        await ceroFilas(tx, "archivar la plantilla oculta", (sp) => sp`update app.task_templates set archivada_por = ${coach}, archivada_en = now() where id = ${d.plantillaId}`);
+      }
+      await como(tx, COACH);
+      await ceroFilas(tx, "archivar un desglose sin consentimiento", (sp) => sp`update app.task_breakdowns set archivado_por = ${COACH}, archivado_en = now() where id = ${d.desgloseId}`);
+      await ceroFilas(tx, "revisar una marca sin consentimiento", (sp) => sp`update app.task_step_events set revisado_por = ${COACH}, revisado_en = now() where id = ${d.marcaId}`);
+      await rechaza(tx, "guardar una plantilla con el retiro", "rls", (sp) => insertarPlantilla(sp, { origen: ENG_DEMO, creadaPor: COACH }));
+      await rechaza(tx, "aplicar la plantilla oculta en otro acompañamiento", "rls", (sp) => insertarDesglose(sp, { engagementId: ENG_ALTA, snapshotId: snapshotAjeno.id, creadoPor: COACH, plantillaId: d.plantillaId }));
+      await como(tx, PERSONA);
+      await rechaza(tx, "marcar con el retiro", "rls", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId }));
+
+      await comoOwner(tx);
+      for (const t of tablas) revisar((await contar(tx, t, ENG_DEMO)) === antes[t], `${t} cambió con el retiro`);
+      const [fila] = await tx`select plantilla_id from app.task_breakdowns where id = ${ajeno.id}`;
+      revisar(fila?.plantilla_id === d.plantillaId, "el desglose de otra persona cambió");
+
+      await evento(tx, ENG_DEMO, PERSONA, "otorgado");
+      await como(tx, PERSONA);
+      for (const t of ["task_breakdowns", "task_step_events"]) revisar((await contar(tx, t, ENG_DEMO)) === antes[t], `la persona no vuelve a ver ${t}`);
+      await ceroFilas(tx, "la persona nunca ve la plantilla", (sp) => sp`select id from app.task_templates where id = ${d.plantillaId}`);
+      for (const coach of [COACH, COACH_SIN]) {
+        await como(tx, coach);
+        await acepta(tx, "la plantilla vuelve a verse", (sp) => sp`select id from app.task_templates where id = ${d.plantillaId}`);
+      }
+      await como(tx, COACH);
+      for (const t of tablas) revisar((await contar(tx, t, ENG_DEMO)) === antes[t], `el coach no vuelve a ver ${t}`);
+    },
+  },
+  {
+    id: "CA-010.51",
+    descripcion: "la persona no escribe pasos directo ni crea una fila con otro creado_por, ni ya archivada o decidida; el coach no inserta marcas",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      const fila = (extra: Partial<FilaDesglose> = {}) => ({ engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: PERSONA, ...extra });
+      await como(tx, PERSONA);
+      await acepta(tx, "la persona pide un desglose (control)", (sp) => insertarDesglose(sp, fila()));
+      await rechaza(tx, "pasos directo", "permiso", (sp) => sp`update app.task_breakdowns set pasos = '[]'::jsonb where id = ${d.desgloseId}`);
+      await rechaza(tx, "tarea_original directo", "permiso", (sp) => sp`update app.task_breakdowns set tarea_original = 'Otra' where id = ${d.desgloseId}`);
+      await rechaza(tx, "generado_desde directo", "permiso", (sp) => sp`update app.task_breakdowns set generado_desde = ${d.snapshotSinVistaId} where id = ${d.desgloseId}`);
+      await rechaza(tx, "borrar un desglose", "permiso", (sp) => sp`delete from app.task_breakdowns where id = ${d.desgloseId}`);
+      await rechaza(tx, "otro creado_por", "rls", (sp) => insertarDesglose(sp, fila({ creadoPor: COACH })));
+      await rechaza(tx, "ya archivada", "rls", (sp) => insertarDesglose(sp, fila({ archivadoPor: PERSONA })));
+      await rechaza(tx, "ya decidida", "rls", (sp) => insertarDesglose(sp, fila({ decididosEn: true })));
+      await rechaza(tx, "otro acompañamiento", "rls", (sp) => insertarDesglose(sp, fila({ engagementId: ENG_ALTA })));
+      await como(tx, COACH);
+      await rechaza(tx, "el coach escribe pasos directo", "permiso", (sp) => sp`update app.task_breakdowns set pasos = '[]'::jsonb where id = ${d.desgloseId}`);
+    },
+  },
+  {
+    id: "CA-010.59",
+    descripcion: "un INSERT con ajustes vacíos lo rechaza la base; con ajustes nulos se puede marcar y app_decidir_ajustes no escribe",
+    correr: async (tx) => {
+      const d = await prepararDatosDemo(tx);
+      await como(tx, PERSONA);
+      await rechaza(tx, "ajustes vacíos", "check", (sp) => insertarDesglose(sp, { engagementId: ENG_DEMO, snapshotId: d.snapshotId, creadoPor: PERSONA, ajustes: [] }));
+      revisar((await decidirAjustes(tx, d.desgloseId, [pasoDesglose()], [])) === false, "app_decidir_ajustes escribió sin ajustes");
+      const [fila] = await tx`select pasos, ajustes_decididos_en from app.task_breakdowns where id = ${d.desgloseId}`;
+      revisar(fila.ajustes_decididos_en === null && (fila.pasos as { id: string }[])[0].id === d.pasoId, "cambió la fila");
+      await acepta(tx, "marcar con ajustes nulos", (sp) => marcarPaso(sp, { desgloseId: d.desgloseId, pasoId: d.pasoLibreId }));
+      const [marcable] = await tx`select private.app_paso_marcable(${d.desgloseId}::uuid, ${d.pasoLibreId}::uuid, ${ENG_DEMO}::uuid) as si`;
+      revisar(marcable.si === true, "app_paso_marcable dijo que no");
+    },
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -1347,6 +2591,10 @@ async function prepararEstadoInicial(tx: Tx) {
   await tx`update app.plans set status = 'descartado' where engagement_id = ${ENG_DEMO} and status = 'borrador'`;
   // Spec 004: una alerta vigente de un recorrido no debe chocar con strong_alerts_una_vigente.
   await tx`update app.strong_alerts set estado = 'atendida' where engagement_id = ${ENG_DEMO}`;
+  // Spec 008: una propuesta de un recorrido no debe chocar con fe_domain_summaries_una_propuesta.
+  await tx`update app.fe_domain_summaries set estado = 'descartado' where engagement_id = ${ENG_DEMO} and estado = 'propuesto'`;
+  // Spec 009: un borrador de un recorrido no debe chocar con shared_guides_un_borrador.
+  await tx`update app.shared_guides set estado = 'descartada' where engagement_id = ${ENG_DEMO} and estado = 'borrador'`;
 }
 
 async function main(url: string) {

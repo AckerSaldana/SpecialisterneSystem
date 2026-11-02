@@ -1,0 +1,7 @@
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- Spec 005 (R-005.26, R-005.27, R-005.34, R-005.46). Generado con npm run db:generate desde lib/db/schema.ts.
+ALTER TABLE "app"."profile_events" ADD COLUMN "resuelto_por_evento" uuid;--> statement-breakpoint
+ALTER TABLE "app"."profile_events" ADD COLUMN "resuelto_por_plan" uuid;--> statement-breakpoint
+ALTER TABLE "app"."profile_events" ADD CONSTRAINT "profile_events_resuelto_por_evento_profile_events_id_fk" FOREIGN KEY ("resuelto_por_evento") REFERENCES "app"."profile_events"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "app"."profile_events" ADD CONSTRAINT "profile_events_resuelto_por_plan_plans_id_fk" FOREIGN KEY ("resuelto_por_plan") REFERENCES "app"."plans"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
+ALTER POLICY "profile_events_insert_persona_feedback" ON "app"."profile_events" TO authenticated WITH CHECK ((select private.app_is_persona_of("app"."profile_events"."engagement_id")) and "app"."profile_events"."created_by" = (select auth.uid()) and "app"."profile_events"."tipo" = 'no_me_representa' and "app"."profile_events"."status" = 'proposed' and (select private.app_has_consent("app"."profile_events"."engagement_id")));

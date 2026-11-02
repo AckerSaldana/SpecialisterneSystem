@@ -52,7 +52,9 @@ const MENSAJES = {
   errorGuardar: "No se pudo guardar la decisión. Intenta de nuevo.",
 } as const;
 
-export async function decidirPropuesta(user: UsuarioRuta, eventId: string, body: unknown): Promise<RespuestaRuta> {
+// "opciones.ahora" solo lo pasa el seed del demo, para que las fechas sigan la historia (R-007.60). La
+// ruta no lo pasa y nada del body llega aquí.
+export async function decidirPropuesta(user: UsuarioRuta, eventId: string, body: unknown, opciones: { ahora?: Date } = {}): Promise<RespuestaRuta> {
   const parsed = DecisionRequest.safeParse(body);
   if (!parsed.success) return conError(400, "La decisión no es válida.");
   const decision = parsed.data;
@@ -80,7 +82,7 @@ export async function decidirPropuesta(user: UsuarioRuta, eventId: string, body:
       if (evento.tipo !== "propuesta_ia") return conError(409, MENSAJES.noEsPropuesta);
       if (evento.status !== "proposed") return conError(409, MENSAJES.yaRevisada);
 
-      const ahora = new Date();
+      const ahora = opciones.ahora ?? new Date();
 
       if (decision.accion === "rechazar") {
         await tx
@@ -114,7 +116,12 @@ export async function decidirPropuesta(user: UsuarioRuta, eventId: string, body:
       const ultimo = await leerUltimoSnapshot(tx, evento.engagementId);
 
       // R-004.59: el resumen llega tal cual a persona_profiles. Ninguna confirmación lo salta.
-      const citas = [...citasDePropuesta(update), ...citasDelPerfil(ultimo?.perfil ?? PERFIL_VACIO)];
+      // R-008.6: las observaciones previas pueden traer citas que el último snapshot ya no tiene.
+      const citas = [
+        ...citasDePropuesta(update),
+        ...citasDelPerfil(ultimo?.perfil ?? PERFIL_VACIO),
+        ...payload.indiceObservaciones.map((e) => e.cita),
+      ];
       const [bloqueo] = bloqueosDeCambios(update, aprobacion, citas);
       if (bloqueo) {
         const [persona] = await tx

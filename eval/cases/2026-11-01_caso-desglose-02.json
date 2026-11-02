@@ -1,0 +1,170 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso de la etapa desglose (R-007.73, R-010.53, tarea 26 de la spec 010), escrito por Claude Code. Persona y datos inventados. Es Tomás, de caso-ws-02: un perfil distinto al de Renata, sin iniciacion, así que R-010.14 no aplica. El caso de Beta solo trae su nota: Claude Code escribió este perfil y este plan a partir de ella, como quedarían después de que el coach aprueba. Pide el coach, así que no hay excepción de R-010.15 y R-010.16. salidaFija no sale del modelo. El texto y los patrones son un borrador: los revisa otra persona del equipo.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "desglose"
+  ],
+  "id": "caso-desglose-02",
+  "descripcion": "El coach prepara una tarea para Tomás, con otro perfil: le cuestan los pasos del final y encontrar sus archivos. R-010.14 no aplica, y el modelo no recibe datos de su empresa.",
+  "rasgos": [
+    {
+      "rasgo": "Hace las conciliaciones de corrido y se le pasan los pasos del final.",
+      "donde": "dimension:concentracion, dominioFE:monitoreo_de_tareas",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "Guarda todo en el escritorio y tarda en encontrar sus archivos.",
+      "donde": "dimension:ajustes_razonables, dominioFE:organizacion_de_materiales",
+      "fuente": "F-017"
+    }
+  ],
+  "basadoEn": "caso-ws-02",
+  "nombrePila": "Tomás",
+  "perfil": [
+    {
+      "dimension": "antecedentes_experiencia",
+      "tipo": "contexto",
+      "resumen": "Tomás lleva año y medio como auxiliar contable en cuentas por pagar.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "motivacion_intereses",
+      "tipo": "fortaleza",
+      "resumen": "Tomás es muy exacto con las cifras y le gusta el trabajo repetitivo con reglas claras.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "concentracion",
+      "tipo": "area_de_apoyo",
+      "resumen": "Tomás hace las conciliaciones largas de corrido, y a veces se le pasan los pasos del final. Le ayuda una lista de revisión.",
+      "dominiosFe": [
+        "monitoreo_de_tareas"
+      ]
+    },
+    {
+      "dimension": "ajustes_razonables",
+      "tipo": "area_de_apoyo",
+      "resumen": "Tomás guarda sus archivos en el escritorio y tarda en encontrarlos. Va a probar una carpeta por mes.",
+      "dominiosFe": [
+        "organizacion_de_materiales"
+      ]
+    },
+    {
+      "dimension": "disparadores_estres",
+      "tipo": "contexto",
+      "resumen": "A Tomás lo estresan los cambios de fecha del cierre sin aviso. Le ayuda tener el calendario impreso.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "estilo_comunicacion",
+      "tipo": "contexto",
+      "resumen": "Tomás habla con soltura en las juntas y explica sus ideas con ejemplos.",
+      "dominiosFe": []
+    }
+  ],
+  "plan": {
+    "items": [
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000301",
+        "tipo": "objetivo",
+        "texto": "Usa tu lista de revisión al final de cada conciliación.",
+        "orden": 0,
+        "itemsAnteriores": []
+      },
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000302",
+        "tipo": "objetivo",
+        "texto": "Prueba una carpeta por mes para tus archivos.",
+        "orden": 1,
+        "itemsAnteriores": []
+      }
+    ]
+  },
+  "pedido": {
+    "quien": "coach",
+    "tarea": "Preparar la conciliación de cuentas por pagar del cierre de mes.",
+    "contexto": {
+      "herramienta": "la hoja de conciliación"
+    }
+  },
+  "salidaFija": {
+    "pasos": [
+      {
+        "accion": "Busca la carpeta del mes en tu computadora.",
+        "criterioTerminado": "La carpeta del mes está abierta en tu pantalla.",
+        "notaApoyo": "Si todavía no la tienes, crea una carpeta con el nombre del mes.",
+        "apoyoRef": "A-03",
+        "minutos": null
+      },
+      {
+        "accion": "Abre la hoja de conciliación del mes.",
+        "criterioTerminado": "La hoja muestra los datos de este cierre.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Compara cada factura con su registro.",
+        "criterioTerminado": "Todas las facturas tienen su registro revisado en la hoja.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Adjunta el soporte a la conciliación.",
+        "criterioTerminado": "El soporte aparece adjunto en la conciliación.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Marca la póliza de la conciliación.",
+        "criterioTerminado": "La póliza aparece marcada en la hoja.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Usa tu lista de revisión con la conciliación completa.",
+        "criterioTerminado": "Cada punto de tu lista de revisión tiene su marca.",
+        "notaApoyo": "Es la lista que acordaste para el final de cada conciliación.",
+        "apoyoRef": "A-04",
+        "minutos": null
+      }
+    ]
+  },
+  "esperado": {
+    "desglose": {
+      "exigeInicio": false,
+      "enLaEntrada": [
+        "se le pasan los pasos del final",
+        "Usa tu lista de revisión",
+        "la hoja de conciliación"
+      ],
+      "patronesProhibidos": [
+        {
+          "patron": "excel",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "jira",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "farmacia",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        }
+      ]
+    }
+  }
+}

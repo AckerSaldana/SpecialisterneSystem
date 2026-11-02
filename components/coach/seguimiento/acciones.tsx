@@ -22,22 +22,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-async function llamar(url: string, metodo: "POST" | "PATCH", cuerpo?: object): Promise<string | null> {
+// status: el de la respuesta con error. null: salió bien o no hubo respuesta.
+async function llamarConEstado(url: string, metodo: "POST" | "PATCH", cuerpo?: object): Promise<{ error: string | null; status: number | null }> {
   try {
     const res = await fetch(url, {
       method: metodo,
       headers: cuerpo ? { "Content-Type": "application/json" } : undefined,
       body: cuerpo ? JSON.stringify(cuerpo) : undefined,
     });
-    if (res.ok) return null;
+    if (res.ok) return { error: null, status: null };
     const err = ApiError.safeParse(await res.json().catch(() => null));
-    return err.success ? err.data.error : "No se pudo guardar el cambio. Intenta de nuevo.";
+    return { error: err.success ? err.data.error : "No se pudo guardar el cambio. Intenta de nuevo.", status: res.status };
   } catch {
-    return "No se pudo guardar el cambio. Revisa tu conexión e intenta de nuevo.";
+    return { error: "No se pudo guardar el cambio. Revisa tu conexión e intenta de nuevo.", status: null };
   }
 }
 
-function enfocar(idFoco: string) {
+export async function llamar(url: string, metodo: "POST" | "PATCH", cuerpo?: object): Promise<string | null> {
+  return (await llamarConEstado(url, metodo, cuerpo)).error;
+}
+
+export function enfocar(idFoco: string) {
   document.getElementById(idFoco)?.focus();
 }
 
@@ -55,24 +60,28 @@ type DialogoProps = {
   // Datos y no una función: este componente recibe sus props desde un componente de servidor.
   cuerpo: Record<string, string>;
   idFoco: string;
+  // Un 404 o un 409 dicen que la pantalla ya estaba vieja, porque otra pestaña ya lo hizo: al cerrar el diálogo, se refresca.
+  refrescarSiCambio?: boolean;
 };
 
-export function AccionConDialogo({ boton, variante = "outline", titulo, texto, etiquetaNota, campoNota, confirmar, url, metodo, cuerpo, idFoco }: DialogoProps) {
+export function AccionConDialogo({ boton, variante = "outline", titulo, texto, etiquetaNota, campoNota, confirmar, url, metodo, cuerpo, idFoco, refrescarSiCambio = false }: DialogoProps) {
   const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [nota, setNota] = useState("");
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [listo, setListo] = useState(false);
+  const [vieja, setVieja] = useState(false);
 
   async function enviar() {
     setGuardando(true);
     setError(null);
     const limpia = nota.trim();
-    const fallo = await llamar(url, metodo, { ...cuerpo, ...(campoNota && limpia ? { [campoNota]: limpia } : {}) });
+    const { error: fallo, status } = await llamarConEstado(url, metodo, { ...cuerpo, ...(campoNota && limpia ? { [campoNota]: limpia } : {}) });
     setGuardando(false);
     if (fallo) {
       setError(fallo);
+      if (refrescarSiCambio && (status === 404 || status === 409)) setVieja(true);
       return;
     }
     setListo(true);
@@ -89,6 +98,12 @@ export function AccionConDialogo({ boton, variante = "outline", titulo, texto, e
         setAbierto(a);
         // El error de un intento anterior no debe aparecer al abrirlo otra vez.
         if (!a) setError(null);
+        // La entrada puede desaparecer con el refresco: el foco va al título, igual que al guardar.
+        if (!a && vieja) {
+          setVieja(false);
+          setListo(true);
+          router.refresh();
+        }
       }}
     >
       <DialogTrigger asChild>

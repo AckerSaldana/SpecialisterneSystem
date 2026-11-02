@@ -16,6 +16,7 @@ import {
   bigserial,
   boolean,
   check,
+  index,
   integer,
   jsonb,
   pgPolicy,
@@ -30,6 +31,8 @@ import {
 import { authenticatedRole, authUid, authUsers } from "drizzle-orm/supabase";
 import type { Aprobacion, EvidenciaGuardada, Perfil, PerfilPersona, ProfileEventPayload } from "@/lib/profile/schema";
 import type { EvidenciaPlan, PayloadPlanIA, PlanPersona } from "@/lib/plan/schema";
+import type { DescartesGuia, DocumentoGuia, LineaGuia } from "@/lib/guia/schema";
+import type { AjusteGuardado, ContextoDesglose, DescartadoDesglose, PasoDesglose, PasoPlantilla } from "@/lib/desglose/schema";
 
 // Todas las tablas viven en el esquema "app". La Data API de Supabase (PostgREST) solo
 // expone "public", así que nadie puede leer ni escribir estas tablas con su sesión desde
@@ -82,6 +85,24 @@ export const signalType = app.enum("signal_type", [
 ]);
 export const signalStatus = app.enum("signal_status", ["activa", "cerrada"]);
 export const alertStatus = app.enum("alert_status", ["abierta", "escalada", "atendida"]);
+// Spec 008. Los mismos nueve de DOMINIOS_FE y las mismas tres de DIRECCIONES_FE (lib/profile/schema.ts).
+export const feDominio = app.enum("fe_dominio", [
+  "inhibicion",
+  "automonitoreo",
+  "flexibilidad",
+  "control_emocional",
+  "iniciacion",
+  "memoria_de_trabajo",
+  "planeacion_organizacion",
+  "monitoreo_de_tareas",
+  "organizacion_de_materiales",
+]);
+export const feDireccion = app.enum("fe_direccion", ["apoyo", "fortaleza", "cambio"]);
+export const feResumenEstado = app.enum("fe_resumen_estado", ["propuesto", "aprobado", "descartado"]);
+// Spec 009.
+export const sharedGuideEstado = app.enum("shared_guide_estado", ["borrador", "lista", "retirada", "descartada"]);
+// Spec 010.
+export const taskStepEstado = app.enum("task_step_estado", ["hecho", "atorado", "pendiente"]);
 
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
 
@@ -100,6 +121,19 @@ const eventoDeSesion = (ev: unknown, ses: unknown, eng: unknown) =>
   sql`(select private.app_evento_de_sesion(${ev}, ${ses}, ${eng}))`;
 const itemDelAcompanamiento = (item: unknown, eng: unknown) =>
   sql`(select private.app_item_del_acompanamiento(${item}, ${eng}))`;
+// Spec 008: una corrección solo apunta a una propuesta aprobada de ese acompañamiento.
+const eventoAprobado = (ev: unknown, eng: unknown) => sql`(select private.app_evento_aprobado(${ev}, ${eng}))`;
+// Spec 009 (R-009.63): una guía no apunta a un snapshot ni a una versión de otro acompañamiento.
+const snapshotDelAcompanamiento = (snap: unknown, eng: unknown) =>
+  sql`(select private.app_snapshot_del_acompanamiento(${snap}, ${eng}))`;
+const guiaDelAcompanamiento = (guia: unknown, eng: unknown) =>
+  sql`(select private.app_guia_del_acompanamiento(${guia}, ${eng}))`;
+// Spec 010: una plantilla de su organización que se pueda aplicar, un desglose de ese acompañamiento y un paso que acepta marcas.
+const plantillaDeMiOrg = (plantilla: unknown) => sql`(select private.app_plantilla_de_mi_org(${plantilla}))`;
+const desgloseDelAcompanamiento = (desglose: unknown, eng: unknown) =>
+  sql`(select private.app_desglose_del_acompanamiento(${desglose}, ${eng}))`;
+const pasoMarcable = (desglose: unknown, paso: unknown, eng: unknown) =>
+  sql`(select private.app_paso_marcable(${desglose}, ${paso}, ${eng}))`;
 
 // ---------------------------------------------------------------------------
 // Organizaciones y usuarios
@@ -273,6 +307,10 @@ export const profileEvents = app.table(
     perfilVersionBase: integer("perfil_version_base"),
     // "set null" evita el ciclo plans → profile_snapshots → profile_events → plans, que rompería la purga.
     planBaseId: uuid("plan_base_id").references((): AnyPgColumn => plans.id, { onDelete: "set null" }),
+    // Spec 005 (R-005.27, R-005.34): qué propuesta o qué versión del plan resolvió un "no me representa".
+    // "set null" por lo mismo que plan_base_id: otro ciclo de llaves rompería la purga (R-002.49).
+    resueltoPorEvento: uuid("resuelto_por_evento").references((): AnyPgColumn => profileEvents.id, { onDelete: "set null" }),
+    resueltoPorPlan: uuid("resuelto_por_plan").references((): AnyPgColumn => plans.id, { onDelete: "set null" }),
   },
   (t) => [
     // R-004.30: una sola propuesta de la IA por sesión, aunque lleguen dos reintentos a la vez.
@@ -299,10 +337,13 @@ export const profileEvents = app.table(
       to: authenticatedRole,
       using: sql`${personaOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'no_me_representa' and ${hasConsent(t.engagementId)}`,
     }),
+    // R-005.46: también exige consentimiento vigente, igual que su lectura.
+    // R-005.50: la persona solo escribe acompañamiento, tipo, estado, payload y quién lo creó. Lo demás
+    // queda vacío y la fecha es la de la inserción: lo que decide el coach no se puede escribir de antemano.
     pgPolicy("profile_events_insert_persona_feedback", {
       for: "insert",
       to: authenticatedRole,
-      withCheck: sql`${personaOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'no_me_representa' and ${t.status} = 'proposed'`,
+      withCheck: sql`${personaOf(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.tipo} = 'no_me_representa' and ${t.status} = 'proposed' and ${hasConsent(t.engagementId)} and ${t.sessionId} is null and ${t.approvedPayload} is null and ${t.decidedBy} is null and ${t.decidedAt} is null and ${t.promptVersion} is null and ${t.model} is null and ${t.perfilVersionBase} is null and ${t.planBaseId} is null and ${t.resueltoPorEvento} is null and ${t.resueltoPorPlan} is null and ${t.createdAt} = now()`,
     }),
   ],
 );
@@ -829,6 +870,337 @@ export const strongAlerts = app.table(
       to: authenticatedRole,
       using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
       withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Trayectoria de función ejecutiva (spec 008): decisiones del coach, no líneas. Las líneas se calculan
+// (lib/trayectoria/lineas.ts, R-008.20). Solo el coach del acompañamiento, con consentimiento vigente.
+// La persona no tiene políticas: 0 filas por construcción (C-09, R-008.40).
+// ---------------------------------------------------------------------------
+
+// Una fila por corrección, sin editar ni borrar las anteriores. La vigente de una línea es la de id más
+// alto (R-008.29). La propuesta de la IA sigue intacta en profile_events.payload. Permisos en 0019.
+export const feCorrections = app.table(
+  "fe_corrections",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => profileEvents.id),
+    lineaId: text("linea_id").notNull(),
+    // Nulo es "Ninguno".
+    dominio: feDominio("dominio"),
+    direccion: feDireccion("direccion"),
+    anteriorLineaId: text("anterior_linea_id"),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    // El lineaId empieza con el id de su evento (R-008.11).
+    check("fe_corrections_linea_del_evento", sql`left(${t.lineaId}, 36) = ${t.eventId}::text`),
+    check("fe_corrections_sin_dominio", sql`${t.dominio} is not null or ${t.direccion} is null`),
+    check("fe_corrections_anterior", sql`coalesce(${t.direccion} = 'cambio', false) = (${t.anteriorLineaId} is not null)`),
+    index("fe_corrections_engagement_linea_id_idx").on(t.engagementId, t.lineaId, t.id),
+    pgPolicy("fe_corrections_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("fe_corrections_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.createdBy} = ${authUid} and ${eventoAprobado(t.eventId, t.engagementId)}`,
+    }),
+  ],
+);
+
+// Resumen por dominio: una oración que propone la IA y el coach aprueba o descarta (R-008.37). El texto
+// no se edita: los permisos de 0019 solo dejan escribir estado, decided_by y decided_at.
+export const feDomainSummaries = app.table(
+  "fe_domain_summaries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    dominio: feDominio("dominio").notNull(),
+    texto: text("texto").notNull(),
+    // Las líneas que usa la oración y las del bloque al generarla (R-008.38).
+    lineaIds: jsonb("linea_ids").$type<string[]>().notNull(),
+    bloqueIds: jsonb("bloque_ids").$type<string[]>().notNull(),
+    estado: feResumenEstado("estado").notNull().default("propuesto"),
+    promptVersion: text("prompt_version").notNull(),
+    model: text("model").notNull(),
+    createdBy: uuid("created_by")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    decidedBy: uuid("decided_by").references(() => users.id),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+  },
+  (t) => [
+    // Una sola propuesta abierta por dominio, aunque lleguen dos pedidos a la vez (R-008.33).
+    uniqueIndex("fe_domain_summaries_una_propuesta").on(t.engagementId, t.dominio).where(sql`${t.estado} = 'propuesto'`),
+    pgPolicy("fe_domain_summaries_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("fe_domain_summaries_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.createdBy} = ${authUid} and ${t.estado} = 'propuesto' and ${t.decidedBy} is null`,
+    }),
+    // Lo ya aprobado o descartado no pasa el using: queda como está.
+    pgPolicy("fe_domain_summaries_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.estado} = 'propuesto'`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.estado} in ('aprobado', 'descartado') and ${t.decidedBy} = ${authUid}`,
+    }),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// "Cómo trabajar conmigo" (spec 009): la hoja que la persona escribe para su líder. shared_guides es solo
+// un nombre interno (R-009.1). RLS filtra filas, no columnas: el coach lee toda la fila de una versión
+// lista, por eso lineas lleva solo IDs como origen, descartes solo conteos y nada de las entradas al modelo.
+// ---------------------------------------------------------------------------
+
+export const sharedGuides = app.table(
+  "shared_guides",
+  {
+    // Lo genera el servidor: el coach no puede usar returning (R-009.13).
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    // Nula hasta "Listo" (R-009.29).
+    version: integer("version"),
+    estado: sharedGuideEstado("estado").notNull().default("borrador"),
+    nombreAMostrar: text("nombre_a_mostrar").notNull(),
+    lineas: jsonb("lineas").$type<LineaGuia[]>().notNull(),
+    documento: jsonb("documento").$type<DocumentoGuia>(),
+    descartes: jsonb("descartes").$type<DescartesGuia>().notNull().default({}),
+    generadaDesdeSnapshotId: uuid("generada_desde_snapshot_id")
+      .notNull()
+      .references(() => profileSnapshots.id),
+    perfilVersion: integer("perfil_version").notNull(),
+    planVersion: integer("plan_version").notNull(),
+    guiaBaseId: uuid("guia_base_id").references((): AnyPgColumn => sharedGuides.id),
+    generadaPor: uuid("generada_por")
+      .notNull()
+      .references(() => users.id),
+    // Nulos si no se llamó al modelo (R-009.32, R-009.47).
+    promptVersion: text("prompt_version"),
+    model: text("model"),
+    // R-009.46: huella de lo que el modelo ya revisó sin proponer nada. Solo una huella, nunca el texto: RLS filtra
+    // filas, no columnas, y el coach lee las versiones listas.
+    revisadaSinCambios: text("revisada_sin_cambios"),
+    // Las pone el trigger private.app_shared_guide_transicion.
+    aprobadaPorPersonaEn: timestamp("aprobada_por_persona_en", { withTimezone: true }),
+    retiradaEn: timestamp("retirada_en", { withTimezone: true }),
+    descartadaEn: timestamp("descartada_en", { withTimezone: true }),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    unique("shared_guides_engagement_version").on(t.engagementId, t.version),
+    // R-009.14: un borrador por acompañamiento, aunque lleguen dos pedidos a la vez.
+    uniqueIndex("shared_guides_un_borrador").on(t.engagementId).where(sql`${t.estado} = 'borrador'`),
+    check(
+      "shared_guides_lista_completa",
+      sql`${t.estado} <> 'lista' or (${t.version} is not null and ${t.documento} is not null and ${t.aprobadaPorPersonaEn} is not null)`,
+    ),
+    pgPolicy("shared_guides_select_persona", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${personaOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+    // R-009.34: el coach no lee borradores, versiones retiradas ni borradores descartados. Lo impide la
+    // política, no la pantalla.
+    pgPolicy("shared_guides_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.estado} = 'lista'`,
+    }),
+    pgPolicy("shared_guides_insert_persona", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${personaOf(t.engagementId)} and ${t.generadaPor} = ${authUid} and ${hasConsent(t.engagementId)} and ${t.estado} = 'borrador' and ${t.version} is null and ${t.documento} is null and ${t.aprobadaPorPersonaEn} is null and ${snapshotDelAcompanamiento(t.generadaDesdeSnapshotId, t.engagementId)} and (${t.guiaBaseId} is null or ${guiaDelAcompanamiento(t.guiaBaseId, t.engagementId)})`,
+    }),
+    // R-009.47: el coach solo pide el primer borrador, sin base.
+    pgPolicy("shared_guides_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${coachOf(t.engagementId)} and ${t.generadaPor} = ${authUid} and ${hasConsent(t.engagementId)} and ${t.estado} = 'borrador' and ${t.version} is null and ${t.documento} is null and ${t.aprobadaPorPersonaEn} is null and ${snapshotDelAcompanamiento(t.generadaDesdeSnapshotId, t.engagementId)} and ${t.guiaBaseId} is null`,
+    }),
+    // Una sola política de UPDATE a propósito: con dos, Postgres junta sus condiciones con OR y una fila
+    // lista podría volver a borrador. El coach no tiene ninguna, y nadie tiene DELETE. Las transiciones las
+    // hace cumplir el trigger (R-009.56).
+    pgPolicy("shared_guides_update_persona", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${personaOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+      withCheck: sql`${personaOf(t.engagementId)} and ${hasConsent(t.engagementId)}`,
+    }),
+  ],
+);
+
+// ---------------------------------------------------------------------------
+// Desglose de tareas (spec 010): la IA le escribe a la persona sin revisión previa (D-070), y lo que ella marca
+// regresa al coach (D-071). RLS filtra filas, no columnas: pasos y ajustes llevan solo IDs como origen, y
+// descartados solo la ruta y el motivo (R-010.24). Permisos por columna en 0027.
+// ---------------------------------------------------------------------------
+
+// Plantillas por organización. Sin notas, contexto ni referencia a la persona o al desglose (R-010.39).
+// Decisión abierta 5, opción B: origen_engagement_id solo sirve para ocultarla con el retiro y borrarla con la
+// purga. Un retiro se la quita a toda la organización (R-010.45), y ninguna lectura ni ruta lo selecciona.
+export const taskTemplates = app.table(
+  "task_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    orgId: uuid("org_id")
+      .notNull()
+      .references(() => organizations.id),
+    origenEngagementId: uuid("origen_engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    puesto: text("puesto").notNull(),
+    titulo: text("titulo").notNull(),
+    tarea: text("tarea").notNull(),
+    pasos: jsonb("pasos").$type<PasoPlantilla[]>().notNull(),
+    creadaPor: uuid("creada_por")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    archivadaPor: uuid("archivada_por").references(() => users.id),
+    archivadaEn: timestamp("archivada_en", { withTimezone: true }),
+  },
+  (t) => [
+    pgPolicy("task_templates_select_coach", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`${isCoach} and ${t.orgId} = (select private.app_org_id()) and ${hasConsent(t.origenEngagementId)}`,
+    }),
+    // R-010.41: solo la guarda el coach del acompañamiento de origen.
+    pgPolicy("task_templates_insert_coach", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${isCoach} and ${t.orgId} = (select private.app_org_id()) and ${t.creadaPor} = ${authUid} and ${t.archivadaEn} is null and ${t.archivadaPor} is null and ${coachOf(t.origenEngagementId)} and ${hasConsent(t.origenEngagementId)}`,
+    }),
+    pgPolicy("task_templates_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${isCoach} and ${t.orgId} = (select private.app_org_id()) and ${t.archivadaEn} is null and ${hasConsent(t.origenEngagementId)}`,
+      withCheck: sql`${isCoach} and ${t.orgId} = (select private.app_org_id()) and ${t.archivadaPor} = ${authUid} and ${hasConsent(t.origenEngagementId)}`,
+    }),
+  ],
+);
+
+export const taskBreakdowns = app.table(
+  "task_breakdowns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    tareaOriginal: text("tarea_original").notNull(),
+    contexto: jsonb("contexto").$type<ContextoDesglose>(),
+    pasos: jsonb("pasos").$type<PasoDesglose[]>().notNull(),
+    // Solo el id del snapshot, nunca una copia de su contenido (R-010.9).
+    generadoDesde: uuid("generado_desde")
+      .notNull()
+      .references(() => profileSnapshots.id),
+    // Una repetición sin llamada copia los dos del origen.
+    promptVersion: text("prompt_version").notNull(),
+    model: text("model").notNull(),
+    // Decisión abierta 5, opción B: si la plantilla se borra con una purga, este desglose sigue, sin ella.
+    plantillaId: uuid("plantilla_id").references(() => taskTemplates.id, { onDelete: "set null" }),
+    origenBreakdownId: uuid("origen_breakdown_id").references((): AnyPgColumn => taskBreakdowns.id),
+    ajustes: jsonb("ajustes").$type<AjusteGuardado[]>(),
+    ajustesAceptados: jsonb("ajustes_aceptados").$type<string[]>(),
+    ajustesDecididosEn: timestamp("ajustes_decididos_en", { withTimezone: true }),
+    descartados: jsonb("descartados").$type<DescartadoDesglose[]>().notNull().default([]),
+    creadoPor: uuid("creado_por")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    archivadoPor: uuid("archivado_por").references(() => users.id),
+    archivadoEn: timestamp("archivado_en", { withTimezone: true }),
+  },
+  (t) => [
+    // R-010.37: sin ajustes que usar, la copia se guarda con ajustes nulo; así nadie queda esperando una decisión.
+    check("task_breakdowns_ajustes_no_vacio", sql`${t.ajustes} is null or jsonb_array_length(${t.ajustes}) > 0`),
+    pgPolicy("task_breakdowns_select_participants", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)}`,
+    }),
+    pgPolicy("task_breakdowns_insert_participants", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${t.creadoPor} = ${authUid} and ${hasConsent(t.engagementId)} and ${snapshotDelAcompanamiento(t.generadoDesde, t.engagementId)} and ${t.ajustesDecididosEn} is null and ${t.archivadoEn} is null and ${t.archivadoPor} is null and (${t.plantillaId} is null or (${coachOf(t.engagementId)} and ${plantillaDeMiOrg(t.plantillaId)})) and (${t.origenBreakdownId} is null or (${personaOf(t.engagementId)} and ${desgloseDelAcompanamiento(t.origenBreakdownId, t.engagementId)}))`,
+    }),
+    // "Ya no la uso" (R-010.29). La persona decide sus ajustes por private.app_decidir_ajustes, no por aquí.
+    pgPolicy("task_breakdowns_update_archivar", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)} and ${t.archivadoEn} is null`,
+      withCheck: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)} and ${t.archivadoPor} = ${authUid}`,
+    }),
+  ],
+);
+
+// Una fila por marca, sin editar ni borrar las anteriores. El estado de un paso es la de id más alto (R-010.27).
+// "Me atoré aquí" es texto literal de la persona: nunca entra a las señales (C-05, D-071, R-010.31).
+export const taskStepEvents = app.table(
+  "task_step_events",
+  {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    engagementId: uuid("engagement_id")
+      .notNull()
+      .references(() => engagements.id, { onDelete: "cascade" }),
+    breakdownId: uuid("breakdown_id")
+      .notNull()
+      .references(() => taskBreakdowns.id),
+    pasoId: uuid("paso_id").notNull(),
+    estado: taskStepEstado("estado").notNull(),
+    texto: text("texto"),
+    creadoPor: uuid("creado_por")
+      .notNull()
+      .references(() => users.id),
+    createdAt: createdAt(),
+    revisadoPor: uuid("revisado_por").references(() => users.id),
+    revisadoEn: timestamp("revisado_en", { withTimezone: true }),
+  },
+  (t) => [
+    check("task_step_events_texto", sql`(${t.texto} is null or ${t.estado} = 'atorado') and (${t.texto} is null or char_length(${t.texto}) <= 1000)`),
+    index("task_step_events_engagement_estado_revisado_idx").on(t.engagementId, t.estado, t.revisadoEn),
+    index("task_step_events_breakdown_paso_id_idx").on(t.breakdownId, t.pasoId, t.id),
+    pgPolicy("task_step_events_select_participants", {
+      for: "select",
+      to: authenticatedRole,
+      using: sql`(${coachOf(t.engagementId)} or ${personaOf(t.engagementId)}) and ${hasConsent(t.engagementId)}`,
+    }),
+    // R-010.26: solo la persona marca. El coach no tiene política de INSERT.
+    pgPolicy("task_step_events_insert_persona", {
+      for: "insert",
+      to: authenticatedRole,
+      withCheck: sql`${personaOf(t.engagementId)} and ${t.creadoPor} = ${authUid} and ${hasConsent(t.engagementId)} and ${t.revisadoPor} is null and ${t.revisadoEn} is null and ${pasoMarcable(t.breakdownId, t.pasoId, t.engagementId)}`,
+    }),
+    // "Ya lo revisé" (R-010.33). Los permisos de 0027 solo dejan escribir revisado_por y revisado_en.
+    pgPolicy("task_step_events_update_coach", {
+      for: "update",
+      to: authenticatedRole,
+      using: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.estado} = 'atorado' and ${t.revisadoEn} is null`,
+      withCheck: sql`${coachOf(t.engagementId)} and ${hasConsent(t.engagementId)} and ${t.revisadoPor} = ${authUid}`,
     }),
   ],
 );

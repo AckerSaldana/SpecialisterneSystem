@@ -1,0 +1,3078 @@
+{
+  "id": "6a15ff83-849e-4e81-8322-611abb2a5ce6",
+  "prevId": "bdb3dba2-8829-424f-a22c-8cc654530fa4",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "app.audit_log": {
+      "name": "audit_log",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "accion": {
+          "name": "accion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "modelo": {
+          "name": "modelo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_entrada": {
+          "name": "tokens_entrada",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_salida": {
+          "name": "tokens_salida",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tokens_cache_lectura": {
+          "name": "tokens_cache_lectura",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "latencia_ms": {
+          "name": "latencia_ms",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ok": {
+          "name": "ok",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "audit_log_user_id_users_id_fk": {
+          "name": "audit_log_user_id_users_id_fk",
+          "tableFrom": "audit_log",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "audit_log_engagement_id_engagements_id_fk": {
+          "name": "audit_log_engagement_id_engagements_id_fk",
+          "tableFrom": "audit_log",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "audit_log_insert_self": {
+          "name": "audit_log_insert_self",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "\"app\".\"audit_log\".\"user_id\" = (select auth.uid())"
+        },
+        "audit_log_select_self": {
+          "name": "audit_log_select_self",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"audit_log\".\"user_id\" = (select auth.uid())"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.catalog_units": {
+      "name": "catalog_units",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "competencia": {
+          "name": "competencia",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dominio_fe": {
+          "name": "dominio_fe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "formato": {
+          "name": "formato",
+          "type": "catalog_format",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duracion_min": {
+          "name": "duracion_min",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "carga_cognitiva": {
+          "name": "carga_cognitiva",
+          "type": "cognitive_load",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idioma": {
+          "name": "idioma",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'es'"
+        },
+        "fuente": {
+          "name": "fuente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "catalog_units_select_all": {
+          "name": "catalog_units_select_all",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "true"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.consent_events": {
+      "name": "consent_events",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigserial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "consent_event_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version_aviso": {
+          "name": "version_aviso",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fecha": {
+          "name": "fecha",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "consent_events_engagement_id_engagements_id_fk": {
+          "name": "consent_events_engagement_id_engagements_id_fk",
+          "tableFrom": "consent_events",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "consent_events_user_id_users_id_fk": {
+          "name": "consent_events_user_id_users_id_fk",
+          "tableFrom": "consent_events",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "consent_events_select_participants": {
+          "name": "consent_events_select_participants",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"consent_events\".\"engagement_id\")) or ((select private.app_is_persona_of(\"app\".\"consent_events\".\"engagement_id\")) and \"app\".\"consent_events\".\"user_id\" = (select auth.uid()))"
+        },
+        "consent_events_insert_persona": {
+          "name": "consent_events_insert_persona",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_persona_of(\"app\".\"consent_events\".\"engagement_id\")) and \"app\".\"consent_events\".\"user_id\" = (select auth.uid()) and (\"app\".\"consent_events\".\"tipo\" = 'retirado' or (select private.app_alta_verificada(\"app\".\"consent_events\".\"engagement_id\")))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.engagements": {
+      "name": "engagements",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "type": {
+          "name": "type",
+          "type": "engagement_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "stage": {
+          "name": "stage",
+          "type": "engagement_stage",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'alta'"
+        },
+        "coach_id": {
+          "name": "coach_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "diagnostico_verificado": {
+          "name": "diagnostico_verificado",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "cedula_profesional": {
+          "name": "cedula_profesional",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diagnostico_verificado_por": {
+          "name": "diagnostico_verificado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "diagnostico_verificado_en": {
+          "name": "diagnostico_verificado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "engagements_org_id_organizations_id_fk": {
+          "name": "engagements_org_id_organizations_id_fk",
+          "tableFrom": "engagements",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "tableTo": "organizations",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "engagements_coach_id_users_id_fk": {
+          "name": "engagements_coach_id_users_id_fk",
+          "tableFrom": "engagements",
+          "columnsFrom": [
+            "coach_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "engagements_persona_id_users_id_fk": {
+          "name": "engagements_persona_id_users_id_fk",
+          "tableFrom": "engagements",
+          "columnsFrom": [
+            "persona_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "engagements_diagnostico_verificado_por_users_id_fk": {
+          "name": "engagements_diagnostico_verificado_por_users_id_fk",
+          "tableFrom": "engagements",
+          "columnsFrom": [
+            "diagnostico_verificado_por"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "engagements_persona_unica": {
+          "name": "engagements_persona_unica",
+          "columns": [
+            "persona_id"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "engagements_select_coach": {
+          "name": "engagements_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"engagements\".\"coach_id\" = (select auth.uid())"
+        },
+        "engagements_insert_coach": {
+          "name": "engagements_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_role()) = 'coach' and \"app\".\"engagements\".\"coach_id\" = (select auth.uid()) and \"app\".\"engagements\".\"org_id\" = (select private.app_org_id()) and \"app\".\"engagements\".\"stage\" = 'alta' and not \"app\".\"engagements\".\"diagnostico_verificado\" and exists (select 1 from app.users u where u.id = \"app\".\"engagements\".\"persona_id\" and u.role = 'persona' and u.org_id = (select private.app_org_id()))"
+        },
+        "engagements_update_coach_alta": {
+          "name": "engagements_update_coach_alta",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"engagements\".\"coach_id\" = (select auth.uid()) and \"app\".\"engagements\".\"stage\" = 'alta'",
+          "withCheck": "\"app\".\"engagements\".\"coach_id\" = (select auth.uid()) and \"app\".\"engagements\".\"stage\" = 'alta'"
+        }
+      },
+      "checkConstraints": {
+        "engagements_verificacion_completa": {
+          "name": "engagements_verificacion_completa",
+          "value": "not \"app\".\"engagements\".\"diagnostico_verificado\" or (\"app\".\"engagements\".\"cedula_profesional\" is not null and \"app\".\"engagements\".\"diagnostico_verificado_por\" is not null and \"app\".\"engagements\".\"diagnostico_verificado_en\" is not null)"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "app.followup_context": {
+      "name": "followup_context",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "followup_context_tipo",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "texto": {
+          "name": "texto",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidencia": {
+          "name": "evidencia",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "plan_item_id": {
+          "name": "plan_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "knowledge_card_id": {
+          "name": "knowledge_card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "quitada_por": {
+          "name": "quitada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quitada_en": {
+          "name": "quitada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "followup_context_engagement_id_engagements_id_fk": {
+          "name": "followup_context_engagement_id_engagements_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "followup_context_plan_item_id_plan_items_id_fk": {
+          "name": "followup_context_plan_item_id_plan_items_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "plan_item_id"
+          ],
+          "tableTo": "plan_items",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "followup_context_knowledge_card_id_knowledge_cards_id_fk": {
+          "name": "followup_context_knowledge_card_id_knowledge_cards_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "knowledge_card_id"
+          ],
+          "tableTo": "knowledge_cards",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "followup_context_session_id_sessions_id_fk": {
+          "name": "followup_context_session_id_sessions_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "tableTo": "sessions",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "followup_context_event_id_profile_events_id_fk": {
+          "name": "followup_context_event_id_profile_events_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "followup_context_approved_by_users_id_fk": {
+          "name": "followup_context_approved_by_users_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "followup_context_quitada_por_users_id_fk": {
+          "name": "followup_context_quitada_por_users_id_fk",
+          "tableFrom": "followup_context",
+          "columnsFrom": [
+            "quitada_por"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "followup_context_select_coach": {
+          "name": "followup_context_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"followup_context\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"followup_context\".\"engagement_id\"))"
+        },
+        "followup_context_insert_coach": {
+          "name": "followup_context_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"followup_context\".\"engagement_id\")) and \"app\".\"followup_context\".\"approved_by\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"followup_context\".\"engagement_id\")) and \"app\".\"followup_context\".\"quitada_por\" is null and \"app\".\"followup_context\".\"quitada_en\" is null and (select private.app_evento_de_sesion(\"app\".\"followup_context\".\"event_id\", \"app\".\"followup_context\".\"session_id\", \"app\".\"followup_context\".\"engagement_id\")) and (\"app\".\"followup_context\".\"plan_item_id\" is null or (select private.app_item_del_acompanamiento(\"app\".\"followup_context\".\"plan_item_id\", \"app\".\"followup_context\".\"engagement_id\")))"
+        },
+        "followup_context_update_coach": {
+          "name": "followup_context_update_coach",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"followup_context\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"followup_context\".\"engagement_id\")) and \"app\".\"followup_context\".\"quitada_en\" is null",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"followup_context\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"followup_context\".\"engagement_id\")) and \"app\".\"followup_context\".\"quitada_por\" = (select auth.uid())"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.invitations": {
+      "name": "invitations",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "persona_id": {
+          "name": "persona_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "creada_por": {
+          "name": "creada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expira_en": {
+          "name": "expira_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "usada_en": {
+          "name": "usada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reemplazada_en": {
+          "name": "reemplazada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "invitations_engagement_id_engagements_id_fk": {
+          "name": "invitations_engagement_id_engagements_id_fk",
+          "tableFrom": "invitations",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "invitations_persona_id_users_id_fk": {
+          "name": "invitations_persona_id_users_id_fk",
+          "tableFrom": "invitations",
+          "columnsFrom": [
+            "persona_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "invitations_creada_por_users_id_fk": {
+          "name": "invitations_creada_por_users_id_fk",
+          "tableFrom": "invitations",
+          "columnsFrom": [
+            "creada_por"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "invitations_select_participants": {
+          "name": "invitations_select_participants",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"invitations\".\"engagement_id\")) or \"app\".\"invitations\".\"persona_id\" = (select auth.uid())"
+        },
+        "invitations_insert_coach": {
+          "name": "invitations_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"invitations\".\"engagement_id\")) and \"app\".\"invitations\".\"creada_por\" = (select auth.uid()) and \"app\".\"invitations\".\"expira_en\" > now() and \"app\".\"invitations\".\"persona_id\" = (select e.persona_id from app.engagements e where e.id = \"app\".\"invitations\".\"engagement_id\") and not (select private.app_invitacion_usada(\"app\".\"invitations\".\"engagement_id\"))"
+        },
+        "invitations_update_coach": {
+          "name": "invitations_update_coach",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"invitations\".\"engagement_id\")) and \"app\".\"invitations\".\"usada_en\" is null and \"app\".\"invitations\".\"reemplazada_en\" is null",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"invitations\".\"engagement_id\")) and \"app\".\"invitations\".\"usada_en\" is null"
+        },
+        "invitations_update_persona": {
+          "name": "invitations_update_persona",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"invitations\".\"persona_id\" = (select auth.uid()) and \"app\".\"invitations\".\"usada_en\" is null and \"app\".\"invitations\".\"reemplazada_en\" is null and \"app\".\"invitations\".\"expira_en\" > now()",
+          "withCheck": "\"app\".\"invitations\".\"persona_id\" = (select auth.uid()) and \"app\".\"invitations\".\"reemplazada_en\" is null"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.knowledge_cards": {
+      "name": "knowledge_cards",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "knowledge_card_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contenido": {
+          "name": "contenido",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dominio_fe": {
+          "name": "dominio_fe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fuente": {
+          "name": "fuente",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "verificada": {
+          "name": "verificada",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "knowledge_cards_select_coach": {
+          "name": "knowledge_cards_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_role()) = 'coach'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.organizations": {
+      "name": "organizations",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "organizations_select_own": {
+          "name": "organizations_select_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"organizations\".\"id\" = (select private.app_org_id())"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.persona_plans": {
+      "name": "persona_plans",
+      "schema": "app",
+      "columns": {
+        "plan_id": {
+          "name": "plan_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contenido": {
+          "name": "contenido",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "persona_plans_plan_id_plans_id_fk": {
+          "name": "persona_plans_plan_id_plans_id_fk",
+          "tableFrom": "persona_plans",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "tableTo": "plans",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "persona_plans_engagement_id_engagements_id_fk": {
+          "name": "persona_plans_engagement_id_engagements_id_fk",
+          "tableFrom": "persona_plans",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "persona_plans_select_participants": {
+          "name": "persona_plans_select_participants",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select private.app_is_coach_of(\"app\".\"persona_plans\".\"engagement_id\")) or (select private.app_is_persona_of(\"app\".\"persona_plans\".\"engagement_id\"))) and (select private.app_has_consent(\"app\".\"persona_plans\".\"engagement_id\"))"
+        },
+        "persona_plans_insert_coach": {
+          "name": "persona_plans_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"persona_plans\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"persona_plans\".\"engagement_id\")) and (select private.app_plan_aprobado(\"app\".\"persona_plans\".\"plan_id\", \"app\".\"persona_plans\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.persona_profiles": {
+      "name": "persona_profiles",
+      "schema": "app",
+      "columns": {
+        "snapshot_id": {
+          "name": "snapshot_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "contenido": {
+          "name": "contenido",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "persona_profiles_snapshot_id_profile_snapshots_id_fk": {
+          "name": "persona_profiles_snapshot_id_profile_snapshots_id_fk",
+          "tableFrom": "persona_profiles",
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "tableTo": "profile_snapshots",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "persona_profiles_engagement_id_engagements_id_fk": {
+          "name": "persona_profiles_engagement_id_engagements_id_fk",
+          "tableFrom": "persona_profiles",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "persona_profiles_select_participants": {
+          "name": "persona_profiles_select_participants",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "((select private.app_is_coach_of(\"app\".\"persona_profiles\".\"engagement_id\")) or (select private.app_is_persona_of(\"app\".\"persona_profiles\".\"engagement_id\"))) and (select private.app_has_consent(\"app\".\"persona_profiles\".\"engagement_id\"))"
+        },
+        "persona_profiles_insert_coach": {
+          "name": "persona_profiles_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"persona_profiles\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"persona_profiles\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.plan_item_updates": {
+      "name": "plan_item_updates",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_item_id": {
+          "name": "plan_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "plan_item_estado",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "resumen": {
+          "name": "resumen",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "evidencia": {
+          "name": "evidencia",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "plan_item_updates_engagement_id_engagements_id_fk": {
+          "name": "plan_item_updates_engagement_id_engagements_id_fk",
+          "tableFrom": "plan_item_updates",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "plan_item_updates_plan_item_id_plan_items_id_fk": {
+          "name": "plan_item_updates_plan_item_id_plan_items_id_fk",
+          "tableFrom": "plan_item_updates",
+          "columnsFrom": [
+            "plan_item_id"
+          ],
+          "tableTo": "plan_items",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "restrict"
+        },
+        "plan_item_updates_session_id_sessions_id_fk": {
+          "name": "plan_item_updates_session_id_sessions_id_fk",
+          "tableFrom": "plan_item_updates",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "tableTo": "sessions",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plan_item_updates_event_id_profile_events_id_fk": {
+          "name": "plan_item_updates_event_id_profile_events_id_fk",
+          "tableFrom": "plan_item_updates",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plan_item_updates_approved_by_users_id_fk": {
+          "name": "plan_item_updates_approved_by_users_id_fk",
+          "tableFrom": "plan_item_updates",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "plan_item_updates_evento_item": {
+          "name": "plan_item_updates_evento_item",
+          "columns": [
+            "event_id",
+            "plan_item_id"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "plan_item_updates_select_coach": {
+          "name": "plan_item_updates_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plan_item_updates\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_item_updates\".\"engagement_id\"))"
+        },
+        "plan_item_updates_insert_coach": {
+          "name": "plan_item_updates_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"plan_item_updates\".\"engagement_id\")) and \"app\".\"plan_item_updates\".\"approved_by\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"plan_item_updates\".\"engagement_id\")) and (select private.app_evento_de_sesion(\"app\".\"plan_item_updates\".\"event_id\", \"app\".\"plan_item_updates\".\"session_id\", \"app\".\"plan_item_updates\".\"engagement_id\")) and (select private.app_item_del_acompanamiento(\"app\".\"plan_item_updates\".\"plan_item_id\", \"app\".\"plan_item_updates\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.plan_items": {
+      "name": "plan_items",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "plan_id": {
+          "name": "plan_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "plan_item_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "descripcion": {
+          "name": "descripcion",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "dominio_fe": {
+          "name": "dominio_fe",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "knowledge_card_id": {
+          "name": "knowledge_card_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "evidencia": {
+          "name": "evidencia",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "orden": {
+          "name": "orden",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "texto_persona": {
+          "name": "texto_persona",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen": {
+          "name": "origen",
+          "type": "plan_item_origen",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'ia'"
+        },
+        "propuesta_ref": {
+          "name": "propuesta_ref",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "origen_item_id": {
+          "name": "origen_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "editado_por": {
+          "name": "editado_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "editado_en": {
+          "name": "editado_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "plan_items_origen_unico": {
+          "name": "plan_items_origen_unico",
+          "columns": [
+            {
+              "expression": "plan_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "origen_item_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"app\".\"plan_items\".\"origen_item_id\" is not null",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "plan_items_plan_id_plans_id_fk": {
+          "name": "plan_items_plan_id_plans_id_fk",
+          "tableFrom": "plan_items",
+          "columnsFrom": [
+            "plan_id"
+          ],
+          "tableTo": "plans",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "plan_items_engagement_id_engagements_id_fk": {
+          "name": "plan_items_engagement_id_engagements_id_fk",
+          "tableFrom": "plan_items",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "plan_items_knowledge_card_id_knowledge_cards_id_fk": {
+          "name": "plan_items_knowledge_card_id_knowledge_cards_id_fk",
+          "tableFrom": "plan_items",
+          "columnsFrom": [
+            "knowledge_card_id"
+          ],
+          "tableTo": "knowledge_cards",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plan_items_origen_item_id_plan_items_id_fk": {
+          "name": "plan_items_origen_item_id_plan_items_id_fk",
+          "tableFrom": "plan_items",
+          "columnsFrom": [
+            "origen_item_id"
+          ],
+          "tableTo": "plan_items",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plan_items_editado_por_users_id_fk": {
+          "name": "plan_items_editado_por_users_id_fk",
+          "tableFrom": "plan_items",
+          "columnsFrom": [
+            "editado_por"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "plan_items_select_coach": {
+          "name": "plan_items_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_items\".\"engagement_id\"))"
+        },
+        "plan_items_insert_coach_borrador": {
+          "name": "plan_items_insert_coach_borrador",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_plan_en_borrador(\"app\".\"plan_items\".\"plan_id\", \"app\".\"plan_items\".\"engagement_id\"))"
+        },
+        "plan_items_update_coach_borrador": {
+          "name": "plan_items_update_coach_borrador",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_plan_en_borrador(\"app\".\"plan_items\".\"plan_id\", \"app\".\"plan_items\".\"engagement_id\"))",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_plan_en_borrador(\"app\".\"plan_items\".\"plan_id\", \"app\".\"plan_items\".\"engagement_id\"))"
+        },
+        "plan_items_delete_coach_borrador": {
+          "name": "plan_items_delete_coach_borrador",
+          "as": "PERMISSIVE",
+          "for": "DELETE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plan_items\".\"engagement_id\")) and (select private.app_plan_en_borrador(\"app\".\"plan_items\".\"plan_id\", \"app\".\"plan_items\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.plans": {
+      "name": "plans",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "titulo": {
+          "name": "titulo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "plan_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'borrador'"
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "approved_at": {
+          "name": "approved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "profile_snapshot_id": {
+          "name": "profile_snapshot_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "propuesta_ia": {
+          "name": "propuesta_ia",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "plans_un_borrador": {
+          "name": "plans_un_borrador",
+          "columns": [
+            {
+              "expression": "engagement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"app\".\"plans\".\"status\" = 'borrador'",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "plans_engagement_id_engagements_id_fk": {
+          "name": "plans_engagement_id_engagements_id_fk",
+          "tableFrom": "plans",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "plans_approved_by_users_id_fk": {
+          "name": "plans_approved_by_users_id_fk",
+          "tableFrom": "plans",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plans_profile_snapshot_id_profile_snapshots_id_fk": {
+          "name": "plans_profile_snapshot_id_profile_snapshots_id_fk",
+          "tableFrom": "plans",
+          "columnsFrom": [
+            "profile_snapshot_id"
+          ],
+          "tableTo": "profile_snapshots",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "plans_created_by_users_id_fk": {
+          "name": "plans_created_by_users_id_fk",
+          "tableFrom": "plans",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "plans_engagement_version": {
+          "name": "plans_engagement_version",
+          "columns": [
+            "engagement_id",
+            "version"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "plans_select_coach": {
+          "name": "plans_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plans\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plans\".\"engagement_id\"))"
+        },
+        "plans_insert_coach": {
+          "name": "plans_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"plans\".\"engagement_id\")) and \"app\".\"plans\".\"created_by\" = (select auth.uid()) and \"app\".\"plans\".\"status\" = 'borrador' and \"app\".\"plans\".\"version\" is null and (select private.app_has_consent(\"app\".\"plans\".\"engagement_id\"))"
+        },
+        "plans_update_coach_borrador": {
+          "name": "plans_update_coach_borrador",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"plans\".\"engagement_id\")) and \"app\".\"plans\".\"status\" = 'borrador' and (select private.app_has_consent(\"app\".\"plans\".\"engagement_id\"))",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"plans\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"plans\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.profile_events": {
+      "name": "profile_events",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "profile_event_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "profile_event_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'proposed'"
+        },
+        "payload": {
+          "name": "payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "approved_payload": {
+          "name": "approved_payload",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decided_by": {
+          "name": "decided_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "decided_at": {
+          "name": "decided_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "prompt_version": {
+          "name": "prompt_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "model": {
+          "name": "model",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "perfil_version_base": {
+          "name": "perfil_version_base",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "plan_base_id": {
+          "name": "plan_base_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resuelto_por_evento": {
+          "name": "resuelto_por_evento",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "resuelto_por_plan": {
+          "name": "resuelto_por_plan",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "profile_events_una_propuesta": {
+          "name": "profile_events_una_propuesta",
+          "columns": [
+            {
+              "expression": "session_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"app\".\"profile_events\".\"tipo\" = 'propuesta_ia'",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "profile_events_engagement_id_engagements_id_fk": {
+          "name": "profile_events_engagement_id_engagements_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "profile_events_session_id_sessions_id_fk": {
+          "name": "profile_events_session_id_sessions_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "tableTo": "sessions",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "profile_events_decided_by_users_id_fk": {
+          "name": "profile_events_decided_by_users_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "decided_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "profile_events_created_by_users_id_fk": {
+          "name": "profile_events_created_by_users_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "profile_events_plan_base_id_plans_id_fk": {
+          "name": "profile_events_plan_base_id_plans_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "plan_base_id"
+          ],
+          "tableTo": "plans",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        },
+        "profile_events_resuelto_por_evento_profile_events_id_fk": {
+          "name": "profile_events_resuelto_por_evento_profile_events_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "resuelto_por_evento"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        },
+        "profile_events_resuelto_por_plan_plans_id_fk": {
+          "name": "profile_events_resuelto_por_plan_plans_id_fk",
+          "tableFrom": "profile_events",
+          "columnsFrom": [
+            "resuelto_por_plan"
+          ],
+          "tableTo": "plans",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "set null"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "profile_events_select_coach": {
+          "name": "profile_events_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"profile_events\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))"
+        },
+        "profile_events_insert_coach": {
+          "name": "profile_events_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"profile_events\".\"engagement_id\")) and \"app\".\"profile_events\".\"created_by\" = (select auth.uid()) and \"app\".\"profile_events\".\"tipo\" = 'propuesta_ia' and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))"
+        },
+        "profile_events_update_coach": {
+          "name": "profile_events_update_coach",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"profile_events\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"profile_events\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))"
+        },
+        "profile_events_select_persona_own": {
+          "name": "profile_events_select_persona_own",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_persona_of(\"app\".\"profile_events\".\"engagement_id\")) and \"app\".\"profile_events\".\"created_by\" = (select auth.uid()) and \"app\".\"profile_events\".\"tipo\" = 'no_me_representa' and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))"
+        },
+        "profile_events_insert_persona_feedback": {
+          "name": "profile_events_insert_persona_feedback",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_persona_of(\"app\".\"profile_events\".\"engagement_id\")) and \"app\".\"profile_events\".\"created_by\" = (select auth.uid()) and \"app\".\"profile_events\".\"tipo\" = 'no_me_representa' and \"app\".\"profile_events\".\"status\" = 'proposed' and (select private.app_has_consent(\"app\".\"profile_events\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.profile_snapshots": {
+      "name": "profile_snapshots",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "version": {
+          "name": "version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "perfil": {
+          "name": "perfil",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_event_id": {
+          "name": "source_event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "profile_snapshots_engagement_id_engagements_id_fk": {
+          "name": "profile_snapshots_engagement_id_engagements_id_fk",
+          "tableFrom": "profile_snapshots",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "profile_snapshots_source_event_id_profile_events_id_fk": {
+          "name": "profile_snapshots_source_event_id_profile_events_id_fk",
+          "tableFrom": "profile_snapshots",
+          "columnsFrom": [
+            "source_event_id"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "profile_snapshots_created_by_users_id_fk": {
+          "name": "profile_snapshots_created_by_users_id_fk",
+          "tableFrom": "profile_snapshots",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "profile_snapshots_engagement_version": {
+          "name": "profile_snapshots_engagement_version",
+          "columns": [
+            "engagement_id",
+            "version"
+          ],
+          "nullsNotDistinct": false
+        }
+      },
+      "policies": {
+        "profile_snapshots_select_coach": {
+          "name": "profile_snapshots_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"profile_snapshots\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"profile_snapshots\".\"engagement_id\"))"
+        },
+        "profile_snapshots_insert_coach": {
+          "name": "profile_snapshots_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"profile_snapshots\".\"engagement_id\")) and \"app\".\"profile_snapshots\".\"created_by\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"profile_snapshots\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.recommendations": {
+      "name": "recommendations",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "catalog_unit_id": {
+          "name": "catalog_unit_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "plan_item_id": {
+          "name": "plan_item_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "razon": {
+          "name": "razon",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "recommendation_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'propuesta'"
+        },
+        "approved_by": {
+          "name": "approved_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "recommendations_engagement_id_engagements_id_fk": {
+          "name": "recommendations_engagement_id_engagements_id_fk",
+          "tableFrom": "recommendations",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "recommendations_catalog_unit_id_catalog_units_id_fk": {
+          "name": "recommendations_catalog_unit_id_catalog_units_id_fk",
+          "tableFrom": "recommendations",
+          "columnsFrom": [
+            "catalog_unit_id"
+          ],
+          "tableTo": "catalog_units",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "recommendations_plan_item_id_plan_items_id_fk": {
+          "name": "recommendations_plan_item_id_plan_items_id_fk",
+          "tableFrom": "recommendations",
+          "columnsFrom": [
+            "plan_item_id"
+          ],
+          "tableTo": "plan_items",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "recommendations_approved_by_users_id_fk": {
+          "name": "recommendations_approved_by_users_id_fk",
+          "tableFrom": "recommendations",
+          "columnsFrom": [
+            "approved_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "recommendations_all_coach": {
+          "name": "recommendations_all_coach",
+          "as": "PERMISSIVE",
+          "for": "ALL",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"recommendations\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"recommendations\".\"engagement_id\"))",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"recommendations\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"recommendations\".\"engagement_id\"))"
+        },
+        "recommendations_select_persona_approved": {
+          "name": "recommendations_select_persona_approved",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_persona_of(\"app\".\"recommendations\".\"engagement_id\")) and \"app\".\"recommendations\".\"status\" = 'aprobada' and (select private.app_has_consent(\"app\".\"recommendations\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.sessions": {
+      "name": "sessions",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coach_id": {
+          "name": "coach_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nota_original": {
+          "name": "nota_original",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "audio_path": {
+          "name": "audio_path",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "session_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'persona'"
+        },
+        "realizada_en": {
+          "name": "realizada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sessions_engagement_id_engagements_id_fk": {
+          "name": "sessions_engagement_id_engagements_id_fk",
+          "tableFrom": "sessions",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "sessions_coach_id_users_id_fk": {
+          "name": "sessions_coach_id_users_id_fk",
+          "tableFrom": "sessions",
+          "columnsFrom": [
+            "coach_id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "sessions_select_coach": {
+          "name": "sessions_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"sessions\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"sessions\".\"engagement_id\"))"
+        },
+        "sessions_insert_coach": {
+          "name": "sessions_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"sessions\".\"engagement_id\")) and \"app\".\"sessions\".\"coach_id\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"sessions\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.signal_states": {
+      "name": "signal_states",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo": {
+          "name": "tipo",
+          "type": "signal_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "estado": {
+          "name": "estado",
+          "type": "signal_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "motivo": {
+          "name": "motivo",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_by": {
+          "name": "created_by",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "signal_states_engagement_id_engagements_id_fk": {
+          "name": "signal_states_engagement_id_engagements_id_fk",
+          "tableFrom": "signal_states",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "signal_states_event_id_profile_events_id_fk": {
+          "name": "signal_states_event_id_profile_events_id_fk",
+          "tableFrom": "signal_states",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "signal_states_created_by_users_id_fk": {
+          "name": "signal_states_created_by_users_id_fk",
+          "tableFrom": "signal_states",
+          "columnsFrom": [
+            "created_by"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "signal_states_select_coach": {
+          "name": "signal_states_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"signal_states\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"signal_states\".\"engagement_id\"))"
+        },
+        "signal_states_insert_coach": {
+          "name": "signal_states_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"signal_states\".\"engagement_id\")) and \"app\".\"signal_states\".\"created_by\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"signal_states\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.strong_alerts": {
+      "name": "strong_alerts",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "engagement_id": {
+          "name": "engagement_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "tipo_senal": {
+          "name": "tipo_senal",
+          "type": "signal_type",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcada_por": {
+          "name": "marcada_por",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "marcada_en": {
+          "name": "marcada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "nota": {
+          "name": "nota",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estado": {
+          "name": "estado",
+          "type": "alert_status",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'abierta'"
+        },
+        "nota_escalada": {
+          "name": "nota_escalada",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "escalada_en": {
+          "name": "escalada_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "atendida_en": {
+          "name": "atendida_en",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "strong_alerts_una_vigente": {
+          "name": "strong_alerts_una_vigente",
+          "columns": [
+            {
+              "expression": "engagement_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "tipo_senal",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "with": {},
+          "method": "btree",
+          "where": "\"app\".\"strong_alerts\".\"estado\" <> 'atendida'",
+          "concurrently": false
+        }
+      },
+      "foreignKeys": {
+        "strong_alerts_engagement_id_engagements_id_fk": {
+          "name": "strong_alerts_engagement_id_engagements_id_fk",
+          "tableFrom": "strong_alerts",
+          "columnsFrom": [
+            "engagement_id"
+          ],
+          "tableTo": "engagements",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "strong_alerts_event_id_profile_events_id_fk": {
+          "name": "strong_alerts_event_id_profile_events_id_fk",
+          "tableFrom": "strong_alerts",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "tableTo": "profile_events",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        },
+        "strong_alerts_marcada_por_users_id_fk": {
+          "name": "strong_alerts_marcada_por_users_id_fk",
+          "tableFrom": "strong_alerts",
+          "columnsFrom": [
+            "marcada_por"
+          ],
+          "tableTo": "users",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "strong_alerts_select_coach": {
+          "name": "strong_alerts_select_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"strong_alerts\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"strong_alerts\".\"engagement_id\"))"
+        },
+        "strong_alerts_insert_coach": {
+          "name": "strong_alerts_insert_coach",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"strong_alerts\".\"engagement_id\")) and \"app\".\"strong_alerts\".\"marcada_por\" = (select auth.uid()) and (select private.app_has_consent(\"app\".\"strong_alerts\".\"engagement_id\")) and \"app\".\"strong_alerts\".\"estado\" = 'abierta'"
+        },
+        "strong_alerts_update_coach": {
+          "name": "strong_alerts_update_coach",
+          "as": "PERMISSIVE",
+          "for": "UPDATE",
+          "to": [
+            "authenticated"
+          ],
+          "using": "(select private.app_is_coach_of(\"app\".\"strong_alerts\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"strong_alerts\".\"engagement_id\"))",
+          "withCheck": "(select private.app_is_coach_of(\"app\".\"strong_alerts\".\"engagement_id\")) and (select private.app_has_consent(\"app\".\"strong_alerts\".\"engagement_id\"))"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "app.users": {
+      "name": "users",
+      "schema": "app",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "org_id": {
+          "name": "org_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "role": {
+          "name": "role",
+          "type": "app_role",
+          "typeSchema": "app",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre_pila": {
+          "name": "nombre_pila",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "users_id_users_id_fk": {
+          "name": "users_id_users_id_fk",
+          "tableFrom": "users",
+          "columnsFrom": [
+            "id"
+          ],
+          "tableTo": "users",
+          "schemaTo": "auth",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "cascade"
+        },
+        "users_org_id_organizations_id_fk": {
+          "name": "users_org_id_organizations_id_fk",
+          "tableFrom": "users",
+          "columnsFrom": [
+            "org_id"
+          ],
+          "tableTo": "organizations",
+          "schemaTo": "app",
+          "columnsTo": [
+            "id"
+          ],
+          "onUpdate": "no action",
+          "onDelete": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {
+        "users_select_self_or_org_coach": {
+          "name": "users_select_self_or_org_coach",
+          "as": "PERMISSIVE",
+          "for": "SELECT",
+          "to": [
+            "authenticated"
+          ],
+          "using": "\"app\".\"users\".\"id\" = (select auth.uid()) or ((select private.app_role()) = 'coach' and \"app\".\"users\".\"org_id\" = (select private.app_org_id()))"
+        },
+        "users_insert_coach_persona": {
+          "name": "users_insert_coach_persona",
+          "as": "PERMISSIVE",
+          "for": "INSERT",
+          "to": [
+            "authenticated"
+          ],
+          "withCheck": "(select private.app_role()) = 'coach' and \"app\".\"users\".\"org_id\" = (select private.app_org_id()) and \"app\".\"users\".\"role\" = 'persona'"
+        }
+      },
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {
+    "app.alert_status": {
+      "name": "alert_status",
+      "schema": "app",
+      "values": [
+        "abierta",
+        "escalada",
+        "atendida"
+      ]
+    },
+    "app.app_role": {
+      "name": "app_role",
+      "schema": "app",
+      "values": [
+        "coach",
+        "persona"
+      ]
+    },
+    "app.catalog_format": {
+      "name": "catalog_format",
+      "schema": "app",
+      "values": [
+        "lectura",
+        "video",
+        "audio",
+        "ejercicio",
+        "interactivo"
+      ]
+    },
+    "app.cognitive_load": {
+      "name": "cognitive_load",
+      "schema": "app",
+      "values": [
+        "baja",
+        "media",
+        "alta"
+      ]
+    },
+    "app.consent_event_type": {
+      "name": "consent_event_type",
+      "schema": "app",
+      "values": [
+        "otorgado",
+        "retirado"
+      ]
+    },
+    "app.engagement_stage": {
+      "name": "engagement_stage",
+      "schema": "app",
+      "values": [
+        "alta",
+        "evaluacion_inicial",
+        "perfil",
+        "plan",
+        "seguimiento",
+        "cierre"
+      ]
+    },
+    "app.engagement_type": {
+      "name": "engagement_type",
+      "schema": "app",
+      "values": [
+        "inclusion",
+        "workplace_support"
+      ]
+    },
+    "app.followup_context_tipo": {
+      "name": "followup_context_tipo",
+      "schema": "app",
+      "values": [
+        "pregunta",
+        "contexto",
+        "siguiente_paso"
+      ]
+    },
+    "app.knowledge_card_type": {
+      "name": "knowledge_card_type",
+      "schema": "app",
+      "values": [
+        "estrategia_fe",
+        "ajuste_razonable",
+        "senal"
+      ]
+    },
+    "app.plan_item_estado": {
+      "name": "plan_item_estado",
+      "schema": "app",
+      "values": [
+        "avanza",
+        "sin_cambios",
+        "necesita_ajuste",
+        "cumplido"
+      ]
+    },
+    "app.plan_item_origen": {
+      "name": "plan_item_origen",
+      "schema": "app",
+      "values": [
+        "ia",
+        "ia_editado",
+        "coach"
+      ]
+    },
+    "app.plan_item_type": {
+      "name": "plan_item_type",
+      "schema": "app",
+      "values": [
+        "objetivo",
+        "apoyo_fe",
+        "instruccion",
+        "comunicacion_lider",
+        "objetivo_equipo",
+        "ajuste_razonable"
+      ]
+    },
+    "app.plan_status": {
+      "name": "plan_status",
+      "schema": "app",
+      "values": [
+        "borrador",
+        "aprobado",
+        "descartado"
+      ]
+    },
+    "app.profile_event_status": {
+      "name": "profile_event_status",
+      "schema": "app",
+      "values": [
+        "proposed",
+        "approved",
+        "rejected"
+      ]
+    },
+    "app.profile_event_type": {
+      "name": "profile_event_type",
+      "schema": "app",
+      "values": [
+        "propuesta_ia",
+        "no_me_representa"
+      ]
+    },
+    "app.recommendation_status": {
+      "name": "recommendation_status",
+      "schema": "app",
+      "values": [
+        "propuesta",
+        "aprobada",
+        "descartada"
+      ]
+    },
+    "app.session_type": {
+      "name": "session_type",
+      "schema": "app",
+      "values": [
+        "persona",
+        "red_de_apoyo"
+      ]
+    },
+    "app.signal_status": {
+      "name": "signal_status",
+      "schema": "app",
+      "values": [
+        "activa",
+        "cerrada"
+      ]
+    },
+    "app.signal_type": {
+      "name": "signal_type",
+      "schema": "app",
+      "values": [
+        "estres_desregulacion",
+        "intencion_de_renunciar",
+        "cambio_de_vida",
+        "desajuste_con_rol"
+      ]
+    }
+  },
+  "schemas": {
+    "app": "app"
+  },
+  "views": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -6,6 +6,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,9 +14,10 @@ import { Label } from "@/components/ui/label";
 import { guardarContrasena, type ContrasenaState } from "./actions";
 
 const estadoInicial: ContrasenaState = { error: null, campo: null };
+const guardar = conFalloDeRed<ContrasenaState>(guardarContrasena, () => ({ error: ERROR_SIN_RESPUESTA, campo: null }));
 
 export function FormularioContrasena() {
-  const [state, formAction, pending] = useActionState(guardarContrasena, estadoInicial);
+  const [state, formAction, pending] = useActionState(guardar, estadoInicial);
   const errorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

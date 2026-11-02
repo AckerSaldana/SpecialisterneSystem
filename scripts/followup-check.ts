@@ -21,7 +21,7 @@ import { historialDeItem } from "@/lib/followup/avance";
 import { decidirPropuesta } from "@/lib/followup/decision";
 import { aRealizadaEn, hoyEnMonterrey } from "@/lib/followup/fecha";
 import { leerPlanConAvance, leerSeguimiento, leerVistaPropuesta } from "@/lib/followup/lectura";
-import { PayloadSeguimientoIA, type FollowupUpdate } from "@/lib/followup/schema";
+import { PayloadSeguimientoIA, type FollowupUpdateEtiquetado } from "@/lib/followup/schema";
 import { PayloadPropuestaIA, type Perfil } from "@/lib/profile/schema";
 import { PROMPT_VERSION, PROMPT_VERSION_SEGUIMIENTO, type EntradaSeguimiento } from "@/lib/prompts";
 import { crearSesion, reintentarPropuesta, type DepsModelo } from "@/lib/sessions/proponer";
@@ -70,12 +70,14 @@ const CITA_MUDANZA = "se muda de ciudad el próximo mes";
 const CITA_RUIDO = "el ruido de la oficina le sigue costando trabajo";
 const CITA_VACACIONES = "Se va de vacaciones la próxima semana";
 const ev = (cita: string) => [{ cita }];
+// Spec 008: las citas de cambios y de avance traen sus tres llaves, como las pide el esquema etiquetado.
+const evFE = (cita: string) => [{ cita, dominio: null, direccion: null, anteriorRef: null }];
 
-function updateVacio(): FollowupUpdate {
+function updateVacio(): FollowupUpdateEtiquetado {
   return { cambios: [], senales: [], relacionesConPerfilPrevio: [], preguntasParaSiguienteSesion: [], avance: [], contexto: [], siguientePaso: null };
 }
 
-function updateCompleto(ref = "P-01"): FollowupUpdate {
+function updateCompleto(ref = "P-01"): FollowupUpdateEtiquetado {
   return {
     ...updateVacio(),
     cambios: [
@@ -84,12 +86,12 @@ function updateCompleto(ref = "P-01"): FollowupUpdate {
         resumen: "A Sol le ayuda trabajar en un lugar con poco ruido.",
         tipo: "area_de_apoyo",
         dominiosFE: [],
-        evidencia: ev(CITA_RUIDO),
+        evidencia: evFE(CITA_RUIDO),
       },
     ],
     senales: [{ tipo: "cambio_de_vida", descripcion: "Se muda de ciudad.", evidencia: ev(CITA_MUDANZA) }],
     preguntasParaSiguienteSesion: ["¿Cómo va la mudanza?"],
-    avance: [{ itemRef: ref, estado: "avanza", resumen: "Entregó el reporte a tiempo.", evidencia: ev(CITA_AVANCE) }],
+    avance: [{ itemRef: ref, estado: "avanza", resumen: "Entregó el reporte a tiempo.", evidencia: evFE(CITA_AVANCE) }],
     contexto: [{ texto: "Vacaciones la próxima semana.", evidencia: ev(CITA_VACACIONES) }],
     siguientePaso: { texto: "Revisar el reporte de la siguiente semana", itemRef: ref, fichaId: null, evidencia: ev(CITA_AVANCE) },
   };
@@ -99,7 +101,7 @@ function updateCompleto(ref = "P-01"): FollowupUpdate {
 // Modelo simulado
 // ---------------------------------------------------------------------------
 
-function resultadoSeguimiento(update: FollowupUpdate): ResultadoSeguimientoModelo {
+function resultadoSeguimiento(update: FollowupUpdateEtiquetado): ResultadoSeguimientoModelo {
   return {
     update,
     usage: { entrada: 100, salida: 50, cacheLectura: 0 },
@@ -109,7 +111,7 @@ function resultadoSeguimiento(update: FollowupUpdate): ResultadoSeguimientoModel
   };
 }
 
-function modeloCon(update: FollowupUpdate, alLlamar?: (entrada: EntradaSeguimiento) => void | Promise<void>): DepsModelo {
+function modeloCon(update: FollowupUpdateEtiquetado, alLlamar?: (entrada: EntradaSeguimiento) => void | Promise<void>): DepsModelo {
   return {
     proponerPerfil: async (): Promise<ResultadoPropuesta> => {
       throw new Error("este caso no debía usar el prompt de 001");
@@ -270,7 +272,7 @@ async function otorgar(engagementId: string, persona: string) {
 const APROBAR = (a: Record<string, unknown>) => ({ accion: "aprobar", aprobacion: { cambios: [], senales: [], ...a } });
 
 // Crea una sesión con propuesta. Devuelve sus ids.
-async function sesionConPropuesta(engagementId: string, update: FollowupUpdate) {
+async function sesionConPropuesta(engagementId: string, update: FollowupUpdateEtiquetado) {
   const r = await crearSesion(usuario, engagementId, { nota: NOTA }, modeloCon(update));
   esperar(r, 200, "crear la sesión");
   return { sessionId: cuerpo(r).sessionId!, eventId: cuerpo(r).eventId! };
@@ -359,7 +361,7 @@ function casos(demo: { items: string[]; planId: string }): Caso[] {
       id: "CA-004.15",
       descripcion: "un campo de puntaje en la salida del modelo responde 502 y deja la nota sin propuesta",
       correr: async () => {
-        const conPuntaje = { ...updateVacio(), puntaje: 80 } as unknown as FollowupUpdate;
+        const conPuntaje = { ...updateVacio(), puntaje: 80 } as unknown as FollowupUpdateEtiquetado;
         const r = await crearSesion(usuario, ENG.incl, { nota: NOTA }, modeloCon(conPuntaje));
         esperar(r, 502, "salida con puntaje");
         const sessionId = cuerpo(r).sessionId;
@@ -455,11 +457,11 @@ function casos(demo: { items: string[]; planId: string }): Caso[] {
       id: "CA-004.41",
       descripcion: "con otra versión del plan, el avance se guarda en el equivalente y el de un ítem sin equivalente no se aprueba",
       correr: async () => {
-        const dosAvances: FollowupUpdate = {
+        const dosAvances: FollowupUpdateEtiquetado = {
           ...updateVacio(),
           avance: [
-            { itemRef: "P-01", estado: "avanza", resumen: "Entregó el reporte.", evidencia: ev(CITA_AVANCE) },
-            { itemRef: "P-02", estado: "sin_cambios", resumen: "El ruido sigue.", evidencia: ev(CITA_RUIDO) },
+            { itemRef: "P-01", estado: "avanza", resumen: "Entregó el reporte.", evidencia: evFE(CITA_AVANCE) },
+            { itemRef: "P-02", estado: "sin_cambios", resumen: "El ruido sigue.", evidencia: evFE(CITA_RUIDO) },
           ],
         };
         const { eventId } = await sesionConPropuesta(ENG.incl, dosAvances);
@@ -592,7 +594,7 @@ function casos(demo: { items: string[]; planId: string }): Caso[] {
       descripcion: "una salida que no pasa el contrato responde 502, deja la nota y audita con ok = false",
       correr: async () => {
         const fallas = await contar("audit_log", ENG.ws, "and not ok");
-        const invalido = { ...updateVacio(), senales: [{ tipo: "otra_cosa", descripcion: "x", evidencia: ev(CITA_RUIDO) }] } as unknown as FollowupUpdate;
+        const invalido = { ...updateVacio(), senales: [{ tipo: "otra_cosa", descripcion: "x", evidencia: ev(CITA_RUIDO) }] } as unknown as FollowupUpdateEtiquetado;
         const r = await crearSesion(usuario, ENG.ws, { nota: NOTA }, modeloCon(invalido));
         esperar(r, 502, "salida inválida");
         const [s] = await sql`select count(*)::int as n from app.sessions where id = ${cuerpo(r).sessionId!}`;
@@ -740,6 +742,93 @@ function casos(demo: { items: string[]; planId: string }): Caso[] {
         esperar(await cambiarAlerta(usuario, id, { estado: "atendida" }), 409, "otra vez");
         const [a] = await sql`select estado::text as estado, nota_escalada, escalada_en, atendida_en from app.strong_alerts where id = ${id}`;
         revisar(a.estado === "atendida" && a.nota_escalada && a.escalada_en && a.atendida_en, "no quedaron estado, nota y fechas");
+      },
+    },
+    {
+      id: "CA-008.1",
+      descripcion: "una salida sin etiquetas, con un dominio fuera del catálogo o con una llave extra responde 502, sin evento y con ok = false",
+      correr: async () => {
+        const conEvidencia = (e: object) =>
+          ({ ...updateVacio(), cambios: [{ dimension: "concentracion", resumen: "Resumen.", tipo: "contexto", dominiosFE: [], evidencia: [e] }] }) as unknown as FollowupUpdateEtiquetado;
+        for (const mala of [{ cita: CITA_RUIDO }, { ...evFE(CITA_RUIDO)[0], dominio: "atencion" }, { ...evFE(CITA_RUIDO)[0], puntaje: 3 }]) {
+          const eventos = await contar("profile_events", ENG.incl);
+          const r = await crearSesion(usuario, ENG.incl, { nota: NOTA }, modeloCon(conEvidencia(mala)));
+          esperar(r, 502, "salida sin el contrato");
+          revisar((await contar("profile_events", ENG.incl)) === eventos, "se guardó un evento");
+          const [a] = await sql`select ok from app.audit_log where engagement_id = ${ENG.incl} order by id desc limit 1`;
+          revisar(a.ok === false, "la auditoría no dice ok = false");
+        }
+      },
+    },
+    {
+      id: "R-008.6",
+      descripcion: "las observaciones llegan con O-nn, sin lineaId, y se guardan en el índice; las etiquetas se limpian; un resumen que copia una observación no se aprueba",
+      correr: async () => {
+        // Una cita de avance nunca entra a un snapshot: solo la conoce el índice de observaciones.
+        const uno = await sesionConPropuesta(ENG.incl, {
+          ...updateVacio(),
+          avance: [{ itemRef: "P-01", estado: "avanza", resumen: "Entregó el reporte.", evidencia: [{ cita: CITA_AVANCE, dominio: "monitoreo_de_tareas", direccion: "fortaleza", anteriorRef: null }] }],
+        });
+        esperar(await decidirPropuesta(usuario, uno.eventId, APROBAR({ avance: [0] })), 200, "aprobar el avance");
+
+        let recibido: EntradaSeguimiento | null = null;
+        const modelo: DepsModelo = {
+          ...modeloQueFalla,
+          proponerSeguimiento: async (entrada) => {
+            recibido = entrada;
+            const ref = entrada.observacionesPrevias.find((o) => o.cita === CITA_AVANCE)?.ref ?? "O-99";
+            return resultadoSeguimiento({
+              ...updateVacio(),
+              cambios: [
+                {
+                  dimension: "concentracion",
+                  resumen: `Contó esto: ${CITA_AVANCE}.`,
+                  tipo: "contexto",
+                  dominiosFE: [],
+                  evidencia: [
+                    { cita: CITA_RUIDO, dominio: "monitoreo_de_tareas", direccion: "cambio", anteriorRef: ref },
+                    // Otro dominio: la limpieza le quita la dirección.
+                    { cita: CITA_VACACIONES, dominio: "iniciacion", direccion: "cambio", anteriorRef: ref },
+                  ],
+                },
+              ],
+            });
+          },
+        };
+        const r = await crearSesion(usuario, ENG.incl, { nota: NOTA }, modelo);
+        esperar(r, 200, "crear");
+        const eventId = cuerpo(r).eventId!;
+
+        const entrada = recibido as EntradaSeguimiento | null;
+        const observacion = entrada?.observacionesPrevias.find((o) => o.cita === CITA_AVANCE);
+        revisar(observacion?.dominio === "monitoreo_de_tareas" && observacion.direccion === "fortaleza", "el modelo no recibió la observación");
+        revisar(!JSON.stringify(entrada?.observacionesPrevias).includes(uno.eventId), "el modelo recibió un id real");
+
+        const [e] = await sql`select payload from app.profile_events where id = ${eventId}`;
+        const payload = PayloadSeguimientoIA.parse(e.payload);
+        const guardada = payload.indiceObservaciones.find((o) => o.cita === CITA_AVANCE);
+        revisar(guardada?.lineaId === `${uno.eventId}:avance[0].evidencia[0]`, `lineaId guardado: ${guardada?.lineaId}`);
+        const [buena, sinAnterior] = payload.update.cambios[0].evidencia;
+        revisar("direccion" in buena && buena.direccion === "cambio" && buena.anteriorRef === guardada?.ref, "se perdió el cambio válido");
+        revisar("direccion" in sinAnterior && sinAnterior.direccion === null && sinAnterior.anteriorRef === null, "no se limpió el cambio de otro dominio");
+        revisar(payload.descartados.some((d) => d.ruta === "cambios[0].evidencia[1]" && d.motivo === "etiqueta_sin_anterior"), "falta el descarte");
+        revisar(payload.banderas.some((b) => b.motivo === "cita_en_texto_persona" && b.termino === CITA_AVANCE), "falta la bandera");
+
+        const vista = await withRls(usuario.claims, (tx) => leerVistaPropuesta(tx, ENG.incl, eventId));
+        revisar(vista?.citasBase.includes(CITA_AVANCE) === true, "citasBase no trae la observación");
+
+        // CA-008.49: la decisión responde 400 sin snapshot; pasa igual si el coach escribe esa cita.
+        const snapshots = await contar("profile_snapshots", ENG.incl);
+        const personas = await contar("persona_profiles", ENG.incl);
+        esperar(await decidirPropuesta(usuario, eventId, APROBAR({ cambios: [0] })), 400, "resumen que copia la observación");
+        esperar(await decidirPropuesta(usuario, eventId, APROBAR({ cambios: [0], ediciones: [{ indice: 0, resumen: `Dijo: ${CITA_AVANCE}.` }] })), 400, "edición que copia la observación");
+        revisar((await contar("profile_snapshots", ENG.incl)) === snapshots, "se creó un snapshot");
+        revisar((await contar("persona_profiles", ENG.incl)) === personas, "se creó una copia para la persona");
+        esperar(await decidirPropuesta(usuario, eventId, APROBAR({ cambios: [0], ediciones: [{ indice: 0, resumen: "Le ayuda tener su lista a la mano." }] })), 200, "con el texto corregido");
+
+        // R-008.9: al snapshot no llega ninguna etiqueta.
+        const [snap] = await sql`select perfil from app.profile_snapshots where engagement_id = ${ENG.incl} order by version desc limit 1`;
+        revisar(Object.keys(snap.perfil.dimensiones.concentracion.evidencia[0]).sort().join() === "cita,sessionId", "el snapshot guarda etiquetas");
       },
     },
     {

@@ -22,15 +22,15 @@ export const encabezadoBorrador = (version: number) => `Borrador del plan · bas
 export const TEXTO_FIJO_BORRADOR =
   "La persona no ve nada de esto hasta que apruebes el plan. Cada cambio se guarda en cuanto lo confirmas.";
 
-// Nota debajo de cada grupo que la persona no ve (R-003.40). Los demás grupos no llevan nota.
+// Nota debajo de cada grupo que la persona no ve tal cual (R-003.40, R-009.54). Los demás grupos no llevan nota.
 export function notaGrupo(tipo: TipoItemPlan, nombre: string): string | null {
   switch (tipo) {
     case "objetivo_equipo":
-      return `${nombre} no ve este grupo.`;
+    case "instruccion":
+      return `${nombre} no ve este grupo tal cual. La IA puede usarlo para proponerle líneas de "Cómo trabajar conmigo".`;
     case "ajuste_razonable":
-      return `Borrador interno. La app no lo envía a la empresa y ${nombre} no ve este grupo.`;
     case "comunicacion_lider":
-      return "Borrador interno. La app no lo envía a la empresa y la persona no lo ve.";
+      return `Borrador interno. La app no lo envía a la empresa. ${nombre} no lo ve tal cual, pero la IA puede usarlo para proponerle líneas de "Cómo trabajar conmigo", y ${nombre} decide si las comparte.`;
     default:
       return null;
   }
@@ -59,7 +59,7 @@ export const PUNTO_NUEVO = "Es un punto nuevo";
 // Diálogos de aprobar y descartar: la pregunta va en el título del Dialog y el resto en su descripción.
 export const APROBAR_TITULO = "¿Aprobar este plan?";
 export const aprobarTexto = (nombre: string) =>
-  `${nombre} va a ver sus objetivos y apoyos. Los objetivos del equipo, los ajustes razonables, las instrucciones y lo del líder se quedan solo para ti. Después de aprobarlo ya no se edita; para cambiarlo pides una propuesta nueva.`;
+  `${nombre} va a ver sus objetivos y apoyos. Los objetivos del equipo, los ajustes razonables, las instrucciones y lo del líder no los ve tal cual, pero la IA puede usarlos para proponerle líneas de "Cómo trabajar conmigo". ${nombre} sí lee esas líneas y decide si las comparte. Después de aprobarlo ya no se edita; para cambiarlo pides una propuesta nueva.`;
 export const DESCARTAR_TITULO = "¿Descartar este borrador?";
 export const DESCARTAR_TEXTO = "Se queda en el historial, pero no se usa.";
 

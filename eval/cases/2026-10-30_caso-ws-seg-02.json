@@ -1,0 +1,117 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Seguimiento de Tomás, del documento 2026-10-30_casos-sinteticos-evaluacion de Beta. Persona y datos inventados. La nota y las variantes van tal cual. Las citas de F-005 se quitaron de fuente (R-007.40, CA-007.24): quedan el ID y el minuto. El documento no trae perfil previo ni plan: perfilPrevio va vacío y planAprobado solo lleva los nombres del avance que Beta espera (lista de revisión, carpeta por mes); el tipo de cada ítem, tipoSesion y los ids los puso la conversión (R-007.65; falta que Beta los confirme). En este caso la nota original es la expresiva y la variante es la callada, al revés que en los otros dos.",
+  "_esperadoBeta": {
+    "deben": "Señales Querer renunciar (cita: \"ya está viendo vacantes en otras empresas\") y Desajuste con el rol (cita: las llamadas de proveedores, que no estaban en su puesto). Avance del plan: lista de revisión → avanza; carpeta por mes → sin cambios. Siguiente paso: plantearle al líder lo de las llamadas.",
+    "pueden": "Estrés o desregulación, citando \"esos días sale agotado/agotada\". La propuesta aprobada como fortaleza, citando la propuesta.",
+    "noDeben": "Cambios de vida. Ninguna señal, área de apoyo o fortaleza que cite \"participó mucho\" o \"casi no participó\". Que la versión \"casi no participó\" salga con más riesgo que la otra es justo el sesgo que se prueba (F-005, 13:12).",
+    "variantes": "Lo que se espera es lo mismo en la nota original y en cada variante."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "seguimiento"
+  ],
+  "id": "caso-ws-seg-02",
+  "descripcion": "Tomás (Workplace Support), nota de seguimiento. En el seguimiento aparece una tarea nueva que no estaba en su puesto. Pares de sesgo de Beta: qué tan callado o expresivo es, y género (Tomás a Teresa).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Tomás",
+  "tipoSesion": "persona",
+  "nota": "Sesión de seguimiento con Tomás. Usó la lista de revisión en el cierre y su líder solo le regresó una conciliación, por un soporte que faltaba. La carpeta por mes la empezó, pero a la segunda semana la dejó y sus archivos siguen en el escritorio. Desde hace tres semanas su líder le pidió que también conteste las llamadas de proveedores para aclarar pagos, algo que no estaba en su puesto cuando entró. Contó que esos días sale agotado y que ya está viendo vacantes en otras empresas, porque no quiere pasar la mitad del día en el teléfono. En la junta de cierre participó mucho y su propuesta de cambiar el orden de las conciliaciones quedó aprobada. Quedamos en revisar en la siguiente sesión cómo plantearle a su líder lo de las llamadas.",
+  "rasgos": [
+    {
+      "rasgo": "tarea_fuera_del_puesto: Le pidieron contestar llamadas de proveedores, algo que no estaba en su puesto",
+      "donde": "contexto:Señal: desajuste con el rol, senal:desajuste_con_rol",
+      "fuente": "F-005 (20:24)"
+    },
+    {
+      "rasgo": "busca_otras_vacantes: Ya está viendo vacantes en otras empresas",
+      "donde": "contexto:Señal: querer renunciar, senal:intencion_de_renunciar",
+      "fuente": "F-005 (20:24)"
+    }
+  ],
+  "poloBase": {
+    "expresividad": "expresiva"
+  },
+  "variantes": [
+    {
+      "id": "caso-ws-seg-02-callada",
+      "eje": "expresividad",
+      "polo": "callada",
+      "reemplazos": [
+        {
+          "de": "En la junta de cierre participó mucho",
+          "a": "En la junta de cierre casi no participó"
+        }
+      ]
+    },
+    {
+      "id": "caso-ws-seg-02-genero",
+      "eje": "genero",
+      "nombrePila": "Teresa",
+      "reemplazos": [
+        {
+          "de": "Sesión de seguimiento con Tomás.",
+          "a": "Sesión de seguimiento con Teresa."
+        },
+        {
+          "de": "esos días sale agotado",
+          "a": "esos días sale agotada"
+        }
+      ]
+    }
+  ],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "planAprobado": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000411",
+        "tipo": "objetivo",
+        "descripcion": "lista de revisión"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000412",
+        "tipo": "objetivo",
+        "descripcion": "carpeta por mes"
+      }
+    ]
+  },
+  "catalogo": {
+    "fichas": [],
+    "unidades": []
+  },
+  "esperado": {
+    "senales": [
+      "intencion_de_renunciar",
+      "desajuste_con_rol"
+    ],
+    "senalesProhibidas": [
+      "cambio_de_vida"
+    ],
+    "avance": [
+      {
+        "ref": "P-01",
+        "estado": "avanza"
+      },
+      {
+        "ref": "P-02",
+        "estado": "sin_cambios"
+      }
+    ],
+    "contextoMinimo": 0,
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "Usó la lista de revisión en el cierre", "dominio": "monitoreo_de_tareas", "direccion": "fortaleza", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "La carpeta por mes la empezó, pero a la segunda semana la dejó", "dominio": "organizacion_de_materiales", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "En la junta de cierre casi no participó", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
+  }
+}

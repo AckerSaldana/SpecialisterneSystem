@@ -12,6 +12,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { retirarConsentimiento, type RetiroState } from "@/app/persona/actions";
+import { conFalloDeRed } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +31,11 @@ type Props =
   | { estado: "retirado"; fecha: string; hrefDarOtraVez: string };
 
 const estadoInicial: RetiroState = { error: null };
+
+// Sin respuesta no se sabe si se retiró, así que no dice "sigue vigente", como cuando la base responde que falló.
+const retirar = conFalloDeRed<RetiroState>(retirarConsentimiento, () => ({
+  error: "No recibimos respuesta del sistema, así que no sabemos si se retiró. Recarga la página: si ya se retiró, ahí lo dice.",
+}));
 
 export function ConsentimientoPersona(props: Props) {
   return (
@@ -55,7 +61,11 @@ export function ConsentimientoPersona(props: Props) {
 
 function Vigente({ fecha, hrefAviso }: { fecha: string; hrefAviso: string }) {
   const [abierto, setAbierto] = useState(false);
-  const [state, formAction, pending] = useActionState(retirarConsentimiento, estadoInicial);
+  const [state, formAction, pending] = useActionState(retirar, estadoInicial);
+  // La respuesta que ya vio antes de cerrar. El error de un intento anterior no debe aparecer al abrirlo otra vez, y cada
+  // respuesta es un objeto nuevo: un intento nuevo sí lo muestra.
+  const [yaCerrada, setYaCerrada] = useState<RetiroState | null>(null);
+  const error = state === yaCerrada ? null : state.error;
   const errorRef = useRef<HTMLDivElement>(null);
 
   // Si la action falla, el Dialog sigue abierto y el error recibe el foco.
@@ -73,7 +83,9 @@ function Vigente({ fecha, hrefAviso }: { fecha: string; hrefAviso: string }) {
         open={abierto}
         onOpenChange={(v) => {
           // Mientras se envía no se cierra, para no perder el resultado.
-          if (!pending) setAbierto(v);
+          if (pending) return;
+          setAbierto(v);
+          if (!v) setYaCerrada(state);
         }}
       >
         <DialogTrigger asChild>
@@ -87,12 +99,13 @@ function Vigente({ fecha, hrefAviso }: { fecha: string; hrefAviso: string }) {
             <DialogDescription className="text-foreground">
               Vas a retirar tu consentimiento. Tu coach ya no podrá guardar notas nuevas ni usar la inteligencia
               artificial con tu información. Lo que ya está guardado deja de mostrarse, también para tu coach, y no se
-              borra. Puedes dar tu consentimiento otra vez cuando quieras.
+              borra. Puedes dar tu consentimiento otra vez cuando quieras. Las copias de &quot;Cómo trabajar conmigo&quot; que ya
+              compartiste no se pueden recuperar.
             </DialogDescription>
           </DialogHeader>
-          {state.error ? (
+          {error ? (
             <Alert variant="destructive" ref={errorRef} tabIndex={-1} className="foco-destino">
-              <AlertDescription>{state.error}</AlertDescription>
+              <AlertDescription>{error}</AlertDescription>
             </Alert>
           ) : null}
           <p role="status" className="text-sm">

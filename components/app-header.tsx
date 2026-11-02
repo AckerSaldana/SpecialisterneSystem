@@ -26,11 +26,20 @@ function ariaCurrent(pathname: string, href: string): "page" | "true" | undefine
   return undefined;
 }
 
+// Cuando un enlace vive dentro de otro (/persona y /persona/como-trabajar-conmigo), solo se marca el más
+// específico: dos marcados a la vez no dicen dónde estás.
+function enlaceActivo(pathname: string, links: NavLink[]): string | undefined {
+  return links
+    .filter((l) => ariaCurrent(pathname, l.href))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+}
+
 export function AppHeader({ nombrePila, inicio, links }: AppHeaderProps) {
   const pathname = usePathname();
+  const activo = enlaceActivo(pathname, links);
 
   return (
-    <header className="border-b bg-background">
+    <header className="border-b bg-background print:hidden">
       <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3">
         <div className="flex flex-col">
           <Link
@@ -45,7 +54,7 @@ export function AppHeader({ nombrePila, inicio, links }: AppHeaderProps) {
         <nav aria-label="Navegación principal">
           <ul className="flex flex-wrap items-center gap-x-4 gap-y-2">
             {links.map((link) => {
-              const current = ariaCurrent(pathname, link.href);
+              const current = link.href === activo ? ariaCurrent(pathname, link.href) : undefined;
               return (
                 <li key={link.href}>
                   <Link

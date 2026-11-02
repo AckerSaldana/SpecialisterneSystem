@@ -7,6 +7,10 @@
 // de engagements (R-002.33). Sin consentimiento vigente no hay botón "Nueva sesión" (R-002.32) y,
 // si lo retiró, RLS oculta notas, perfil e historial también al coach (decisión b, R-002.30).
 // Spec 004: propuestas sin revisar, sesiones sin propuesta, alertas fuertes e historiales.
+// Spec 005: aviso y cierre de los "Esto no me representa" (R-005.25 a R-005.27, R-005.34).
+// Spec 008: enlace a la pantalla "Función ejecutiva" dentro de "Perfil actual" (R-008.21).
+// Spec 009: enlace a "Cómo trabajar conmigo", después del plan.
+// Spec 010: enlace a "Tareas de {nombre}", junto a ese (R-010.2).
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -19,6 +23,8 @@ import { withRls } from "@/lib/db/rls";
 import { engagements, invitations, profileEvents, profileSnapshots, sessions, users } from "@/lib/db/schema";
 import { ENGAGEMENT_CONFIG, etiquetaEtapa } from "@/lib/engagements/config";
 import { leerSeguimiento, type DatosSeguimiento } from "@/lib/followup/lectura";
+import { TITULO_GUIA } from "@/lib/guia/schema-cliente";
+import { leerDatosCierre, type DatosCierre } from "@/lib/persona/cierre-comentario";
 import type { Perfil } from "@/lib/profile/schema";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -28,9 +34,10 @@ import { formatFecha } from "@/components/coach/labels";
 import { textoConsentimiento, textoDatosOcultos, textoSinNotas } from "@/components/coach/alta/consentimiento";
 import { InvitacionPaso, type EstadoInvitacion } from "@/components/coach/alta/invitacion-paso";
 import { VerificacionForm } from "@/components/coach/alta/verificacion-form";
+import { tituloTareas } from "@/components/coach/desglose/textos";
 import { leerPlan, type DatosPlan } from "@/components/coach/plan/datos";
 import { SeccionPlan } from "@/components/coach/plan/seccion-plan";
-import { AccionesSenal, AlertasFuertes, Historiales, PropuestasPendientes } from "@/components/coach/seguimiento/secciones";
+import { AccionesSenal, AlertasFuertes, ComentariosSinRevisar, Historiales, PropuestasPendientes } from "@/components/coach/seguimiento/secciones";
 
 // Título fijo: así no hace falta otra consulta solo para el <title>.
 export const metadata: Metadata = { title: "Acompañamiento" };
@@ -147,7 +154,9 @@ export default async function EngagementPage({ params, searchParams }: Props) {
 
     const seguimiento = await leerSeguimiento(tx, id, snapshot?.perfil ?? null);
 
-    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan, seguimiento } };
+    const cierre = await leerDatosCierre(tx, id);
+
+    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan, seguimiento, cierre } };
   });
 
   if (!datos) notFound();
@@ -290,12 +299,13 @@ type HistorialProps = {
   eventos: EventoVista[];
   plan: DatosPlan;
   seguimiento: DatosSeguimiento;
+  cierre: DatosCierre;
   engagementId: string;
   nombre: string;
 };
 
 // Perfil, plan, señales e historial: solo con consentimiento vigente.
-function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento, engagementId, nombre }: HistorialProps) {
+function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento, cierre, engagementId, nombre }: HistorialProps) {
   // sessionId -> fecha formateada, para la evidencia de cada dimensión.
   const fechasSesion: Record<string, string> = {};
   for (const s of listaSesiones) fechasSesion[s.id] = formatFecha(s.realizadaEn);
@@ -307,12 +317,20 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
     <>
       <PropuestasPendientes datos={seguimiento} engagementId={engagementId} />
 
+      <ComentariosSinRevisar eventos={eventos} cierre={cierre} nombre={nombre} idFoco="historial-eventos" />
+
       <Separator />
 
       <section aria-labelledby="perfil-actual" className="flex flex-col gap-4">
         <h2 id="perfil-actual" className="text-xl font-semibold">
           Perfil actual
         </h2>
+        {/* Spec 008 (R-008.21): solo con consentimiento vigente, como todo HistorialVisible. */}
+        <p className="text-sm">
+          <Link href={`/coach/engagements/${engagementId}/funcion-ejecutiva`} className="underline underline-offset-4">
+            Función ejecutiva
+          </Link>
+        </p>
         {snapshot ? (
           <>
             <p className="text-sm text-muted-foreground">
@@ -335,6 +353,20 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
         nombre={nombre}
         datos={{ plan, snapshotActualVersion: snapshot?.version ?? null, fechasSesion }}
       />
+
+      {/* Spec 009: solo con consentimiento vigente, como todo HistorialVisible (R-009.51). */}
+      <p className="text-sm">
+        <Link href={`/coach/engagements/${engagementId}/como-trabajar-conmigo`} className="underline underline-offset-4">
+          {TITULO_GUIA}
+        </Link>
+      </p>
+
+      {/* Spec 010: también solo con consentimiento vigente (R-010.45). */}
+      <p className="text-sm">
+        <Link href={`/coach/engagements/${engagementId}/desgloses`} className="underline underline-offset-4">
+          {tituloTareas(nombre)}
+        </Link>
+      </p>
 
       <Separator />
 
@@ -364,10 +396,10 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
         </h2>
         <Historiales datos={seguimiento} nombre={nombre} />
         <section aria-labelledby="historial-eventos" className="flex flex-col gap-3">
-          <h3 id="historial-eventos" className="text-lg font-semibold">
+          <h3 id="historial-eventos" tabIndex={-1} className="foco-destino text-lg font-semibold">
             Propuestas y comentarios
           </h3>
-          <EventTimeline eventos={eventos} nombre={nombre} />
+          <EventTimeline eventos={eventos} nombre={nombre} planesPersona={cierre.planesPersona} />
         </section>
       </section>
     </>

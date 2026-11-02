@@ -10,6 +10,7 @@
 import { useActionState, useState } from "react";
 import type { CSSProperties } from "react";
 import { guardarPreferencias, type EstadoGuardado } from "@/app/preferencias/actions";
+import { conFalloDeRed, enviarSinReiniciar, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Button } from "@/components/ui/button";
 import type { OPCIONES, Preferencias } from "@/lib/preferences";
 
@@ -26,13 +27,14 @@ const GRUPOS: { campo: Campo; titulo: string }[] = [
 ];
 
 const ESTADO_INICIAL: EstadoGuardado = { estado: "sin-enviar" };
+const guardar = conFalloDeRed<EstadoGuardado>(guardarPreferencias, () => ({ estado: "error", mensaje: ERROR_SIN_RESPUESTA }));
 
 function sonIguales(a: Preferencias, b: Preferencias) {
   return GRUPOS.every(({ campo }) => a[campo] === b[campo]);
 }
 
 export function PreferencesForm({ inicial, opciones }: { inicial: Preferencias; opciones: Opciones }) {
-  const [estado, enviar, guardando] = useActionState(guardarPreferencias, ESTADO_INICIAL);
+  const [estado, enviar, guardando] = useActionState(guardar, ESTADO_INICIAL);
   const [borrador, setBorrador] = useState<Preferencias>(inicial);
 
   // Lo último que quedó guardado en la cookie (y que ya aplica el layout).
@@ -63,7 +65,13 @@ export function PreferencesForm({ inicial, opciones }: { inicial: Preferencias; 
   } as CSSProperties;
 
   return (
-    <form action={enviar} className="flex flex-col gap-8">
+    <form
+      action={enviar}
+      // Con action sola, React reinicia el formulario al terminar y cada radio regresa a como se montó,
+      // aunque lo guardado sea otra opción.
+      onSubmit={enviarSinReiniciar(enviar)}
+      className="flex flex-col gap-8"
+    >
       <div className="grid gap-6 md:grid-cols-2">
         {GRUPOS.map(({ campo, titulo }) => (
           <fieldset key={campo} className="flex flex-col gap-2">

@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 import { getUserWithRole } from "@/lib/auth";
 import { invitations } from "@/lib/db/schema";
 import { withRls } from "@/lib/db/rls";
+import { tieneFormaDeCodigo } from "@/lib/invitations/code";
 import { logError } from "@/lib/log";
 import { INVITACION_VENCIDA, leerInvitacion } from "@/lib/persona/puerta";
 import { createClient } from "@/lib/supabase/server";
@@ -23,6 +24,7 @@ const ERROR_DISTINTAS = "Las dos contraseñas no son iguales.";
 const ERROR_DEBIL = "La contraseña es muy corta o muy fácil. Prueba con una más larga.";
 const ERROR_IGUAL = "Esa contraseña no se puede usar. Elige una distinta.";
 const ERROR_SERVIDOR = "No pudimos guardar tu contraseña por un problema del sistema. Intenta de nuevo en unos minutos.";
+const ERROR_YA_GUARDADA = "Tu contraseña ya quedó guardada, pero no pudimos terminar este paso por un problema del sistema. Escríbela otra vez en unos minutos.";
 
 // Códigos de Supabase Auth que significan "esta contraseña no sirve". El mínimo lo pone la
 // política de contraseñas del proyecto de Supabase, no la app.
@@ -56,7 +58,10 @@ export async function guardarContrasena(_prev: ContrasenaState, formData: FormDa
   if (invitacion.estado !== "pendiente") redirect("/bienvenida/aviso");
 
   const { error } = await supabase.auth.updateUser({ password: contrasena });
-  if (error) {
+  // Con la invitación pendiente, "es la misma" quiere decir que ya se guardó en un intento anterior y falló la marca de abajo:
+  // se sigue a marcarla. Salvo que sea el código: esa sería su contraseña actual, y no puede quedarse como la nueva (R-002.18).
+  const yaGuardada = error?.code === "same_password" && !tieneFormaDeCodigo(contrasena);
+  if (error && !yaGuardada) {
     // Sesión revocada: el coach generó un código nuevo mientras esta pantalla estaba abierta
     // (cambiar la contraseña temporal cierra las sesiones de la persona). Es un código vencido,
     // no una falla del sistema (R-002.17).
@@ -85,10 +90,10 @@ export async function guardarContrasena(_prev: ContrasenaState, formData: FormDa
     // No se sigue como si nada: se reporta y la puerta vuelve a decidir con el estado real.
     if (marcadas.length === 0) throw new Error("la invitación no se marcó como usada");
   } catch (e) {
-    // La contraseña ya cambió, así que el código ya no sirve. Si la marca falla, la puerta
-    // vuelve a pedir la contraseña y la persona puede guardarla otra vez.
+    // La contraseña ya cambió, así que el código ya no sirve, y decir que no se guardó sería falso. Si la marca falla, la
+    // puerta vuelve a pedir la contraseña y la persona puede escribir la misma (yaGuardada) o una distinta.
     logError("bienvenida/contrasena: no se pudo marcar la invitación como usada", e);
-    return { error: ERROR_SERVIDOR, campo: null };
+    return { error: ERROR_YA_GUARDADA, campo: null };
   }
 
   redirect("/bienvenida/aviso");

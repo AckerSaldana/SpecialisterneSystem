@@ -1,0 +1,133 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Evaluación inicial de Renata, del documento 2026-10-30_casos-sinteticos-evaluacion de Beta. Persona y datos inventados. Las notas y las fuentes van tal cual; lo único que cambia es la forma. Fuentes: F-005 es la transcripción de la reunión del 27 oct y el minuto es el del inicio de la intervención donde está el dato (las dimensiones salen de la intervención que empieza en 40:05 y la autorización para usarlas está en 45:53). F-017 es el BRIEF-A y solo se usan los nombres de los dominios. Reemplaza al caso-ws-01 provisional (Daniela).",
+  "_esperadoBeta": {
+    "deben": "Antecedentes y experiencia (Contexto); Motivación, habilidades e intereses (Fortaleza); Disparadores de estrés y qué le ayuda; Indicadores observables de estrés; Aspectos sensoriales; Forma de aprender; Comunicación escrita o Estilo de comunicación, como fortaleza o contexto; Cómo prefiere recibir retroalimentación. Dominio de función ejecutiva: Iniciación, ligado a los tickets con poca información.",
+    "pueden": "Ajustes razonables (persiana, llamadas agendadas por chat); Planeación/organización como fortaleza.",
+    "noDeben": "Conflictos, Trabajo en equipo, Trato uno a uno ni Concentración, porque la nota no dice nada de eso. Ninguna señal de riesgo. Nada que trate \"habla poco en reuniones\" como área de apoyo o como riesgo."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "perfil"
+  ],
+  "id": "caso-ws-01",
+  "descripcion": "Renata (Workplace Support). Soporte para clientes en una empresa de software de nómina; lleva tres años ahí. Su líder y Recursos Humanos pidieron el acompañamiento porque los tickets complejos se le quedan abiertos varios días. Es el disparador típico de Workplace Support: un tema de desempeño (F-005, 00:00).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Renata",
+  "nota": "Sesión de evaluación inicial con Renata. Trabaja hace tres años en soporte para clientes de una empresa de software de nómina. Su líder y Recursos Humanos pidieron el acompañamiento porque los tickets complejos se le quedan abiertos varios días. Llegó con una lista impresa de sus tickets de la semana y la fue revisando conmigo punto por punto.\n\nRenata es quien mejor conoce la base de conocimiento del equipo: escribió casi la mitad de los artículos y sus compañeros la buscan cuando un error se repite. Cuando cuenta cómo encontró la causa de una falla en el cálculo de aguinaldos, se emociona y explica cada paso con detalle.\n\nLos tickets sencillos los cierra el mismo día. Con los complejos, sobre todo cuando el cliente manda poca información, abre el ticket, lo lee varias veces y lo deja para después; dice que no sabe qué preguntar primero. Un día que su compañero de turno le sugirió tres preguntas para pedirle datos al cliente, cerró dos tickets que llevaban una semana abiertos.\n\nLas llamadas que le pasan sin aviso la estresan. Cuando le entra una a mitad de un ticket, se le tensan los hombros, después relee el mismo ticket varias veces y tarda en retomarlo. Le ayuda levantarse a caminar unos minutos y que las llamadas se agenden antes por chat.\n\nSu lugar está junto a una ventana grande y por la tarde el reflejo en la pantalla le cansa la vista. Pidió una persiana y todavía no le contestan.\n\nAprende mejor con pasos escritos y capturas de pantalla. Cuando le explican un proceso nuevo solo de palabra, después pide que se lo manden por escrito.\n\nEn las reuniones de equipo habla poco y prefiere mandar sus ideas por chat al terminar. Su líder dice que esas ideas suelen ser las más concretas.\n\nLa retroalimentación la prefiere por escrito y con un ticket de ejemplo, para revisarla con calma.\n\nPara la siguiente sesión acordamos probar una lista de preguntas fijas para los tickets complejos y llevarle a su líder el tema de agendar las llamadas.",
+  "rasgos": [
+    {
+      "rasgo": "antecedentes: Tres años en soporte para clientes",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "activacion_por_desempeno: Su líder y RH piden el acompañamiento por tickets abiertos varios días",
+      "donde": "contexto:Disparador de Workplace Support",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "conoce_la_base: Escribió casi la mitad de los artículos; se emociona al explicar cómo encontró una falla",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "lista_impresa: Llega con la lista de tickets y la revisa punto por punto (como fortaleza)",
+      "donde": "dominioFE:planeacion_organizacion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "arranque_con_poca_info: Abre el ticket complejo, lo relee y lo deja para después; no sabe qué preguntar primero",
+      "donde": "dominioFE:iniciacion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "llamadas_sin_aviso: Las llamadas sin aviso la estresan; le ayuda caminar y que se agenden por chat",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "tension_y_relectura: Se le tensan los hombros, relee el ticket y tarda en retomarlo",
+      "donde": "dimension:indicadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "reflejo_en_pantalla: El reflejo de la ventana le cansa la vista; pidió una persiana",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "pasos_escritos: Aprende con pasos escritos y capturas; pide por escrito lo que le explican de palabra",
+      "donde": "dimension:forma_aprender",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "ideas_por_chat: Habla poco en reuniones y manda sus ideas por chat; su líder las ve concretas",
+      "donde": "dimension:estilo_comunicacion, dimension:comunicacion_escrita",
+      "fuente": "F-005 (40:05; hablar poco no es un problema: 13:12)"
+    },
+    {
+      "rasgo": "retro_por_escrito: Prefiere la retroalimentación por escrito y con un ticket de ejemplo",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "red_de_apoyo: Su líder y un compañero de turno",
+      "donde": "contexto:Red de apoyo",
+      "fuente": "F-005 (00:00)"
+    }
+  ],
+  "variantes": [],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "disparadores_estres",
+      "indicadores_estres",
+      "aspectos_sensoriales",
+      "forma_aprender",
+      "retroalimentacion"
+    ],
+    "dominiosFE": [
+      "iniciacion"
+    ],
+    "senales": [],
+    "senalesProhibidas": [
+      "estres_desregulacion",
+      "intencion_de_renunciar",
+      "cambio_de_vida",
+      "desajuste_con_rol"
+    ],
+    "tipoNoPermitido": [
+      {
+        "dimension": "estilo_comunicacion",
+        "tipo": "area_de_apoyo",
+        "severidad": "critica",
+        "motivo": "Nada que trate \"habla poco en reuniones\" como área de apoyo o como riesgo."
+      },
+      {
+        "dimension": "comunicacion_escrita",
+        "tipo": "area_de_apoyo",
+        "severidad": "critica",
+        "motivo": "Nada que trate \"habla poco en reuniones\" como área de apoyo o como riesgo."
+      }
+    ],
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "abre el ticket, lo lee varias veces y lo deja para después", "dominio": "iniciacion", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "dice que no sabe qué preguntar primero", "dominio": "iniciacion", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "Llegó con una lista impresa de sus tickets de la semana y la fue revisando conmigo punto por punto", "dominio": "planeacion_organizacion", "direccion": "fortaleza", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "En las reuniones de equipo habla poco", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
+  }
+}

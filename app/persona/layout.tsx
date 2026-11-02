@@ -6,11 +6,15 @@
 // R-002.18, R-002.19, R-002.39). Cada página vuelve a llamar la puerta, porque un layout no se
 // vuelve a ejecutar al navegar entre sus páginas; la lectura se hace una vez por petición.
 import { AppHeader, type NavLink } from "@/components/app-header";
+import { RUTA_DESGLOSES, TITULO as TITULO_DESGLOSES } from "@/components/persona/desglose/textos";
 import { SiteFooter } from "@/components/site-footer";
+import { TITULO_GUIA } from "@/lib/guia/schema-cliente";
 import { puertaPersona } from "@/lib/persona/puerta";
 
 const links: NavLink[] = [
   { href: "/persona", label: "Mi perfil" },
+  { href: RUTA_DESGLOSES, label: TITULO_DESGLOSES },
+  { href: "/persona/como-trabajar-conmigo", label: TITULO_GUIA },
   { href: "/preferencias", label: "Preferencias" },
 ];
 

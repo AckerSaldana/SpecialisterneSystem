@@ -1,10 +1,12 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
 //
 // Panel "Antes de esta sesión" (R-004.22), arriba del campo de la nota: lo que el coach aprobó en
-// sesiones anteriores para no perder el hilo. Solo lo ve el coach.
+// sesiones anteriores para no perder el hilo. Solo lo ve el coach. Después de "Señales activas" y aparte de ellas
+// va lo que la persona escribió en "Me atoré aquí" (spec 010, R-010.30).
 import type { DatosSeguimiento, FilaContexto } from "@/lib/followup/lectura";
 import { etiquetaEstadoAvance } from "@/lib/followup/schema";
 import { etiquetaSenal } from "@/lib/profile/schema";
+import { SeccionAtorados } from "../desglose/atorados";
 import { formatFecha } from "../labels";
 import { BotonYaNoAplica } from "./acciones";
 
@@ -33,7 +35,7 @@ function ListaGuardada({ titulo, vacio, filas, render }: { titulo: string; vacio
 }
 
 export function PanelAntesDeSesion({ datos, nombre }: { datos: DatosSeguimiento; nombre: string }) {
-  const { ultimaSesion, guardado, avance, senales } = datos;
+  const { ultimaSesion, guardado, avance, senales, atorados } = datos;
   const hayAvance = avance.some((a) => a.ultimo);
 
   return (
@@ -96,6 +98,8 @@ export function PanelAntesDeSesion({ datos, nombre }: { datos: DatosSeguimiento;
           </ul>
         )}
       </div>
+
+      <SeccionAtorados atorados={atorados} nombre={nombre} />
     </section>
   );
 }

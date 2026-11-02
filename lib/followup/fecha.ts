@@ -4,7 +4,7 @@
 // en Monterrey: "hoy" se calcula en esa zona y la sesión se guarda a las 12:00 de ese día, para que
 // no cambie de día al mostrarse. También corre en el navegador, para el valor inicial del campo.
 
-const ZONA = "America/Monterrey";
+export const ZONA = "America/Monterrey";
 
 // en-CA da el formato AAAA-MM-DD.
 const formatoDia = new Intl.DateTimeFormat("en-CA", { timeZone: ZONA, year: "numeric", month: "2-digit", day: "2-digit" });

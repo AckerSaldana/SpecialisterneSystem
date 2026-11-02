@@ -6,7 +6,7 @@ A coaching platform for Specialisterne LATAM, used in its inclusion projects and
 
 A coach writes session notes in plain language. The AI reads the note and proposes an update to the participant's profile, citing the exact sentence from the note behind every field. The coach approves or rejects each change. The participant sees their profile in plain language and can mark any part with "this doesn't represent me".
 
-The AI structures and proposes. The coach decides. The system does not diagnose, and it does not infer types or levels of anything.
+The AI structures and proposes. The coach decides, with one exception: in "Cómo trabajar conmigo" and in task breakdowns the model writes to the participant without prior coach review, behind mandatory code filters, and the participant decides (constitution C-04, D-070, which David and Rodrigo have not confirmed yet). The system does not diagnose, and it does not infer types or levels of anything.
 
 This is a sprint 1 prototype. All data is synthetic.
 
@@ -72,6 +72,7 @@ Synthetic accounts created by the seed. They exist only in this prototype.
 | Coach | `coach@caja-mex.test` | `caja-mex-coach-demo` |
 | Participant | `persona@caja-mex.test` | `caja-mex-persona-demo` |
 | Participant in onboarding | `persona-alta@caja-mex.test` | None. Sign in at `/invitacion` with the code the coach generates. |
+| Demo participant (Renata) | `renata@caja-mex.test` | `caja-mex-renata-demo`. Created by `npm run seed-demo`. |
 
 ## Onboarding and consent (spec 002)
 
@@ -80,8 +81,8 @@ The full requirements are in `specs/002-alta-y-consentimiento.md`.
 1. **The coach creates the engagement.** Type (`inclusion` or `workplace_support`), the participant's first name and a `.test` email. The app creates the participant's Supabase Auth account, their `app.users` row and the engagement in stage `alta`. One engagement per participant.
 2. **The coach records the diagnosis check.** The coach reviews the document outside the system and looks up the professional license on the SEP site. The app stores only verified yes or no and the license number; the database fills in who and when. The document never enters the app: there is no file field anywhere.
 3. **The coach generates an invitation code.** Single use, 8 characters, expires after 7 days. Supabase Auth stores it as a temporary password, hashed. The app does not store the code in its tables, logs or `audit_log`, and the code never goes in a URL. The coach sees it once and hands it over in person or by phone. A new code replaces the previous one. Once the participant has set a password, no new code can be generated.
-4. **The participant signs in at `/invitacion`.** They create their own password, read the privacy notice (`legal/2026-10-29_aviso-privacidad.md`, version `AVISO_VERSION` in `lib/legal/aviso.ts`) and either give consent or choose "No por ahora". The consent checkbox starts unchecked. The first consent moves the engagement from `alta` to `evaluacion_inicial`.
-5. **The participant can withdraw consent** from `/persona` at any time. Notes, profiles and recommendations are hidden from both the coach and the participant, not deleted, and no new notes or model calls are allowed. Giving consent again shows them again. Six months after a withdrawal the data is deleted with `scripts/purge-retirados.ts`.
+4. **The participant signs in at `/invitacion`.** They create their own password, read the privacy notice (the current one is `legal/2026-11-03_aviso-privacidad.md`, set by `AVISO_VERSION` in `lib/legal/aviso.ts`) and either give consent or choose "No por ahora". The consent checkbox starts unchecked. The first consent moves the engagement from `alta` to `evaluacion_inicial`.
+5. **The participant can withdraw consent** from `/persona` at any time. Notes, profiles and recommendations are hidden from both the coach and the participant, not deleted, and no new notes or model calls are allowed. Giving consent again shows them again. Six months after a withdrawal the data is deleted with `scripts/purge-retirados.ts`, and giving consent again after that brings nothing back.
 
 Consent is stored as events in `app.consent_events`. The current consent is the latest event, and `private.app_has_consent(engagement_id)` is the only check, used by RLS policies and by `exigirConsentimiento` in `lib/consent.ts`. The privacy notice is a draft without legal review.
 
@@ -95,8 +96,8 @@ Consent is stored as events in `app.consent_events`. The current consent is the 
 
 | Command | What it does |
 | --- | --- |
-| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001 to 004 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
-| `npm run purge-retirados` | Runs `scripts/purge-retirados.ts`: for each engagement whose latest consent event is a withdrawal older than 6 months, deletes its sessions, profile events, profile snapshots, participant profiles and recommendations. The engagement and its consent events stay as a record. |
+| `npm run rls-check` | Runs `scripts/rls-check.ts` against `DATABASE_URL`: signs in with each seed user's claims, checks the RLS cases of specs 001 to 005 and 008 to 010 inside transactions that roll back, prints each case with its ID and exits with an error if any fails. |
+| `npm run purge-retirados` | Runs `scripts/purge-retirados.ts`: for each engagement whose latest consent event is a withdrawal older than 6 months, deletes its rows in the 18 tables of `TABLAS_PURGA` (`scripts/tablas-purga.ts`): sessions, profile events and snapshots, participant profiles, plans, follow-up data, executive function corrections and summaries, shared guides, task breakdowns and the templates that came from them. The engagement (with its diagnosis check and license number), its consent events, the `app.users` row and the Auth account stay. |
 | `npm run purge-retirados -- --dry-run` | Lists what would be deleted without deleting anything. |
 | `npm run purge-retirados -- --engagement <id>` | Deletes one engagement's data now, when the participant asks for it. |
 | `npm run purge-retirados -- --test` | Test mode (CA-002.42): runs against a simulated withdrawal date inside a transaction that rolls back, so nothing is deleted. |
@@ -105,14 +106,14 @@ Consent is stored as events in `app.consent_events`. The current consent is the 
 
 The full requirements are in `specs/003-plan-de-acompanamiento.md`.
 
-1. **The AI proposes.** The coach asks for a proposal once a profile is approved and consent is current. The model receives the latest approved profile, with each quote replaced by a short ID (`E-01`, `E-02`…), and only the knowledge cards marked `verificada = true`. It does not receive risk signals, the diagnosis check or the notes. Code, not the model, turns each evidence ID back into its quote and session, and drops items that cite unknown evidence or cards.
+1. **The AI proposes.** The coach asks for a proposal once a profile is approved and consent is current. The model receives the latest approved profile, where each quote travels with a short ID (`E-01`, `E-02`…) and the model cites by ID, and only the knowledge cards marked `verificada = true`. It receives fragments of notes, never full notes, and it does not receive risk signals or the diagnosis check. Code, not the model, turns each evidence ID back into its quote and session, and drops items that cite unknown evidence or cards.
 2. **The coach edits and approves.** The draft can be edited item by item: change the text or the card, remove quotes, remove items, add the coach's own. Item types: goals, team goals, executive function supports, reasonable adjustments, how to give instructions, and what to tell the team lead. Flagged terms block approval until the coach rewrites them.
 3. **Versions keep a trail.** Each approval creates a new version. The model's original proposal is stored and cannot be changed, so every version shows which items came from the AI unchanged, which the coach edited (with the original text) or wrote, which AI items were removed, and which item of the previous version each one continues. Approved and discarded plans are frozen by RLS.
 4. **The participant sees only goals and supports.** On approval the app writes a copy to `app.persona_plans` with the participant-facing text of goals and supports and nothing else: no quotes, cards, executive function names or coach descriptions. The participant cannot read `app.plans`, `app.plan_items` or `app.knowledge_cards`.
-5. **Lead notes and adjustments stay in the app.** Items for the team lead and reasonable adjustments are internal drafts. There is no route, export or view for the employer.
+5. **Lead notes and adjustments stay in the app.** Items for the team lead and reasonable adjustments are internal drafts. There is no route, export or view for the employer. The participant can print and share "Cómo trabajar conmigo" on their own (spec 009).
 6. **Stages move on their own.** Database triggers advance the engagement: the first approved profile moves it to `perfil`, the first plan draft to `plan`, and the first approved plan to `seguimiento`. Stages only move forward, and no user can write `stage`.
 
-Plans, plan items and the participant copy follow the consent block of spec 002: with consent withdrawn, neither the coach nor the participant can read them, and nothing is deleted. The privacy notice moved to version `2026-10-30` (`legal/2026-10-30_aviso-privacidad.md`) to say what this stage sends to the model.
+Plans, plan items and the participant copy follow the consent block of spec 002: with consent withdrawn, neither the coach nor the participant can read them, and nothing is deleted. The privacy notice moved to version `2026-10-30` (`legal/2026-10-30_aviso-privacidad.md`) to say what this stage sends to the model. The current version is `2026-11-03`.
 
 ## Follow-up sessions and signals (spec 004)
 
@@ -124,7 +125,51 @@ The full requirements are in `specs/004-seguimiento-y-senales.md`.
 4. **Signals and strong alerts.** A signal can be closed without touching the profile. The coach can mark a signal as a strong alert. The app notifies nobody: the coach passes it to a person at Specialisterne outside the system and records that. The tool does not handle emergencies.
 5. **Failures do not lose the note.** If the model fails, the note stays saved and the proposal can be requested again without rewriting it. Each model call is audited in its own transaction, and errors store only their class and code.
 
-The participant sees none of this except approved profile changes. The new tables are coach-only under RLS and follow the consent block of spec 002. The privacy notice moved to version `2026-10-31` to say what this stage sends to the model. Nothing goes to the employer.
+Of this stage's material, the participant sees only approved profile changes. The new tables are coach-only under RLS and follow the consent block of spec 002. The privacy notice moved to version `2026-10-31` to say what this stage sends to the model. The current version is `2026-11-03`. Nothing goes to the employer.
+
+## Participant view (spec 005, the part built in this phase)
+
+The full requirements are in `specs/005-vista-persona-y-recursos.md`. Resources, the short module and closing are out of this phase.
+
+1. **The participant reads their profile and plan.** `/persona` shows the approved profile in plain language and the goals and supports of the plan, from `app.persona_profiles` and `app.persona_plans`. No quotes, signals or executive function names.
+2. **"Esto no me representa".** The participant can comment on a profile dimension or a plan item. The comment is stored as an event and the coach reads it and closes it. It does not change the profile or the plan and it never reaches the model. The current privacy notice says so.
+
+## Evaluation and bias (spec 007, the part built in this phase)
+
+The full requirements are in `specs/007-evaluacion-y-sesgo.md`, and how to read each check is in `eval/README.md`.
+
+`npm run eval` runs code checks without network, then synthetic cases against the model, and compares the output with what the case expects. Bias pairs (`eval/sesgo.ts`) run the same case with a change that should not matter, such as gender or how much the person talks, and flag a signal or support area that cites that change. It is a pilot with synthetic data, not a result about real people.
+
+## Executive function trajectory (spec 008)
+
+The full requirements are in `specs/008-trayectoria-fe.md`.
+
+1. **The coach sees behaviors by domain.** `/coach/engagements/[id]/funcion-ejecutiva` lists, for each of the 9 domains, the behaviors from approved events, each with its quote and session. No scores, levels or classification: the AI orders what the coach already wrote.
+2. **The coach can correct.** A line's domain or direction can be changed, with the author recorded and the AI's original kept.
+3. **One-sentence summaries.** The model proposes a sentence per domain from those quotes only, and it stays a proposal until the coach approves it.
+
+The participant sees nothing of this.
+
+## "Cómo trabajar conmigo" (spec 009)
+
+The full requirements are in `specs/009-como-trabajar-conmigo.md`.
+
+1. **The model drafts, and the participant reads first.** The model receives the first name, the engagement type, the profile without quotes, the goals and supports, and the plan items only the coach sees. It does not receive notes, quotes, signals or cards. Nobody reviews its output before the participant does (constitution C-04, D-070), so code filters drop lines with a copied quote, a condition or clinical term, an internal ID or a link.
+2. **The participant decides line by line.** They keep, edit or remove each line and add their own. Text with a blocked term is not saved, and the message names the words they wrote. Marking it ready freezes a version.
+3. **The coach does not see drafts.** The coach sees ready versions and what changed from the AI's proposal, and stops seeing a version the participant withdraws.
+4. **The system sends nothing.** The participant prints or shares the sheet if they want to (D-069). The company never receives the diagnosis or its check.
+
+## Task breakdown (spec 010)
+
+The full requirements are in `specs/010-desglose-de-tareas.md`.
+
+1. **A task becomes steps.** The participant, or their coach, writes a task. The model receives the task, its context and a list of supports with short IDs (`A-01`), built from what the profile says and the plan goals and supports the participant can see. It does not receive notes, quotes, signals or the diagnosis check.
+2. **Nobody reviews the steps first (D-070).** Code checks one action per step, a concrete done criterion, a concrete first step when the profile asks for it, terms, urgency words and things the input never mentioned. With problems there is one retry, only if consent is still current. A support note that does not hold up is removed and the step stays.
+3. **"Me atoré aquí".** The participant can mark a step as stuck, with optional text. The coach reads it literally. It is not evidence and never becomes a signal.
+4. **Repeating a task.** With stuck marks, the model proposes adjustments, and the participant chooses which to use. Nothing changes until they save their choice.
+5. **Templates.** A coach can save a task and its steps as a template for the organization, without the participant's name or the support notes. It is hidden and deleted together with the data of the engagement it came from.
+
+There are no timers or countdowns. Nothing here changes the profile, the plan or the stage.
 
 ## Scripts
 
@@ -137,8 +182,13 @@ The participant sees none of this except approved profile changes. The new table
 | `npm run db:generate` | Generates a SQL migration from `lib/db/schema.ts`. |
 | `npm run db:migrate` | Applies pending migrations to `DATABASE_URL`. |
 | `npm run seed` | Loads `scripts/seed.sql` (synthetic data). |
-| `npm run eval` | Runs the synthetic evaluation cases in `eval/` against the model and compares the output. |
+| `npm run seed-demo -- --hasta <etapa>` | Loads the end-to-end demo case (Renata, synthetic) up to `evaluacion_inicial`, `perfil`, `plan` or `seguimiento`. Runs after `npm run seed`, does not call the model and can be repeated. |
+| `npm run eval` | Runs the synthetic evaluation cases in `eval/` against the model and compares the output. `--offline`, `--repeticiones <n>` and `--reporte` are described in `eval/README.md`. |
 | `npm run followup-check` | Runs `scripts/followup-check.ts`: tests the route logic of spec 004 with a simulated model and synthetic accounts, then deletes what it created. |
+| `npm run persona-check` | Runs `scripts/persona-check.ts`: tests the route logic of spec 005 ("Esto no me representa" and its close by the coach) with synthetic accounts, then deletes what it created. |
+| `npm run trayectoria-check` | Runs `scripts/trayectoria-check.ts`: tests the route logic of spec 008 (corrections and domain summaries) with a simulated model and synthetic accounts, then deletes what it created. |
+| `npm run guia-check` | Runs `scripts/guia-check.ts`: tests the route logic of spec 009 (asking for a draft, line decisions, marking a version as ready, regeneration) with a simulated model and synthetic accounts, then deletes what it created. |
+| `npm run desglose-check` | Runs `scripts/desglose-check.ts`: tests the route logic of spec 010 (asking for a task breakdown, marking steps, archiving, "Ya lo revisé", repeating a task, deciding its adjustments, saving, archiving and applying templates, and what its screens read) with a simulated model and synthetic accounts, then deletes what it created. |
 
 ## Folder map
 
@@ -146,11 +196,13 @@ The participant sees none of this except approved profile changes. The new table
 | --- | --- |
 | `app/` | Routes: pages, layouts, route handlers and Server Actions. `app/preferencias` holds the display preferences screen. |
 | `components/` | Shared UI. `components/ui` holds the shadcn/ui primitives. |
-| `lib/` | Profile schema, database schema and RLS helper, auth, Supabase client, API contracts, engagement config, display preferences. |
+| `lib/` | Profile schema, database schema and RLS helper, auth, Supabase client, API contracts, engagement config, display preferences, the prompt builders and model calls (`lib/ai/`), and each stage's logic (`lib/plan/`, `lib/followup/`, `lib/trayectoria/`, `lib/guia/`, `lib/desglose/`). |
 | `prompts/` | Versioned prompts sent to the model, one file per version. |
 | `eval/` | Synthetic evaluation cases and the comparison script. |
 | `drizzle/` | Generated SQL migrations. |
-| `scripts/` | Seed data and its loader. |
+| `scripts/` | Seed data and its loaders, the purge script and the `*-check` scripts that test RLS and route logic against the database. |
+| `specs/` | The requirements of each stage and the constitution. |
+| `legal/` | The versions of the privacy notice. |
 
 ## Accessibility
 
@@ -203,7 +255,7 @@ These sources informed the design. The team has not yet checked each claim again
 
 The code was written with Claude Code (Opus 5.5). Acker Saldaña's review is still pending. Each AI-assisted file starts with an attribution header that records its review status. Acker Saldaña reviews the code and is responsible for it.
 
-The product itself uses an LLM only to propose structured profile updates from coach notes. A coach approves every change before it reaches a profile.
+The product uses an LLM in six places: profile updates from coach notes, support plans, follow-up proposals, one-sentence executive function summaries, "Cómo trabajar conmigo" drafts, and task breakdowns with their adjustments (`lib/ai/propose-*`). In the first four, a coach approves what the model proposes before it counts. In the last two, the participant receives the output without prior coach review, behind mandatory code filters, and decides what to use (constitution C-04, D-070, which David and Rodrigo have not confirmed yet). Those two never write to the profile or the plan.
 
 ## Libraries
 

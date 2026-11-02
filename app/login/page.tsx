@@ -6,6 +6,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { SiteFooter } from "@/components/site-footer";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -14,9 +15,10 @@ import { Label } from "@/components/ui/label";
 import { login, type LoginState } from "./actions";
 
 const estadoInicial: LoginState = { error: null, email: "" };
+const entrar = conFalloDeRed<LoginState>(login, (_previo, datos) => ({ error: ERROR_SIN_RESPUESTA, email: String(datos.get("email") ?? "").trim() }));
 
 export default function LoginPage() {
-  const [state, formAction, pending] = useActionState(login, estadoInicial);
+  const [state, formAction, pending] = useActionState(entrar, estadoInicial);
   const errorRef = useRef<HTMLDivElement>(null);
 
   // Cada respuesta de la action es un objeto nuevo, así que esto corre en cada intento,

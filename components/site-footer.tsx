@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-auto border-t border-border bg-muted text-foreground">
+    <footer className="mt-auto border-t border-border bg-muted text-foreground print:hidden">
       <div className="mx-auto flex max-w-5xl flex-col gap-2 px-4 py-6">
         <p className="prose-measure">
           ¿Necesitas ayuda? Habla con tu coach o escribe a{" "}

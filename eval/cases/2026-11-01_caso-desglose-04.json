@@ -1,0 +1,221 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso de la etapa desglose (CA-010.19, R-010.19, C-13, tarea 26 de la spec 010), escrito por Claude Code. Persona y datos inventados. Es Irene, de caso-inc-01. Lo de hablar poco va en trato_uno_a_uno con tipo fortaleza, a propósito: R-010.5 deja fuera las dimensiones de tipo contexto, y si el modelo no lo recibe este criterio no puede fallar. El caso de Beta solo trae su nota: Claude Code escribió este perfil y este plan a partir de ella. La tarea no tiene que ver con hablar. salidaFija no sale del modelo. El texto y los patrones son un borrador: los revisa otra persona del equipo.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "desglose"
+  ],
+  "id": "caso-desglose-04",
+  "descripcion": "Irene habla poco en las juntas y la tarea no tiene que ver con hablar: ningún paso ni nota le pide hablar o participar más.",
+  "rasgos": [
+    {
+      "rasgo": "Habla poco en las juntas y lleva sus dudas a su mentor después: es un estilo, no algo que hay que corregir.",
+      "donde": "dimension:trato_uno_a_uno",
+      "fuente": "F-005 (13:12), C-13"
+    },
+    {
+      "rasgo": "Le cuesta dejar lo que estaba haciendo cuando cambia el orden de las pruebas.",
+      "donde": "dimension:ajustes_razonables, dominioFE:flexibilidad",
+      "fuente": "F-017"
+    }
+  ],
+  "basadoEn": "caso-inc-01",
+  "nombrePila": "Irene",
+  "perfil": [
+    {
+      "dimension": "antecedentes_experiencia",
+      "tipo": "contexto",
+      "resumen": "Irene entró hace cinco semanas como analista de pruebas de software.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "trato_uno_a_uno",
+      "tipo": "fortaleza",
+      "resumen": "Irene habla poco en las juntas y lleva sus dudas a su mentor después, en persona.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "motivacion_intereses",
+      "tipo": "fortaleza",
+      "resumen": "A Irene le gusta encontrar errores en los casos de prueba. Dice que es como resolver un acertijo.",
+      "dominiosFe": [
+        "monitoreo_de_tareas"
+      ]
+    },
+    {
+      "dimension": "forma_aprender",
+      "tipo": "contexto",
+      "resumen": "Irene aprende mejor si ve a alguien hacerlo una vez y luego lo hace con una guía escrita al lado.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "ajustes_razonables",
+      "tipo": "area_de_apoyo",
+      "resumen": "Cuando cambia el orden de las pruebas a mitad del día, a Irene le ayuda saber qué hacer con lo que queda a medias.",
+      "dominiosFe": [
+        "flexibilidad"
+      ]
+    }
+  ],
+  "plan": {
+    "items": [
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000401",
+        "tipo": "objetivo",
+        "texto": "Pídele a tu líder un aviso antes de cambiar el orden de las pruebas.",
+        "orden": 0,
+        "itemsAnteriores": []
+      }
+    ]
+  },
+  "pedido": {
+    "quien": "persona",
+    "tarea": "Escribir el reporte de errores de las pruebas de hoy.",
+    "contexto": null
+  },
+  "salidaFija": {
+    "pasos": [
+      {
+        "accion": "Abre la lista de pruebas de hoy.",
+        "criterioTerminado": "La lista de pruebas se ve en tu pantalla.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Copia cada error en una línea del reporte.",
+        "criterioTerminado": "Cada error de hoy tiene su línea en el reporte.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Escribe los pasos para repetir cada error.",
+        "criterioTerminado": "Cada línea del reporte dice cómo repetir el error.",
+        "notaApoyo": "Si te surge una duda, llévala a tu mentor después.",
+        "apoyoRef": "A-01",
+        "minutos": null
+      },
+      {
+        "accion": "Revisa el reporte contra la lista de pruebas.",
+        "criterioTerminado": "Cada prueba de la lista aparece en el reporte o no tuvo errores.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Manda el reporte a quien te lo pidió.",
+        "criterioTerminado": "El reporte aparece como enviado.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      }
+    ]
+  },
+  "esperado": {
+    "desglose": {
+      "exigeInicio": false,
+      "enLaEntrada": [
+        "Irene habla poco en las juntas"
+      ],
+      "patronesProhibidos": [
+        {
+          "patron": "hablar mas",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "habla mas",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "hablar en",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "participa mas",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "participar mas",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "participa en",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "participar en",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "interviene",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "intervenir",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "toma la palabra",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "levanta la mano",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "en voz alta",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "opina en",
+          "motivo": "C-13, R-010.19: hablar poco es un estilo. La tarea no pide hablar.",
+          "severidad": "critica"
+        },
+        {
+          "patron": "junta",
+          "motivo": "La tarea no tiene que ver con juntas: lo lee una persona.",
+          "severidad": "advertencia"
+        },
+        {
+          "patron": "reunion",
+          "motivo": "La tarea no tiene que ver con reuniones: lo lee una persona.",
+          "severidad": "advertencia"
+        },
+        {
+          "patron": "comenta",
+          "motivo": "C-13, R-010.19: puede ser pedirle que hable en grupo. Lo lee una persona.",
+          "severidad": "advertencia"
+        },
+        {
+          "patron": "comparte",
+          "motivo": "C-13, R-010.19: puede ser pedirle que hable en grupo. Lo lee una persona.",
+          "severidad": "advertencia"
+        },
+        {
+          "patron": "presenta",
+          "motivo": "C-13, R-010.19: puede ser pedirle que hable en grupo. Lo lee una persona.",
+          "severidad": "advertencia"
+        }
+      ]
+    }
+  }
+}

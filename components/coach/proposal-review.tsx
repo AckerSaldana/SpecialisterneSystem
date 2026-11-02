@@ -12,7 +12,7 @@ import Link from "next/link";
 import { ApiError, DecisionRequest, DecisionResponse } from "@/lib/api/contracts";
 import { aprobacionVacia, bloqueosDeCambios, SIN_SELECCION, textoBloqueo } from "@/lib/followup/aprobacion";
 import type { VistaPropuesta } from "@/lib/followup/lectura";
-import { etiquetaEstadoAvance } from "@/lib/followup/schema";
+import { etiquetaEstadoAvance, type FollowupUpdate } from "@/lib/followup/schema";
 import { etiquetaDimension, etiquetaDominioFE, etiquetaSenal, type TipoHallazgo } from "@/lib/profile/schema";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Citas } from "./citas";
+import { textoEtiquetaCita } from "./etiqueta-cita";
 import { ETIQUETA_TIPO } from "./labels";
 
 type Props = { vista: VistaPropuesta; nombre: string };
@@ -143,6 +144,10 @@ export function ProposalReview({ vista, nombre }: Props) {
   ];
 
   const hayAvisos = citasQuitadas.length + cambiosRepetidos.length + otrosDescartes.length + todosLosTerminos.length > 0;
+
+  // R-008.10: el coach ve la etiqueta de cada cita de cambios y avance. Aquí no se edita.
+  const conEtiquetas = (evidencia: FollowupUpdate["cambios"][number]["evidencia"], lista: "cambios" | "avance", i: number) =>
+    evidencia.map((e, j) => ({ ...e, detalle: textoEtiquetaCita(e, `${lista}[${i}].evidencia[${j}]`, descartados, nombre) }));
 
   const descripcionItem = (ref: string | null) => indicePlan.find((e) => e.ref === ref)?.descripcion;
 
@@ -372,7 +377,7 @@ export function ProposalReview({ vista, nombre }: Props) {
                           ))}
                         </div>
                       ) : null}
-                      <Citas citas={c.evidencia} />
+                      <Citas citas={conEtiquetas(c.evidencia, "cambios", i)} />
                     </CardContent>
                   </Card>
                 </li>
@@ -480,7 +485,7 @@ export function ProposalReview({ vista, nombre }: Props) {
                         {terminos.length > 0 ? (
                           <p className="text-sm font-medium">Revisa estos términos: {terminos.join(", ")}.</p>
                         ) : null}
-                        <Citas citas={a.evidencia} />
+                        <Citas citas={conEtiquetas(a.evidencia, "avance", i)} />
                       </CardContent>
                     </Card>
                   </li>

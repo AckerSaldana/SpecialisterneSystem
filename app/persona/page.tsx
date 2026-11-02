@@ -1,22 +1,27 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente (cambió el 29 oct, spec 002)
 //
-// /persona: el perfil de la persona en lenguaje claro, sus recursos aprobados y la sección
-// "Tus datos y tu consentimiento" (spec 002, R-002.27).
+// /persona: el perfil de la persona en lenguaje claro, su plan (spec 005, R-005.6), sus recursos
+// aprobados y la sección "Tus datos y tu consentimiento" (spec 002, R-002.27).
 // El acompañamiento sale de la puerta (miAcompanamiento, R-002.40): esta página no selecciona
 // columnas de app.engagements. La puerta también garantiza que hay consentimiento vigente.
 // Privacidad: aquí NO se muestran citas (vienen de las notas privadas del coach),
 // ni señales de riesgo, ni nombres de funciones ejecutivas. La página lee
-// persona_profiles, que solo trae resumen y tipo por dimensión.
+// persona_profiles, que solo trae resumen y tipo por dimensión, persona_plans y sus propios
+// comentarios (R-005.1, R-005.2). No lee plans, plan_items, decided_by ni las columnas resuelto_*.
 import type { Metadata } from "next";
 import { asc, desc, eq, and } from "drizzle-orm";
 import { withRls } from "@/lib/db/rls";
 import { catalogUnits, personaProfiles, recommendations } from "@/lib/db/schema";
+import { estadosDeComentarios, vistaEstado } from "@/lib/persona/comentarios";
+import { dimensionesDeGrupo } from "@/lib/persona/dimensiones";
+import { leerPlanYComentarios } from "@/lib/persona/feedback";
 import { puertaPersona } from "@/lib/persona/puerta";
 import { formatFecha } from "@/components/coach/labels";
 import { ConsentimientoPersona } from "@/components/persona/consentimiento";
-import { DIMENSIONES, etiquetaDimension, type TipoHallazgo } from "@/lib/profile/schema";
+import type { TipoHallazgo } from "@/lib/profile/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { NotMeButton } from "@/components/persona/not-me-button";
+import { TuPlan } from "@/components/persona/tu-plan";
 
 // Encabezados en segunda persona, uno por tipo de hallazgo.
 const GRUPOS: { tipo: TipoHallazgo; titulo: string }[] = [
@@ -69,8 +74,9 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
           .where(and(eq(recommendations.engagementId, engagement.id), eq(recommendations.status, "aprobada")))
           .orderBy(asc(recommendations.createdAt));
 
-        return { snapshot, recursos };
+        return { snapshot, recursos, ...(await leerPlanYComentarios(tx, engagement.id)) };
       });
+  const estados = datos ? estadosDeComentarios(datos.comentarios, datos.plan?.contenido ?? null) : null;
   const vigente = consentimiento?.estado === "vigente" ? consentimiento : null;
 
   return (
@@ -89,7 +95,7 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
       {!datos ? (
         <p className="prose-measure">Todavía no tienes un acompañamiento activo. Tu coach te avisa cuando empiece.</p>
       ) : !datos.snapshot ? (
-        <p className="prose-measure">Tu perfil todavía no está listo. Tu coach lo revisa contigo antes de publicarlo.</p>
+        <p className="prose-measure">Tu perfil todavía no está listo. Tu coach lo prepara contigo.</p>
       ) : (
         <>
           <p className="prose-measure">
@@ -98,8 +104,8 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
 
           {GRUPOS.map((grupo) => {
             const perfil = datos.snapshot!.perfil;
-            // Dimensiones de este tipo, en el orden del catálogo.
-            const dims = DIMENSIONES.filter((d) => perfil.dimensiones[d.id]?.tipo === grupo.tipo);
+            // Dimensiones visibles de este tipo, en el orden de la constante (R-005.4).
+            const dims = dimensionesDeGrupo(perfil, grupo.tipo);
             return (
               <section key={grupo.tipo} aria-labelledby={`grupo-${grupo.tipo}`} className="flex flex-col gap-3">
                 <h2 id={`grupo-${grupo.tipo}`} className="text-xl font-semibold">
@@ -113,11 +119,15 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
                       <li key={d.id}>
                         <Card>
                           <CardHeader>
-                            <h3 className="font-medium">{etiquetaDimension(d.id)}</h3>
+                            <h3 className="font-medium">{d.etiqueta}</h3>
                           </CardHeader>
                           <CardContent className="flex flex-col gap-3">
                             <p className="prose-measure">{perfil.dimensiones[d.id]!.resumen}</p>
-                            <NotMeButton dimension={d.id} sobre={etiquetaDimension(d.id)} />
+                            <NotMeButton
+                              dimension={d.id}
+                              sobre={d.etiqueta}
+                              estado={vistaEstado(estados?.dimensiones[d.id], formatFecha)}
+                            />
                           </CardContent>
                         </Card>
                       </li>
@@ -132,54 +142,57 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
             <h2 id="perfil-general" className="text-xl font-semibold">
               Tu perfil en general
             </h2>
-            <NotMeButton dimension={null} sobre="tu perfil en general" textoBoton="Algo de mi perfil no me representa" />
+            <NotMeButton
+              sobre="tu perfil en general"
+              textoBoton="Algo de mi perfil no me representa"
+              estado={vistaEstado(estados?.perfilGeneral, formatFecha)}
+            />
           </section>
         </>
       )}
 
-      {datos ? (
+      {datos && estados ? <TuPlan plan={datos.plan} estados={estados} /> : null}
+
+      {/* R-005.48: mientras recursos quede fuera de esta fase, sin recursos aprobados no hay sección. */}
+      {datos && datos.recursos.length > 0 ? (
         <section aria-labelledby="recursos" className="flex flex-col gap-3">
           <h2 id="recursos" className="text-xl font-semibold">
             Recursos
           </h2>
-          {datos.recursos.length === 0 ? (
-            <p className="prose-measure">Todavía no hay recursos. Tu coach los agrega cuando tu plan esté listo.</p>
-          ) : (
-            <ul className="flex flex-col gap-3">
-              {datos.recursos.map((r) => (
-                <li key={r.id}>
-                  <Card>
-                    <CardHeader>
-                      <h3 className="font-medium">{r.titulo}</h3>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-2">
-                      <dl className="flex flex-col gap-1 text-sm">
-                        <div className="flex flex-wrap gap-x-2">
-                          <dt className="font-medium">Formato:</dt>
-                          <dd>{FORMATO[r.formato]}</dd>
-                        </div>
-                        <div className="flex flex-wrap gap-x-2">
-                          <dt className="font-medium">Duración:</dt>
-                          <dd>{r.duracionMin} minutos</dd>
-                        </div>
-                        <div className="flex flex-wrap gap-x-2">
-                          <dt className="font-medium">Esfuerzo de concentración:</dt>
-                          <dd>{ESFUERZO[r.cargaCognitiva]}</dd>
-                        </div>
-                      </dl>
-                      {r.url ? (
-                        <p className="text-sm">
-                          <a href={r.url} className="font-medium underline underline-offset-4">
-                            Abrir el recurso<span className="sr-only">: {r.titulo}</span>
-                          </a>
-                        </p>
-                      ) : null}
-                    </CardContent>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          )}
+          <ul className="flex flex-col gap-3">
+            {datos.recursos.map((r) => (
+              <li key={r.id}>
+                <Card>
+                  <CardHeader>
+                    <h3 className="font-medium">{r.titulo}</h3>
+                  </CardHeader>
+                  <CardContent className="flex flex-col gap-2">
+                    <dl className="flex flex-col gap-1 text-sm">
+                      <div className="flex flex-wrap gap-x-2">
+                        <dt className="font-medium">Formato:</dt>
+                        <dd>{FORMATO[r.formato]}</dd>
+                      </div>
+                      <div className="flex flex-wrap gap-x-2">
+                        <dt className="font-medium">Duración:</dt>
+                        <dd>{r.duracionMin} minutos</dd>
+                      </div>
+                      <div className="flex flex-wrap gap-x-2">
+                        <dt className="font-medium">Esfuerzo de concentración:</dt>
+                        <dd>{ESFUERZO[r.cargaCognitiva]}</dd>
+                      </div>
+                    </dl>
+                    {r.url ? (
+                      <p className="text-sm">
+                        <a href={r.url} className="font-medium underline underline-offset-4">
+                          Abrir el recurso<span className="sr-only">: {r.titulo}</span>
+                        </a>
+                      </p>
+                    ) : null}
+                  </CardContent>
+                </Card>
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
 

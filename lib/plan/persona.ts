@@ -23,8 +23,9 @@ const MAX_VERSIONES = 1000;
 
 // Sigue origen_item_id hacia atrás: el ítem anterior, el anterior a ese... hasta uno sin origen.
 // "origenes" es id → origen_item_id de TODOS los ítems de planes aprobados del acompañamiento,
-// incluidos los que no llegaron a persona_plans por no tener texto (R-003.61).
-function cadenaAnterior(origenItemId: string | null, origenes: Map<string, string | null>): string[] {
+// incluidos los que no llegaron a persona_plans por no tener texto (R-003.61). También la usa la
+// regeneración de "Cómo trabajar conmigo" (R-009.48).
+export function cadenaAnterior(origenItemId: string | null, origenes: Map<string, string | null>): string[] {
   const cadena: string[] = [];
   let actual = origenItemId;
   while (actual !== null && !cadena.includes(actual) && cadena.length < MAX_VERSIONES) {

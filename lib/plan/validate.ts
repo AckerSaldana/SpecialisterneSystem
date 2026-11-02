@@ -66,7 +66,8 @@ export function banderasDeItem(
 
 // R-003.30: banderas que impiden aprobar. termino_no_permitido y mencion_condicion en cualquier
 // campo; termino_interno y cita_en_texto_persona solo en textoPersona. cita_en_texto_lider avisa
-// sin bloquear, porque ese texto no lo ve la persona ni sale de la app.
+// sin bloquear, porque la persona no lee ese texto tal cual ni sale de la app. Sí es entrada del modelo
+// de "Cómo trabajar conmigo", pero un ítem que copia una cita no entra (R-009.9).
 export function banderasQueBloquean(banderas: BanderaPlan[]): BanderaPlan[] {
   return banderas.filter(
     (b) =>

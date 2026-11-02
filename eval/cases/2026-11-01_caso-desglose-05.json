@@ -1,0 +1,319 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente",
+  "_nota": "Caso de la etapa desglose (CA-010.44, R-007.73, tarea 26 de la spec 010), escrito por Claude Code. Persona y datos inventados. La misma plantilla con dos perfiles: Renata, del caso-demo-01, y Tomás, de caso-ws-02, con el perfil y el plan de caso-desglose-02. Da falla crítica si pasosDistintos da falso. Que dé verdadero no prueba por sí solo que se usó el perfil: dos corridas del mismo perfil también pueden redactar distinto, por eso el reporte pone el control al lado. La plantilla y salidaFija no salen del modelo: las escribió Claude Code. El texto y los patrones son un borrador: los revisa otra persona del equipo.",
+  "formato": 2,
+  "autor": "Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "desglose"
+  ],
+  "id": "caso-desglose-05",
+  "descripcion": "El coach aplica la misma plantilla a Renata y a Tomás: los pasos tienen que salir distintos, y la diferencia con la plantilla la calcula el código.",
+  "rasgos": [
+    {
+      "rasgo": "Las dos personas tienen el mismo pedido y perfiles distintos: a una le cuesta empezar, al otro los pasos del final y encontrar sus archivos.",
+      "donde": "dominioFE:iniciacion, dominioFE:monitoreo_de_tareas, dominioFE:organizacion_de_materiales",
+      "fuente": "F-017"
+    }
+  ],
+  "basadoEn": "caso-demo-01",
+  "nombrePila": "Renata",
+  "perfil": [
+    {
+      "dimension": "antecedentes_experiencia",
+      "tipo": "contexto",
+      "resumen": "Renata lleva tres años dando soporte a los clientes de una empresa de software.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "motivacion_intereses",
+      "tipo": "fortaleza",
+      "resumen": "Renata conoce a fondo la base de conocimiento de su equipo y sus compañeros acuden a ella. Disfruta explicar cómo encuentra la causa de una falla, y ya propuso dos mejoras a esa base.",
+      "dominiosFe": [
+        "organizacion_de_materiales"
+      ]
+    },
+    {
+      "dimension": "disparadores_estres",
+      "tipo": "contexto",
+      "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse unos minutos y que las llamadas se acuerden antes por escrito.",
+      "dominiosFe": [
+        "control_emocional"
+      ]
+    },
+    {
+      "dimension": "indicadores_estres",
+      "tipo": "contexto",
+      "resumen": "Cuando una llamada la interrumpe, Renata tensa los hombros y le toma tiempo volver a lo que estaba haciendo.",
+      "dominiosFe": [
+        "control_emocional"
+      ]
+    },
+    {
+      "dimension": "aspectos_sensoriales",
+      "tipo": "contexto",
+      "resumen": "Con la persiana que le pusieron, Renata termina la tarde con la vista menos cansada.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "forma_aprender",
+      "tipo": "contexto",
+      "resumen": "Renata aprende mejor cuando tiene los pasos por escrito con imágenes de la pantalla.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "comunicacion_escrita",
+      "tipo": "fortaleza",
+      "resumen": "Renata comparte sus ideas por escrito después de las reuniones, y su líder las considera muy concretas.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "retroalimentacion",
+      "tipo": "contexto",
+      "resumen": "Renata prefiere recibir comentarios por escrito, con un caso real como ejemplo, para leerlos con calma.",
+      "dominiosFe": []
+    },
+    {
+      "dimension": "ajustes_razonables",
+      "tipo": "area_de_apoyo",
+      "resumen": "Cuando un caso llega con pocos datos, a Renata le ayuda tener claro qué preguntarle primero al cliente. Con unas preguntas sugeridas, avanzó casos que llevaban días detenidos.",
+      "dominiosFe": [
+        "iniciacion"
+      ]
+    }
+  ],
+  "plan": {
+    "items": [
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000201",
+        "tipo": "objetivo",
+        "texto": "Usa tu lista de preguntas fijas cuando abras un ticket complejo.",
+        "orden": 0,
+        "itemsAnteriores": []
+      },
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000202",
+        "tipo": "objetivo",
+        "texto": "Pídele a tu líder que las llamadas se acuerden antes por chat.",
+        "orden": 1,
+        "itemsAnteriores": []
+      },
+      {
+        "planItemId": "d0000000-0000-4000-8000-000000000204",
+        "tipo": "apoyo_fe",
+        "texto": "Si una llamada te interrumpe, camina unos minutos antes de volver a tu ticket.",
+        "orden": 3,
+        "itemsAnteriores": []
+      }
+    ]
+  },
+  "pedido": {
+    "quien": "coach",
+    "tarea": "Preparar el reporte semanal de pendientes del equipo.",
+    "contexto": null
+  },
+  "plantilla": {
+    "puesto": "Trabajo administrativo",
+    "titulo": "Reporte semanal de pendientes",
+    "tarea": "Preparar el reporte semanal de pendientes del equipo.",
+    "pasos": [
+      {
+        "accion": "Abre el archivo de pendientes de la semana.",
+        "criterioTerminado": "El archivo se ve completo en tu pantalla."
+      },
+      {
+        "accion": "Marca los pendientes que ya se cerraron.",
+        "criterioTerminado": "Cada pendiente cerrado tiene su marca en el archivo."
+      },
+      {
+        "accion": "Ordena los pendientes abiertos por fecha de entrega.",
+        "criterioTerminado": "El pendiente con la fecha más cercana quedó arriba."
+      },
+      {
+        "accion": "Manda el archivo a tu líder.",
+        "criterioTerminado": "El archivo aparece como enviado en tu correo."
+      }
+    ]
+  },
+  "salidaFija": {
+    "pasos": [
+      {
+        "accion": "Abre el archivo de pendientes de la semana.",
+        "criterioTerminado": "El archivo se ve completo en tu pantalla.",
+        "notaApoyo": "Si un pendiente llegó con pocos datos, apunta primero qué preguntar.",
+        "apoyoRef": "A-03",
+        "minutos": null
+      },
+      {
+        "accion": "Marca los pendientes que ya se cerraron.",
+        "criterioTerminado": "Cada pendiente cerrado tiene su marca en el archivo.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Ordena los pendientes abiertos por fecha de entrega.",
+        "criterioTerminado": "El pendiente con la fecha más cercana quedó arriba.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      },
+      {
+        "accion": "Manda el archivo a tu líder.",
+        "criterioTerminado": "El archivo aparece como enviado en tu correo.",
+        "notaApoyo": null,
+        "apoyoRef": null,
+        "minutos": null
+      }
+    ]
+  },
+  "otroPerfil": {
+    "basadoEn": "caso-ws-02",
+    "nombrePila": "Tomás",
+    "perfil": [
+      {
+        "dimension": "antecedentes_experiencia",
+        "tipo": "contexto",
+        "resumen": "Tomás lleva año y medio como auxiliar contable en cuentas por pagar.",
+        "dominiosFe": []
+      },
+      {
+        "dimension": "motivacion_intereses",
+        "tipo": "fortaleza",
+        "resumen": "Tomás es muy exacto con las cifras y le gusta el trabajo repetitivo con reglas claras.",
+        "dominiosFe": []
+      },
+      {
+        "dimension": "concentracion",
+        "tipo": "area_de_apoyo",
+        "resumen": "Tomás hace las conciliaciones largas de corrido, y a veces se le pasan los pasos del final. Le ayuda una lista de revisión.",
+        "dominiosFe": [
+          "monitoreo_de_tareas"
+        ]
+      },
+      {
+        "dimension": "ajustes_razonables",
+        "tipo": "area_de_apoyo",
+        "resumen": "Tomás guarda sus archivos en el escritorio y tarda en encontrarlos. Va a probar una carpeta por mes.",
+        "dominiosFe": [
+          "organizacion_de_materiales"
+        ]
+      },
+      {
+        "dimension": "disparadores_estres",
+        "tipo": "contexto",
+        "resumen": "A Tomás lo estresan los cambios de fecha del cierre sin aviso. Le ayuda tener el calendario impreso.",
+        "dominiosFe": []
+      },
+      {
+        "dimension": "estilo_comunicacion",
+        "tipo": "contexto",
+        "resumen": "Tomás habla con soltura en las juntas y explica sus ideas con ejemplos.",
+        "dominiosFe": []
+      }
+    ],
+    "plan": {
+      "items": [
+        {
+          "planItemId": "d0000000-0000-4000-8000-000000000301",
+          "tipo": "objetivo",
+          "texto": "Usa tu lista de revisión al final de cada conciliación.",
+          "orden": 0,
+          "itemsAnteriores": []
+        },
+        {
+          "planItemId": "d0000000-0000-4000-8000-000000000302",
+          "tipo": "objetivo",
+          "texto": "Prueba una carpeta por mes para tus archivos.",
+          "orden": 1,
+          "itemsAnteriores": []
+        }
+      ]
+    },
+    "exigeInicio": false,
+    "enLaEntrada": [
+      "se le pasan los pasos del final"
+    ],
+    "salidaFija": {
+      "pasos": [
+        {
+          "accion": "Busca la carpeta del mes en tu computadora.",
+          "criterioTerminado": "La carpeta del mes está abierta en tu pantalla.",
+          "notaApoyo": "Si todavía no la tienes, crea una carpeta con el nombre del mes.",
+          "apoyoRef": "A-03",
+          "minutos": null
+        },
+        {
+          "accion": "Abre el archivo de pendientes de la semana.",
+          "criterioTerminado": "El archivo se ve completo en tu pantalla.",
+          "notaApoyo": null,
+          "apoyoRef": null,
+          "minutos": null
+        },
+        {
+          "accion": "Marca los pendientes que ya se cerraron.",
+          "criterioTerminado": "Cada pendiente cerrado tiene su marca en el archivo.",
+          "notaApoyo": null,
+          "apoyoRef": null,
+          "minutos": null
+        },
+        {
+          "accion": "Ordena los pendientes abiertos por fecha de entrega.",
+          "criterioTerminado": "El pendiente con la fecha más cercana quedó arriba.",
+          "notaApoyo": null,
+          "apoyoRef": null,
+          "minutos": null
+        },
+        {
+          "accion": "Usa tu lista de revisión con el reporte completo.",
+          "criterioTerminado": "Cada punto de tu lista de revisión tiene su marca.",
+          "notaApoyo": "Es la lista que acordaste usar al final.",
+          "apoyoRef": "A-04",
+          "minutos": null
+        },
+        {
+          "accion": "Manda el archivo a tu líder.",
+          "criterioTerminado": "El archivo aparece como enviado en tu correo.",
+          "notaApoyo": null,
+          "apoyoRef": null,
+          "minutos": null
+        }
+      ]
+    }
+  },
+  "esperado": {
+    "desglose": {
+      "exigeInicio": true,
+      "enLaEntrada": [
+        "a Renata le ayuda tener claro qué preguntarle primero",
+        "Abre el archivo de pendientes de la semana."
+      ],
+      "patronesProhibidos": [
+        {
+          "patron": "excel",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "jira",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "nomina",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        },
+        {
+          "patron": "farmacia",
+          "motivo": "Información ajena: no está en lo que recibió el modelo (R-010.17, R-010.53).",
+          "severidad": "critica"
+        }
+      ]
+    }
+  }
+}

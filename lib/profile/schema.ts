@@ -73,6 +73,19 @@ export const DominioFE = z.enum(
 );
 export type DominioFE = z.infer<typeof DominioFE>;
 
+// Spec 008 (R-008.1): dirección de una cita. Describe la conducta citada, nunca a la persona.
+// "cambio" no quiere decir mejora ni retroceso: solo dice que es distinto a una observación previa.
+export const DIRECCIONES_FE = [
+  { id: "apoyo", etiqueta: "Apoyo necesario" },
+  { id: "fortaleza", etiqueta: "Fortaleza" },
+  { id: "cambio", etiqueta: "Cambio" },
+] as const;
+
+export const DireccionFE = z.enum(
+  DIRECCIONES_FE.map((d) => d.id) as [(typeof DIRECCIONES_FE)[number]["id"], ...(typeof DIRECCIONES_FE)[number]["id"][]],
+);
+export type DireccionFE = z.infer<typeof DireccionFE>;
+
 // Riesgos que se registran en el seguimiento de coaching (CONTEXTO §5).
 export const SENALES = [
   { id: "estres_desregulacion", etiqueta: "Estrés o desregulación" },
@@ -105,6 +118,22 @@ export type EvidenciaPropuesta = z.infer<typeof EvidenciaPropuesta>;
 
 export const ListaEvidencia = z.array(EvidenciaPropuesta).min(1).max(5);
 
+// Spec 008 (R-008.1, R-008.4): el modelo siempre manda las tres llaves, nulas si no aplican. anteriorRef
+// no lleva patrón: un ID malo lo descarta limpiarEtiquetas, no tumba la respuesta.
+export const EvidenciaEtiquetada = EvidenciaPropuesta.extend({
+  dominio: DominioFE.nullable().describe("Id del dominio que corresponde con claridad a la conducta de esta cita, o null."),
+  direccion: DireccionFE.nullable().describe("Dirección de la conducta citada, o null. Con dominio null, va null."),
+  anteriorRef: z.string().nullable().describe("Solo con direccion = cambio: ID corto O-nn de una observación previa del mismo dominio. Si no, null."),
+});
+export type EvidenciaEtiquetada = z.infer<typeof EvidenciaEtiquetada>;
+
+// Lo que recibe el modelo: toda cita lleva etiquetas.
+export const ListaEvidenciaEtiquetada = z.array(EvidenciaEtiquetada).min(1).max(5);
+
+// Lo que se lee de un payload (R-008.5): los eventos anteriores a 008 solo traen "cita". Los dos
+// objetos son estrictos, así que una cita con otra llave, como "puntaje", falla.
+export const ListaEvidenciaFE = z.array(z.union([EvidenciaEtiquetada, EvidenciaPropuesta])).min(1).max(5);
+
 export const CambioDimension = z.strictObject({
   dimension: DimensionId,
   resumen: z
@@ -116,7 +145,7 @@ export const CambioDimension = z.strictObject({
     ),
   tipo: TipoHallazgo,
   dominiosFE: z.array(DominioFE).max(3),
-  evidencia: ListaEvidencia,
+  evidencia: ListaEvidenciaFE,
 });
 export type CambioDimension = z.infer<typeof CambioDimension>;
 
@@ -142,6 +171,13 @@ export const ProfileUpdate = z.strictObject({
   preguntasParaSiguienteSesion: z.array(z.string().min(1).max(300)).max(5),
 });
 export type ProfileUpdate = z.infer<typeof ProfileUpdate>;
+
+// Lo que le pide lib/ai al modelo y lo que valida lib/sessions/proponer.ts (spec 008). ProfileUpdate
+// es el esquema de lectura y también aceptaría una cita sin etiquetas (R-008.4).
+export const ProfileUpdateEtiquetado = ProfileUpdate.extend({
+  cambios: z.array(CambioDimension.extend({ evidencia: ListaEvidenciaEtiquetada })).max(15),
+});
+export type ProfileUpdateEtiquetado = z.infer<typeof ProfileUpdateEtiquetado>;
 
 // ---------------------------------------------------------------------------
 // Lo que se guarda: perfil consolidado (profile_snapshots.perfil)
@@ -212,6 +248,8 @@ export const Descartado = z.strictObject({
   cita: z.string(),
   // Spec 004, con ruta del elemento y cita "": "item_no_existe", "avance_duplicado",
   // "ficha_no_valida" y "siguiente_paso_sin_destino".
+  // Spec 008 (R-008.7, R-008.8), con la cita: "etiqueta_sin_anterior" y "etiqueta_participacion". Su
+  // ruta es sobre la propuesta LIMPIA, porque es la que usa evidenciaId; la cita no se quita.
   motivo: z.enum([
     "cita_no_encontrada",
     "dimension_duplicada",
@@ -219,6 +257,8 @@ export const Descartado = z.strictObject({
     "avance_duplicado",
     "ficha_no_valida",
     "siguiente_paso_sin_destino",
+    "etiqueta_sin_anterior",
+    "etiqueta_participacion",
   ]),
 });
 export type Descartado = z.infer<typeof Descartado>;
@@ -237,24 +277,46 @@ export const Bandera = z.strictObject({
 });
 export type Bandera = z.infer<typeof Bandera>;
 
+// Spec 008 (R-008.6): O-nn → línea. El modelo no ve ni escribe el lineaId. "cita" es el texto que
+// recibió: la revisión de cambios[].resumen la lee de aquí, sin recalcular líneas.
+export const EntradaIndiceObservacion = z.strictObject({
+  ref: z.string(),
+  lineaId: z.string(),
+  dominio: DominioFE,
+  cita: z.string(),
+});
+export type EntradaIndiceObservacion = z.infer<typeof EntradaIndiceObservacion>;
+
 export const PayloadPropuestaIA = z.strictObject({
   tipo: z.literal("propuesta_ia"),
   update: ProfileUpdate,
   descartados: z.array(Descartado),
   banderas: z.array(Bandera),
+  // Los eventos anteriores a 008 no lo traen (R-008.5).
+  indiceObservaciones: z.array(EntradaIndiceObservacion).default([]),
 });
 
-// Botón "esto no me representa" del lado persona.
+// Spec 005 (R-005.33): sobre qué parte es un "no me representa". "cierre" lo usa 006; en esta fase
+// solo existe en el esquema (R-005.47).
+export const OrigenComentario = z.enum(["perfil", "plan", "cierre"]);
+export type OrigenComentario = z.infer<typeof OrigenComentario>;
+
+// Botón "esto no me representa" del lado persona. Un evento guardado sin "origen" cuenta como "perfil".
+// planItemId y planVersion solo van con origen "plan"; planVersion lo pone la ruta (R-005.33).
 export const PayloadNoMeRepresenta = z.strictObject({
   tipo: z.literal("no_me_representa"),
   dimension: DimensionId.nullable(),
   comentario: z.string().max(2000),
+  origen: OrigenComentario.optional(),
+  planItemId: z.uuid().nullable().optional(),
+  planVersion: z.int().optional(),
 });
+export type PayloadNoMeRepresenta = z.infer<typeof PayloadNoMeRepresenta>;
 
 // Cada lector parsea con el esquema de su tipo; aquí solo se junta el tipo de TypeScript.
 export type ProfileEventPayload =
   | z.infer<typeof PayloadPropuestaIA>
-  | z.infer<typeof PayloadNoMeRepresenta>
+  | PayloadNoMeRepresenta
   | PayloadSeguimientoIA;
 
 // Lo que el coach aprobó de una propuesta (profile_events.approved_payload).
@@ -288,4 +350,5 @@ export type AprobacionEntrada = z.input<typeof Aprobacion>;
 
 export const etiquetaDimension = (id: DimensionId) => DIMENSIONES.find((d) => d.id === id)!.etiqueta;
 export const etiquetaDominioFE = (id: DominioFE) => DOMINIOS_FE.find((d) => d.id === id)!.etiqueta;
+export const etiquetaDireccionFE = (id: DireccionFE) => DIRECCIONES_FE.find((d) => d.id === id)!.etiqueta;
 export const etiquetaSenal = (id: TipoSenal) => SENALES.find((s) => s.id === id)!.etiqueta;

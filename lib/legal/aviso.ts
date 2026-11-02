@@ -7,7 +7,7 @@ import "server-only";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-export const AVISO_VERSION = "2026-10-31";
+export const AVISO_VERSION = "2026-11-03";
 const ARCHIVO = `${AVISO_VERSION}_aviso-privacidad.md`;
 
 // Bloques simples para mostrar el aviso sin una librería de markdown: el archivo solo usa

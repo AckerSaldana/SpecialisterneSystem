@@ -2,9 +2,10 @@
 //
 // Historial de eventos del perfil (profile_events), del más reciente al más antiguo.
 // Cada estado se escribe en texto. Los "no me representa" de la persona muestran
-// su comentario y la dimensión a la que se refieren. Las propuestas de seguimiento dicen también
+// su comentario y sobre qué parte son (spec 005, R-005.25). Las propuestas de seguimiento dicen también
 // el avance, el contexto y el siguiente paso, con el tipo y la fecha de la sesión (spec 004).
-import { Aprobacion, etiquetaDimension, type AprobacionEntrada, type Descartado, type ProfileEventPayload } from "@/lib/profile/schema";
+import { estadoComentarioCoach, ETIQUETA_ORIGEN_COMENTARIO, origenDe, sobreComentario, type VersionPlanPersona } from "@/lib/persona/comentarios";
+import { Aprobacion, type AprobacionEntrada, type Descartado, type ProfileEventPayload } from "@/lib/profile/schema";
 import type { TipoSesion } from "@/lib/followup/schema";
 import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
@@ -29,12 +30,6 @@ const ESTADO_PROPUESTA = {
   proposed: "Pendiente de revisión",
   approved: "Aprobada",
   rejected: "Rechazada",
-} as const;
-
-const ESTADO_COMENTARIO = {
-  proposed: "Sin revisar",
-  approved: "Revisado, con cambios al perfil",
-  rejected: "Revisado, sin cambios al perfil",
 } as const;
 
 function plural(n: number, uno: string, varios: string) {
@@ -67,7 +62,14 @@ function Dato({ termino, children }: { termino: string; children: ReactNode }) {
   );
 }
 
-export function EventTimeline({ eventos, nombre }: { eventos: EventoVista[]; nombre: string }) {
+type Props = {
+  eventos: EventoVista[];
+  nombre: string;
+  // Lo que vio la persona en cada versión del plan, para la línea "Sobre".
+  planesPersona: VersionPlanPersona[];
+};
+
+export function EventTimeline({ eventos, nombre, planesPersona }: Props) {
   if (eventos.length === 0) {
     return <p className="text-sm text-muted-foreground">Todavía no hay eventos.</p>;
   }
@@ -167,12 +169,15 @@ export function EventTimeline({ eventos, nombre }: { eventos: EventoVista[]; nom
                   <h3 className="flex flex-wrap items-center gap-2 font-medium">
                     La persona dijo: “Esto no me representa”
                     <Badge variant="outline" className="h-auto">
-                      Estado: {ESTADO_COMENTARIO[e.status]}
+                      {ETIQUETA_ORIGEN_COMENTARIO[origenDe(p)]}
+                    </Badge>
+                    <Badge variant="outline" className="h-auto">
+                      Estado: {estadoComentarioCoach(e.status, origenDe(p))}
                     </Badge>
                   </h3>
                   <dl className="flex flex-col gap-1">
                     <Dato termino="Fecha">{formatFecha(e.createdAt)}</Dato>
-                    <Dato termino="Sobre">{p.dimension ? etiquetaDimension(p.dimension) : "El perfil en general"}</Dato>
+                    <Dato termino="Sobre">{sobreComentario(p, planesPersona)}</Dato>
                     {e.creadoPor ? <Dato termino="Lo envió">{e.creadoPor}</Dato> : null}
                   </dl>
                   {p.comentario ? (

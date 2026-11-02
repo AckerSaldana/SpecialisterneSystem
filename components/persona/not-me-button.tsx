@@ -1,13 +1,21 @@
 // AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
 //
-// Botón "Esto no me representa". Abre un Dialog con un comentario opcional y lo
-// envía a POST /api/persona/feedback. El resultado se muestra en la misma tarjeta.
-// dimension = null significa "el perfil en general".
+// Botón "Esto no me representa". Abre un Dialog con un comentario opcional y lo envía a
+// POST /api/persona/feedback. Sirve para el perfil y para el plan (spec 005, R-005.22, R-005.32).
+// dimension = null y planItemId = null significan "en general".
+// El estado guardado llega de la página (R-005.24, R-005.28): mientras está pendiente no hay botón, y
+// ya cerrado se muestra el resultado y el botón vuelve a estar disponible. Al enviar, la página se
+// refresca; mientras tanto se muestra lo mismo que va a llegar del servidor.
 "use client";
 
 import { useRef, useState } from "react";
-import { ApiError, FeedbackRequest, FeedbackResponse } from "@/lib/api/contracts";
+import { useRouter } from "next/navigation";
+// Solo contracts-cliente y texto-comentario: este archivo llega al navegador de la persona y no puede
+// traer los valores de lib/profile/schema (C-09, R-005.2). DimensionId entra solo como tipo.
+import { ApiError, FeedbackCuerpo, FeedbackResponse } from "@/lib/api/contracts-cliente";
+import { textoEstado, textoSobre, type VistaEstado } from "@/lib/persona/texto-comentario";
 import type { DimensionId } from "@/lib/profile/schema";
+import { formatFecha } from "@/components/coach/labels";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,28 +32,46 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 type Props = {
-  dimension: DimensionId | null;
-  // Nombre de la parte del perfil, para que el Dialog diga de qué se trata.
+  origen?: "perfil" | "plan";
+  dimension?: DimensionId | null;
+  planItemId?: string | null;
+  // Nombre de la parte, para que el Dialog diga de qué se trata.
   sobre: string;
   textoBoton?: string;
+  estado?: VistaEstado | null;
 };
 
-export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me representa" }: Props) {
+export function NotMeButton({
+  origen = "perfil",
+  dimension = null,
+  planItemId = null,
+  sobre,
+  textoBoton = "Esto no me representa",
+  estado = null,
+}: Props) {
+  const router = useRouter();
   const [abierto, setAbierto] = useState(false);
   const [comentario, setComentario] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [enviado, setEnviado] = useState(false);
+  // Cuándo se envió, hasta que el refresco traiga el estado guardado.
+  const [enviadoEn, setEnviadoEn] = useState<Date | null>(null);
   const mensajeRef = useRef<HTMLParagraphElement>(null);
+  const moverFoco = useRef(false);
+
+  if (enviadoEn && estado?.pendiente) setEnviadoEn(null);
+
+  const pendiente = enviadoEn !== null || estado?.pendiente === true;
+  const mensaje = enviadoEn ? textoEstado({ origen, resultado: "pendiente" }, formatFecha(enviadoEn)) : (estado?.texto ?? null);
 
   // Un id distinto por botón, porque hay varios en la misma página.
-  const idCampo = `que-cambiarias-${dimension ?? "general"}`;
+  const idCampo = `que-cambiarias-${origen}-${planItemId ?? dimension ?? "general"}`;
 
   async function enviar() {
     setEnviando(true);
     setError(null);
     try {
-      const body = FeedbackRequest.parse({ dimension, comentario });
+      const body = FeedbackCuerpo.parse({ dimension, comentario, origen, ...(origen === "plan" ? { planItemId } : {}) });
       const res = await fetch("/api/persona/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -58,8 +84,11 @@ export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me represe
         return;
       }
       FeedbackResponse.parse(json);
-      setEnviado(true);
+      moverFoco.current = true;
+      setEnviadoEn(new Date());
+      setComentario("");
       setAbierto(false);
+      router.refresh();
     } catch {
       setError("No se pudo enviar. Revisa tu conexión e intenta de nuevo.");
     } finally {
@@ -69,6 +98,12 @@ export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me represe
 
   return (
     <div className="flex flex-col gap-2">
+      {mensaje ? (
+        // tabIndex -1 para poder mover el foco aquí al cerrar el Dialog.
+        <p ref={mensajeRef} tabIndex={-1} role="status" className="prose-measure text-sm font-medium outline-none">
+          {mensaje}
+        </p>
+      ) : null}
       {/* El Dialog sigue montado después de enviar, para poder mover el foco al mensaje al cerrarse. */}
       <Dialog
         open={abierto}
@@ -76,12 +111,7 @@ export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me represe
           if (!enviando) setAbierto(v);
         }}
       >
-        {enviado ? (
-          // tabIndex -1 para poder mover el foco aquí al cerrar el Dialog.
-          <p ref={mensajeRef} tabIndex={-1} role="status" className="text-sm font-medium outline-none">
-            Tu coach lo va a revisar contigo.
-          </p>
-        ) : (
+        {pendiente ? null : (
           <DialogTrigger asChild>
             <Button variant="outline" className="w-fit">
               {textoBoton}
@@ -92,7 +122,8 @@ export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me represe
           showCloseButton={false}
           onCloseAutoFocus={(e) => {
             // Si ya se envió, el botón ya no existe: el foco va al mensaje.
-            if (enviado) {
+            if (moverFoco.current) {
+              moverFoco.current = false;
               e.preventDefault();
               mensajeRef.current?.focus();
             }
@@ -100,7 +131,7 @@ export function NotMeButton({ dimension, sobre, textoBoton = "Esto no me represe
         >
           <DialogHeader>
             <DialogTitle>Esto no me representa</DialogTitle>
-            <DialogDescription>Sobre: {sobre}. Tu coach recibe tu mensaje y lo habla contigo.</DialogDescription>
+            <DialogDescription>{textoSobre(sobre)}</DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <Label htmlFor={idCampo}>¿Qué cambiarías? (opcional)</Label>

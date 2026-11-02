@@ -2,14 +2,19 @@
 //
 // Secciones de seguimiento de la página del acompañamiento (spec 004): propuestas sin revisar,
 // sesiones sin propuesta, acciones sobre una señal, alertas fuertes e historiales. Todo es del coach.
+// De la spec 005: los comentarios de la persona sin revisar (R-005.25).
 import Link from "next/link";
 import { RESPONSABLE_ALERTAS } from "@/lib/followup/aprobacion";
 import type { DatosSeguimiento, FilaAlerta } from "@/lib/followup/lectura";
 import { etiquetaEstadoAvance } from "@/lib/followup/schema";
-import { etiquetaSenal, type TipoSenal } from "@/lib/profile/schema";
+import { opcionesDeCierre, type DatosCierre, type OpcionCierre } from "@/lib/persona/cierre-comentario";
+import { ETIQUETA_ORIGEN_COMENTARIO, origenDe, sobreComentario, textoAvisoComentarios } from "@/lib/persona/comentarios";
+import { etiquetaSenal, type ProfileEventPayload, type TipoSenal } from "@/lib/profile/schema";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatFecha, textoTipoSesion } from "../labels";
 import { AccionConDialogo, BotonPedirPropuesta } from "./acciones";
+import { CerrarComentario } from "./cerrar-comentario";
 
 const ID_SENALES = "senales-activas";
 const ID_ALERTAS = "alertas-fuertes";
@@ -39,6 +44,77 @@ export function PropuestasPendientes({ datos, engagementId }: { datos: DatosSegu
             <BotonPedirPropuesta engagementId={engagementId} sessionId={s.id} />
           </li>
         ))}
+      </ul>
+    </section>
+  );
+}
+
+function textoOpcion(o: OpcionCierre): string {
+  if (o.tipo === "plan") return `Versión ${o.version}, aprobada el ${formatFecha(o.fecha)}`;
+  return `Propuesta aprobada el ${formatFecha(o.fecha)}, con ${o.cambios} ${o.cambios === 1 ? "cambio" : "cambios"} al perfil`;
+}
+
+type EventoComentario = { id: string; status: "proposed" | "approved" | "rejected"; payload: ProfileEventPayload; createdAt: Date };
+
+// R-005.25, R-005.26 y R-005.34. idFoco: el título que recibe el foco al cerrar, porque el botón desaparece.
+export function ComentariosSinRevisar({
+  eventos,
+  cierre,
+  nombre,
+  idFoco,
+}: {
+  eventos: EventoComentario[];
+  cierre: DatosCierre;
+  nombre: string;
+  idFoco: string;
+}) {
+  const pendientes = eventos.flatMap((e) =>
+    e.status === "proposed" && e.payload.tipo === "no_me_representa" ? [{ ...e, payload: e.payload }] : [],
+  );
+  if (pendientes.length === 0) return null;
+  return (
+    <section aria-labelledby="comentarios-sin-revisar" className="flex flex-col gap-3">
+      <h2 id="comentarios-sin-revisar" className="text-xl font-semibold">
+        {textoAvisoComentarios(nombre, pendientes.length)}
+      </h2>
+      <ul className="flex flex-col gap-3">
+        {pendientes.map((c) => {
+          const origen = origenDe(c.payload);
+          return (
+            <li key={c.id} className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
+              <p>
+                <Badge variant="outline" className="h-auto">
+                  {ETIQUETA_ORIGEN_COMENTARIO[origen]}
+                </Badge>
+              </p>
+              <p className="prose-measure">
+                <span className="font-medium">Sobre:</span> {sobreComentario(c.payload, cierre.planesPersona)}
+              </p>
+              <p>
+                <span className="font-medium">Fecha:</span> {formatFecha(c.createdAt)}
+              </p>
+              {c.payload.comentario ? (
+                <blockquote className="prose-measure border-l-4 border-border pl-3">“{c.payload.comentario}”</blockquote>
+              ) : (
+                <p className="text-muted-foreground">No dejó comentario.</p>
+              )}
+              {/* R-005.47: el cierre de estos comentarios se construye con 006. */}
+              {origen === "cierre" ? (
+                <p>Este comentario se revisa desde el resumen de cierre.</p>
+              ) : (
+                <div>
+                  <CerrarComentario
+                    eventId={c.id}
+                    nombre={nombre}
+                    origen={origen}
+                    opciones={opcionesDeCierre(cierre, origen, c.createdAt).map((o) => ({ id: o.id, texto: textoOpcion(o) }))}
+                    idFoco={idFoco}
+                  />
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ul>
     </section>
   );

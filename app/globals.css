@@ -403,3 +403,91 @@
     translate: none;
   }
 }
+
+/* ------------------------------------------------------------------------ */
+/* Impresión: la hoja "Cómo trabajar conmigo" (spec 009, R-009.43)           */
+/* ------------------------------------------------------------------------ */
+
+/*
+  En papel no cuentan las preferencias (modo, fuente, tamaño): negro sobre blanco, en carta.
+  Con !important porque atributosHtml (lib/preferences.ts) pone sus variables en el style de <html>,
+  y un style inline gana sobre cualquier regla sin !important.
+
+  Los tamaños son para que 20 líneas de 160 caracteres y las 5 secciones quepan en una página (R-009.5,
+  CA-009.37): cada línea ocupa hasta 2 renglones de 13 pt, unos 690 pt en total, sobre 720 pt útiles.
+*/
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  html {
+    --background: #ffffff !important;
+    --foreground: #000000 !important;
+    --card: #ffffff !important;
+    --card-foreground: #000000 !important;
+    --muted: #ffffff !important;
+    --muted-foreground: #000000 !important;
+    --accent: #ffffff !important;
+    --accent-foreground: #000000 !important;
+    --border: #000000 !important;
+    --link: #000000 !important;
+    --text-size: 10.5pt !important;
+    --letter-spacing: 0em !important;
+    --line-height: 1.25 !important;
+    --measure: none !important;
+    --app-font: var(--font-atkinson), Arial, sans-serif !important;
+    height: auto !important;
+  }
+
+  body {
+    display: block !important;
+    min-height: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  main {
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Encabezado y pie llevan print:hidden. Estos no son parte de una página en particular. */
+  .skip-link,
+  [data-slot="button"] {
+    display: none !important;
+  }
+
+  .hoja-lider {
+    gap: 6pt !important;
+  }
+
+  .hoja-titulo {
+    font-size: 18pt !important;
+    line-height: 1.2 !important;
+  }
+
+  .hoja-nombre {
+    font-size: 12pt !important;
+  }
+
+  .hoja-seccion {
+    gap: 2pt !important;
+    break-inside: avoid;
+  }
+
+  .hoja-seccion-titulo {
+    font-size: 11pt !important;
+  }
+
+  .hoja-lineas {
+    gap: 0 !important;
+    padding-left: 12pt !important;
+  }
+
+  .hoja-lineas li {
+    break-inside: avoid;
+  }
+}

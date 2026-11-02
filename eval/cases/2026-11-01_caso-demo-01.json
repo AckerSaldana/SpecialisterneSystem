@@ -1,0 +1,282 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · notas: David Betancourth con Claude (sesión de David); propuestas fijas, etiquetas, plan y fechas: Claude Code (Opus 5.5)",
+  "_nota": "Caso de demo de punta a punta (R-007.69). Persona y datos inventados. Las dos notas son las de Renata del documento de Beta, tal cual. Las propuestas fijas, el plan y las fechas de las sesiones no están en ese documento: los escribió Claude Code a partir de lo que Beta espera en cada etapa. No salen del modelo. El seed los guarda con prompt_version seed-demo (R-007.60). Sin recursos ni módulo (D-073). Las etiquetas de cada evidencia las escribió Claude Code (tarea 10 de la spec 007, tarea 21 de la spec 008): son un borrador y las revisa Acker. El anteriorRef de la línea con cambio es el O-nn que calcula el código con las sesiones anteriores (R-007.69).",
+  "formato": 2,
+  "autor": "Notas: David Betancourth con Claude. Propuestas fijas, etiquetas y plan: Claude Code (Opus 5.5)",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "demo"
+  ],
+  "id": "caso-demo-01",
+  "descripcion": "Renata (Workplace Support), del alta a la vista de la persona: evaluación inicial, perfil, plan y una sesión de seguimiento.",
+  "basadoEn": "caso-ws-01",
+  "engagementType": "workplace_support",
+  "nombrePila": "Renata",
+  "sesiones": [
+    {
+      "id": "d0000000-0000-4000-8000-000000000101",
+      "tipo": "persona",
+      "fecha": "2026-10-13",
+      "nota": "Sesión de evaluación inicial con Renata. Trabaja hace tres años en soporte para clientes de una empresa de software de nómina. Su líder y Recursos Humanos pidieron el acompañamiento porque los tickets complejos se le quedan abiertos varios días. Llegó con una lista impresa de sus tickets de la semana y la fue revisando conmigo punto por punto.\n\nRenata es quien mejor conoce la base de conocimiento del equipo: escribió casi la mitad de los artículos y sus compañeros la buscan cuando un error se repite. Cuando cuenta cómo encontró la causa de una falla en el cálculo de aguinaldos, se emociona y explica cada paso con detalle.\n\nLos tickets sencillos los cierra el mismo día. Con los complejos, sobre todo cuando el cliente manda poca información, abre el ticket, lo lee varias veces y lo deja para después; dice que no sabe qué preguntar primero. Un día que su compañero de turno le sugirió tres preguntas para pedirle datos al cliente, cerró dos tickets que llevaban una semana abiertos.\n\nLas llamadas que le pasan sin aviso la estresan. Cuando le entra una a mitad de un ticket, se le tensan los hombros, después relee el mismo ticket varias veces y tarda en retomarlo. Le ayuda levantarse a caminar unos minutos y que las llamadas se agenden antes por chat.\n\nSu lugar está junto a una ventana grande y por la tarde el reflejo en la pantalla le cansa la vista. Pidió una persiana y todavía no le contestan.\n\nAprende mejor con pasos escritos y capturas de pantalla. Cuando le explican un proceso nuevo solo de palabra, después pide que se lo manden por escrito.\n\nEn las reuniones de equipo habla poco y prefiere mandar sus ideas por chat al terminar. Su líder dice que esas ideas suelen ser las más concretas.\n\nLa retroalimentación la prefiere por escrito y con un ticket de ejemplo, para revisarla con calma.\n\nPara la siguiente sesión acordamos probar una lista de preguntas fijas para los tickets complejos y llevarle a su líder el tema de agendar las llamadas.",
+      "eventoId": "d0000000-0000-4000-8000-000000000111",
+      "update": {
+        "cambios": [
+          {
+            "dimension": "antecedentes_experiencia",
+            "resumen": "Renata lleva tres años dando soporte a los clientes de una empresa de software.",
+            "tipo": "contexto",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "Trabaja hace tres años en soporte para clientes de una empresa de software de nómina", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "motivacion_intereses",
+            "resumen": "Renata conoce a fondo la base de conocimiento de su equipo y sus compañeros acuden a ella. Disfruta explicar cómo encuentra la causa de una falla.",
+            "tipo": "fortaleza",
+            "dominiosFE": [
+              "organizacion_de_materiales"
+            ],
+            "evidencia": [
+              { "cita": "escribió casi la mitad de los artículos y sus compañeros la buscan cuando un error se repite", "dominio": "organizacion_de_materiales", "direccion": "fortaleza", "anteriorRef": null },
+              { "cita": "se emociona y explica cada paso con detalle", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "disparadores_estres",
+            "resumen": "A Renata le cuestan las llamadas que entran sin aviso. Le ayuda levantarse unos minutos y que las llamadas se acuerden antes por escrito.",
+            "tipo": "contexto",
+            "dominiosFE": [
+              "control_emocional"
+            ],
+            "evidencia": [
+              { "cita": "Las llamadas que le pasan sin aviso la estresan", "dominio": "control_emocional", "direccion": "apoyo", "anteriorRef": null },
+              { "cita": "Le ayuda levantarse a caminar unos minutos y que las llamadas se agenden antes por chat", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "indicadores_estres",
+            "resumen": "Cuando una llamada la interrumpe, Renata tensa los hombros y le toma tiempo volver a lo que estaba haciendo.",
+            "tipo": "contexto",
+            "dominiosFE": [
+              "control_emocional"
+            ],
+            "evidencia": [
+              { "cita": "se le tensan los hombros, después relee el mismo ticket varias veces y tarda en retomarlo", "dominio": "control_emocional", "direccion": "apoyo", "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "aspectos_sensoriales",
+            "resumen": "Por la tarde, el reflejo de la ventana en su pantalla le cansa la vista a Renata. Ya pidió una persiana.",
+            "tipo": "contexto",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "por la tarde el reflejo en la pantalla le cansa la vista", "dominio": null, "direccion": null, "anteriorRef": null },
+              { "cita": "Pidió una persiana y todavía no le contestan", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "forma_aprender",
+            "resumen": "Renata aprende mejor cuando tiene los pasos por escrito con imágenes de la pantalla.",
+            "tipo": "contexto",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "Aprende mejor con pasos escritos y capturas de pantalla", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "comunicacion_escrita",
+            "resumen": "Renata comparte sus ideas por escrito después de las reuniones, y su líder las considera muy concretas.",
+            "tipo": "fortaleza",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "prefiere mandar sus ideas por chat al terminar", "dominio": null, "direccion": null, "anteriorRef": null },
+              { "cita": "esas ideas suelen ser las más concretas", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "retroalimentacion",
+            "resumen": "Renata prefiere recibir comentarios por escrito, con un caso real como ejemplo, para leerlos con calma.",
+            "tipo": "contexto",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "La retroalimentación la prefiere por escrito y con un ticket de ejemplo", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "ajustes_razonables",
+            "resumen": "Cuando un caso llega con pocos datos, a Renata le ayuda tener claro qué preguntarle primero al cliente. Con unas preguntas sugeridas, avanzó casos que llevaban días detenidos.",
+            "tipo": "area_de_apoyo",
+            "dominiosFE": [
+              "iniciacion"
+            ],
+            "evidencia": [
+              { "cita": "abre el ticket, lo lee varias veces y lo deja para después", "dominio": "iniciacion", "direccion": "apoyo", "anteriorRef": null },
+              { "cita": "dice que no sabe qué preguntar primero", "dominio": "iniciacion", "direccion": "apoyo", "anteriorRef": null },
+              { "cita": "le sugirió tres preguntas para pedirle datos al cliente, cerró dos tickets", "dominio": "iniciacion", "direccion": "apoyo", "anteriorRef": null }
+            ]
+          }
+        ],
+        "senales": [],
+        "relacionesConPerfilPrevio": [],
+        "preguntasParaSiguienteSesion": [
+          "¿Cómo le fue con la lista de preguntas fijas en los tickets complejos?"
+        ]
+      },
+      "aprobacion": {
+        "cambios": [0, 1, 2, 3, 4, 5, 6, 7, 8],
+        "senales": []
+      }
+    },
+    {
+      "id": "d0000000-0000-4000-8000-000000000102",
+      "tipo": "persona",
+      "fecha": "2026-10-27",
+      "nota": "Sesión de seguimiento con Renata. Usó la lista de preguntas fijas en los tickets complejos y ya no tiene ninguno abierto de más de una semana. Dice que lo que más le sirvió fue mandar las tres preguntas en el primer correo al cliente. Lo de las llamadas sigue igual: todavía no le pide a su líder que se agenden por chat porque no ha encontrado el momento. Ya le pusieron la persiana y por la tarde termina menos cansada. En la reunión semanal de soporte casi no habló y al día siguiente le mandó a su líder por chat dos propuestas para la base de conocimiento. Contó que a su papá lo van a operar de la rodilla y que ella lo va a acompañar a sus consultas los martes durante un mes; quiere pedir que esos días le muevan el horario. Quedamos en preparar en la siguiente sesión el mensaje para su líder sobre el horario y las llamadas.",
+      "eventoId": "d0000000-0000-4000-8000-000000000112",
+      "update": {
+        "cambios": [
+          {
+            "dimension": "motivacion_intereses",
+            "resumen": "Renata conoce a fondo la base de conocimiento de su equipo y sus compañeros acuden a ella. Disfruta explicar cómo encuentra la causa de una falla, y ya propuso dos mejoras a esa base.",
+            "tipo": "fortaleza",
+            "dominiosFE": [
+              "organizacion_de_materiales"
+            ],
+            "evidencia": [
+              { "cita": "le mandó a su líder por chat dos propuestas para la base de conocimiento", "dominio": "organizacion_de_materiales", "direccion": "fortaleza", "anteriorRef": null }
+            ]
+          },
+          {
+            "dimension": "aspectos_sensoriales",
+            "resumen": "Con la persiana que le pusieron, Renata termina la tarde con la vista menos cansada.",
+            "tipo": "contexto",
+            "dominiosFE": [],
+            "evidencia": [
+              { "cita": "Ya le pusieron la persiana y por la tarde termina menos cansada", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          }
+        ],
+        "senales": [
+          {
+            "tipo": "cambio_de_vida",
+            "descripcion": "A su papá lo van a operar de la rodilla. Renata lo va a acompañar un día por semana durante un mes y quiere pedir un cambio de horario para esos días.",
+            "evidencia": [
+              { "cita": "a su papá lo van a operar de la rodilla y que ella lo va a acompañar a sus consultas los martes durante un mes" },
+              { "cita": "quiere pedir que esos días le muevan el horario" }
+            ]
+          }
+        ],
+        "relacionesConPerfilPrevio": [],
+        "preguntasParaSiguienteSesion": [
+          "¿Cómo va su papá con lo de la rodilla?"
+        ],
+        "avance": [
+          {
+            "itemRef": "P-01",
+            "estado": "avanza",
+            "resumen": "Usó la lista en los casos complejos y ya no tiene ninguno detenido más de una semana.",
+            "evidencia": [
+              { "cita": "Usó la lista de preguntas fijas en los tickets complejos y ya no tiene ninguno abierto de más de una semana", "dominio": "iniciacion", "direccion": "cambio", "anteriorRef": "O-03" }
+            ]
+          },
+          {
+            "itemRef": "P-02",
+            "estado": "sin_cambios",
+            "resumen": "Todavía no lo ha hablado con su líder.",
+            "evidencia": [
+              { "cita": "todavía no le pide a su líder que se agenden por chat porque no ha encontrado el momento", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          },
+          {
+            "itemRef": "P-03",
+            "estado": "cumplido",
+            "resumen": "Ya tiene la persiana.",
+            "evidencia": [
+              { "cita": "Ya le pusieron la persiana y por la tarde termina menos cansada", "dominio": null, "direccion": null, "anteriorRef": null }
+            ]
+          }
+        ],
+        "contexto": [
+          {
+            "texto": "Preguntar cómo va su papá. Lo acompaña a consultas un día por semana durante un mes.",
+            "evidencia": [
+              { "cita": "a su papá lo van a operar de la rodilla y que ella lo va a acompañar a sus consultas los martes durante un mes" }
+            ]
+          }
+        ],
+        "siguientePaso": {
+          "texto": "Preparar con Renata el mensaje para su líder sobre el horario y las llamadas.",
+          "itemRef": "P-02",
+          "fichaId": null,
+          "evidencia": [
+            { "cita": "Quedamos en preparar en la siguiente sesión el mensaje para su líder sobre el horario y las llamadas" }
+          ]
+        }
+      },
+      "aprobacion": {
+        "cambios": [0, 1],
+        "senales": [0],
+        "avance": [0, 1, 2],
+        "preguntas": [0],
+        "contexto": [0],
+        "siguientePaso": true
+      }
+    }
+  ],
+  "planAprobado": {
+    "items": [
+      {
+        "id": "d0000000-0000-4000-8000-000000000201",
+        "tipo": "objetivo",
+        "descripcion": "Renata usa una lista de preguntas fijas al abrir los casos complejos que llegan con pocos datos.",
+        "texto_persona": "Usa tu lista de preguntas fijas cuando abras un ticket complejo.",
+        "dominio_fe": "iniciacion",
+        "knowledge_card_id": null,
+        "evidencia": [
+          { "cita": "dice que no sabe qué preguntar primero", "sessionId": "d0000000-0000-4000-8000-000000000101" },
+          { "cita": "le sugirió tres preguntas para pedirle datos al cliente, cerró dos tickets", "sessionId": "d0000000-0000-4000-8000-000000000101" }
+        ]
+      },
+      {
+        "id": "d0000000-0000-4000-8000-000000000202",
+        "tipo": "objetivo",
+        "descripcion": "Renata le lleva a su líder el tema de acordar las llamadas por escrito antes de hacerlas.",
+        "texto_persona": "Pídele a tu líder que las llamadas se acuerden antes por chat.",
+        "dominio_fe": null,
+        "knowledge_card_id": null,
+        "evidencia": [
+          { "cita": "Las llamadas que le pasan sin aviso la estresan", "sessionId": "d0000000-0000-4000-8000-000000000101" },
+          { "cita": "Le ayuda levantarse a caminar unos minutos y que las llamadas se agenden antes por chat", "sessionId": "d0000000-0000-4000-8000-000000000101" }
+        ]
+      },
+      {
+        "id": "d0000000-0000-4000-8000-000000000203",
+        "tipo": "ajuste_razonable",
+        "descripcion": "Una persiana en el lugar de Renata para el reflejo de la tarde.",
+        "texto_persona": null,
+        "dominio_fe": null,
+        "knowledge_card_id": null,
+        "evidencia": [
+          { "cita": "Pidió una persiana y todavía no le contestan", "sessionId": "d0000000-0000-4000-8000-000000000101" }
+        ]
+      },
+      {
+        "id": "d0000000-0000-4000-8000-000000000204",
+        "tipo": "apoyo_fe",
+        "descripcion": "Después de una interrupción, Renata se levanta unos minutos antes de volver al caso que tenía abierto.",
+        "texto_persona": "Si una llamada te interrumpe, camina unos minutos antes de volver a tu ticket.",
+        "dominio_fe": null,
+        "knowledge_card_id": null,
+        "evidencia": [
+          { "cita": "se le tensan los hombros, después relee el mismo ticket varias veces y tarda en retomarlo", "sessionId": "d0000000-0000-4000-8000-000000000101" },
+          { "cita": "Le ayuda levantarse a caminar unos minutos y que las llamadas se agenden antes por chat", "sessionId": "d0000000-0000-4000-8000-000000000101" }
+        ]
+      }
+    ]
+  }
+}

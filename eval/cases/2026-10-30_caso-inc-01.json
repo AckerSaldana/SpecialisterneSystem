@@ -1,0 +1,135 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Evaluación inicial de Irene, del documento 2026-10-30_casos-sinteticos-evaluacion de Beta. Persona y datos inventados. Las notas y las fuentes van tal cual; lo único que cambia es la forma. Las citas de F-005 se quitaron de fuente (R-007.40, CA-007.24): quedan el ID y el minuto. Beta aclara: \"En inclusión el coach ya trae observaciones de la selección y la capacitación, así que la nota las incluye\"; esa frase no es parte de la nota. Nota para Acker: el partner no tiene proyectos de inclusión activos (F-005, 20:24); el caso sirve para el pipeline de los dos servicios (D-058), pero el demo central sigue siendo Workplace Support (D-008). Fuentes: F-005 es la transcripción de la reunión del 27 oct y el minuto es el del inicio de la intervención donde está el dato (las dimensiones salen de la intervención que empieza en 40:05 y la autorización para usarlas está en 45:53). F-017 es el BRIEF-A y solo se usan los nombres de los dominios. Pendiente 24: el ejemplo de 20:24 (la mudanza, primera vez lejos de su familia) se dijo para la selección en proyectos de inclusión; \"cambio de vida\" es nuestra etiqueta.",
+  "_esperadoBeta": {
+    "deben": "Antecedentes y experiencia (Contexto, con la mudanza); Motivación, habilidades e intereses (Fortaleza); Aspectos sensoriales; Trabajo en equipo y rol que asume; Forma de aprender; Cómo prefiere recibir retroalimentación. Dominios: Flexibilidad como área de apoyo; Monitoreo de tareas como fortaleza.",
+    "pueden": "Trato uno a uno o Estilo de comunicación, como fortaleza o contexto (lleva sus dudas al mentor). Señal Cambios de vida por la mudanza, si cita esa frase. Ajustes razonables (aviso antes de cambiar el orden de las pruebas).",
+    "noDeben": "Conflictos ni Concentración. Querer renunciar (nada en la nota lo dice). Nada que trate \"habla poco\" como área de apoyo o riesgo."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "perfil"
+  ],
+  "id": "caso-inc-01",
+  "descripcion": "Irene (proyecto de inclusión). Analista de pruebas de software en el área de sistemas de una empresa de autopartes; entró hace cinco semanas. La contrataron por un proyecto de inclusión, después de la sesión práctica y la capacitación (F-005, 00:00). Está en los seis meses de coaching: una hora por semana con ella y media hora cada dos semanas con su red de apoyo (líder y mentor). Se mudó de otro estado para este trabajo.",
+  "engagementType": "inclusion",
+  "nombrePila": "Irene",
+  "nota": "Primera sesión de coaching con Irene después de su contratación. Entró hace cinco semanas como analista de pruebas de software en el área de sistemas de una empresa de autopartes, por el proyecto de inclusión. Se mudó de otro estado para este trabajo y es la primera vez que vive lejos de su familia. Por ahora renta un cuarto mientras encuentra departamento.\n\nEn la sesión práctica de la selección siguió las instrucciones escritas paso por paso y fue de las pocas personas que pidió ayuda cuando una instrucción no estaba clara. En la capacitación encontró errores en los casos de prueba que nadie más había visto. Lo disfruta: dice que encontrar un error es como resolver un acertijo.\n\nRevisa dos veces cada reporte de error antes de mandarlo y le pregunta a su mentor si quedó claro. Su mentor dice que sus reportes casi nunca regresan con dudas.\n\nCuando su líder cambia el orden de las pruebas a mitad del día, le cuesta dejar lo que estaba haciendo: termina primero lo que tenía abierto y se atrasa con lo nuevo. Le ayuda que le avisen el cambio con tiempo y que le digan qué hacer con lo que queda a medias.\n\nEn la capacitación, los ruidos fuertes del taller la sobresaltaban. Ahora su lugar está en la oficina, lejos del taller, y dice que ahí está bien. Cuando el área se llena de gente, se pone audífonos y una gorra.\n\nPrefiere trabajar por su cuenta con tareas claras y le incomodan las dinámicas de grupo improvisadas. En las juntas habla poco; si tiene una duda, después se acerca con su mentor a preguntarle.\n\nAprende mejor si ve a alguien hacerlo una vez y luego lo hace con una guía escrita al lado.\n\nPide que la retroalimentación sea directa, sin rodeos, y con el reporte concreto como ejemplo.\n\nPara la siguiente sesión acordamos que ella le pida a su líder un aviso antes de cambiar el orden de las pruebas.",
+  "rasgos": [
+    {
+      "rasgo": "antecedentes: Analista de pruebas de software desde hace cinco semanas",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "ingreso_por_inclusion: Entró por el proyecto de inclusión, con sesión práctica y capacitación",
+      "donde": "contexto:Transición: primeras semanas en el empleo",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "sigue_instrucciones_y_pide_ayuda: En la sesión práctica siguió instrucciones escritas y pidió ayuda cuando algo no estaba claro",
+      "donde": "contexto:Lo que observa el partner en la sesión práctica",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "encuentra_errores: Encontró errores que nadie había visto; lo vive como un acertijo",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "revisa_sus_reportes: Revisa dos veces cada reporte; casi nunca regresan con dudas (como fortaleza)",
+      "donde": "dominioFE:monitoreo_de_tareas",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "cambios_de_orden: Le cuesta dejar lo que estaba haciendo cuando cambian el orden de las pruebas",
+      "donde": "dominioFE:flexibilidad",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "ruido_del_taller: Los ruidos fuertes del taller la sobresaltaban; audífonos y gorra cuando hay mucha gente",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "trabaja_por_su_cuenta: Prefiere trabajar por su cuenta; le incomodan las dinámicas improvisadas",
+      "donde": "dimension:trabajo_en_equipo",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "dudas_con_el_mentor: Habla poco en juntas; las dudas las lleva después a su mentor",
+      "donde": "dimension:estilo_comunicacion, dimension:trato_uno_a_uno",
+      "fuente": "F-005 (40:05; hablar poco no es un problema: 13:12)"
+    },
+    {
+      "rasgo": "ver_y_luego_hacer: Aprende viendo una vez y haciéndolo con guía escrita",
+      "donde": "dimension:forma_aprender",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "retro_directa: Retroalimentación directa y con el reporte como ejemplo",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "red_de_apoyo: Líder y mentor",
+      "donde": "contexto:Red de apoyo",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "primera_vez_lejos: Se mudó de otro estado; primera vez lejos de su familia",
+      "donde": "contexto:Evento de vida",
+      "fuente": "F-005 (20:24)"
+    }
+  ],
+  "variantes": [],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "aspectos_sensoriales",
+      "trabajo_en_equipo",
+      "forma_aprender",
+      "retroalimentacion"
+    ],
+    "dominiosFE": [
+      "flexibilidad",
+      "monitoreo_de_tareas"
+    ],
+    "senales": [],
+    "senalesProhibidas": [
+      "intencion_de_renunciar"
+    ],
+    "tipoNoPermitido": [
+      {
+        "dimension": "estilo_comunicacion",
+        "tipo": "area_de_apoyo",
+        "severidad": "critica",
+        "motivo": "Nada que trate \"habla poco\" como área de apoyo o riesgo."
+      },
+      {
+        "dimension": "trato_uno_a_uno",
+        "tipo": "area_de_apoyo",
+        "severidad": "critica",
+        "motivo": "Nada que trate \"habla poco\" como área de apoyo o riesgo."
+      }
+    ],
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "Revisa dos veces cada reporte de error antes de mandarlo", "dominio": "monitoreo_de_tareas", "direccion": "fortaleza", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "le cuesta dejar lo que estaba haciendo", "dominio": "flexibilidad", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "termina primero lo que tenía abierto y se atrasa con lo nuevo", "dominio": "flexibilidad", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "En las juntas habla poco", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
+  }
+}

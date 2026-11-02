@@ -19,7 +19,8 @@
 //    solo avisan al coach. Las rutas de "banderas" se refieren al update YA LIMPIO (el que
 //    ve el coach).
 //    En cambios[i].resumen, que llega a la persona, también busca condiciones, términos internos y
-//    citas copiadas (R-004.59). La ruta de decisión repite esa revisión con el texto final.
+//    citas copiadas (R-004.59). La ruta de decisión repite esa revisión con el texto final. "citasPrevias"
+//    son las de las observaciones previas que recibió el modelo (R-008.6): solo agregan banderas.
 import type { Bandera, CambioDimension, Descartado, DimensionId, ProfileUpdate } from "@/lib/profile/schema";
 import { buscarTerminos, citaEnNota, MIN_CITA, normalizar, revisarTextoPersona } from "@/lib/profile/terminos";
 
@@ -35,7 +36,7 @@ export type ResultadoSanitizado = {
   banderas: Bandera[];
 };
 
-export function sanitizeUpdate(update: ProfileUpdate, nota: string): ResultadoSanitizado {
+export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias: string[] = []): ResultadoSanitizado {
   const notaNormal = normalizar(nota);
   const descartados: Descartado[] = [];
 
@@ -87,7 +88,9 @@ export function sanitizeUpdate(update: ProfileUpdate, nota: string): ResultadoSa
     ...limpio.cambios.flatMap((c) => c.evidencia),
     ...limpio.senales.flatMap((s) => s.evidencia),
     ...limpio.relacionesConPerfilPrevio.flatMap((r) => r.evidencia),
-  ].map((e) => e.cita);
+  ]
+    .map((e) => e.cita)
+    .concat(citasPrevias);
   limpio.cambios.forEach((c, i) => {
     for (const { termino, motivo } of revisarTextoPersona(c.resumen, citas)) {
       banderas.push({ ruta: `cambios[${i}].resumen`, termino, motivo });

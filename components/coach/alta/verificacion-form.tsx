@@ -8,6 +8,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { guardarVerificacion, type VerificacionState } from "@/app/coach/engagements/[id]/actions";
+import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,12 +24,22 @@ type Props = {
 
 const ORDEN = ["casillas", "cedula", "general"] as const;
 
+// Lo escrito regresa por el estado, igual que con un error del servidor.
+const guardar = conFalloDeRed<VerificacionState>(guardarVerificacion, (_previo, datos) => ({
+  errores: { general: ERROR_SIN_RESPUESTA },
+  valores: {
+    cedula: String(datos.get("cedula") ?? ""),
+    revisoDocumento: datos.get("revisoDocumento") === "on",
+    consultoSep: datos.get("consultoSep") === "on",
+  },
+}));
+
 export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: Props) {
   const estadoInicial: VerificacionState = {
     errores: {},
     valores: { cedula: cedulaGuardada ?? "", revisoDocumento: false, consultoSep: false },
   };
-  const [state, formAction, pending] = useActionState(guardarVerificacion, estadoInicial);
+  const [state, formAction, pending] = useActionState(guardar, estadoInicial);
   const refs = useRef<Partial<Record<(typeof ORDEN)[number], HTMLElement | null>>>({});
 
   // Como en app/login/page.tsx: cada intento con error mueve el foco al primer error.

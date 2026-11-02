@@ -10,7 +10,7 @@ import "server-only";
 import { generateText, Output } from "ai";
 import { MODEL_ID, modelo } from "@/lib/ai/model";
 import { mensajeUsuarioProfileUpdate, PROMPT_VERSION, systemPromptProfileUpdate, type EntradaProfileUpdate } from "@/lib/prompts";
-import { ProfileUpdate } from "@/lib/profile/schema";
+import { ProfileUpdateEtiquetado } from "@/lib/profile/schema";
 
 export type UsoTokens = {
   entrada: number | null;
@@ -19,7 +19,7 @@ export type UsoTokens = {
 };
 
 export type ResultadoPropuesta = {
-  update: ProfileUpdate;
+  update: ProfileUpdateEtiquetado;
   usage: UsoTokens;
   latenciaMs: number;
   modelo: string;
@@ -45,12 +45,14 @@ export async function proposeProfileUpdate(entrada: EntradaProfileUpdate): Promi
     // no acepta (min/max de strings y arrays), pasándolas a la descripción del campo.
     // Después, el AI SDK valida la respuesta con el esquema Zod completo: si no cumple, lanza error.
     output: Output.object({
-      schema: ProfileUpdate,
+      // Esquema etiquetado (spec 008, R-008.4): toda cita de cambios lleva sus tres llaves.
+      schema: ProfileUpdateEtiquetado,
       name: "ProfileUpdate",
       description: "Propuesta de actualización del perfil con evidencia citada de la nota.",
     }),
     // Sin temperature: claude-haiku-5-5 no la acepta (el proveedor la ignora con un aviso).
-    maxOutputTokens: 8000,
+    // Con las etiquetas por cita, una respuesta completa ya llegó a 7586 tokens: con 8000 un corte da una salida ilegible.
+    maxOutputTokens: 12000,
   });
 
   const usage = result.totalUsage;
