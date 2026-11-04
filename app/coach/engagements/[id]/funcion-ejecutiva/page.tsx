@@ -87,7 +87,7 @@ export default async function FuncionEjecutivaPage({ params, searchParams }: Pro
   const urlAcompanamiento = `/coach/engagements/${engagement.id}`;
 
   const encabezado = (
-    <p className="text-sm">
+    <p>
       <Link href={`${urlAcompanamiento}#perfil-actual`} className="underline underline-offset-4">
         {textoVolver(nombre)}
       </Link>
@@ -98,7 +98,7 @@ export default async function FuncionEjecutivaPage({ params, searchParams }: Pro
     return (
       <div className="flex flex-col gap-4">
         {encabezado}
-        <h1 className="text-2xl font-semibold">{TITULO_PANTALLA}</h1>
+        <h1 className="text-4xl leading-tight">{TITULO_PANTALLA}</h1>
         <p className="prose-measure font-medium">
           {consentimiento.estado === "retirado" ? textoDatosOcultos(nombre, consentimiento.fecha) : textoSinNotas(nombre)}
         </p>
@@ -121,9 +121,24 @@ export default async function FuncionEjecutivaPage({ params, searchParams }: Pro
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4">
         {encabezado}
-        <h1 className="text-2xl font-semibold">{TITULO_PANTALLA}</h1>
-        <p className="prose-measure">{textoIntro(nombre)}</p>
+        <h1 className="text-4xl leading-tight">{TITULO_PANTALLA}</h1>
+        <p className="prose-measure text-muted-foreground">{textoIntro(nombre)}</p>
       </header>
+
+      {/* Spec 012 (R-012.31): solo nombres, en el orden de los bloques. Ningún número ni marca de cuáles tienen líneas (R-008.26). */}
+      <nav aria-label="Ir a un dominio" className="flex flex-col gap-2 border-y border-border py-3">
+        <span className="text-muted-foreground">Ir a un dominio:</span>
+        <ul className="flex flex-wrap gap-x-5 gap-y-2">
+          {completa.bloques.map((b) => (
+            <li key={b.dominio}>
+              <a href={`#${idBloque(b.dominio)}`}>{etiquetaDominioFE(b.dominio)}</a>
+            </li>
+          ))}
+          <li>
+            <a href={`#${idBloque(null)}`}>{TITULO_SIN_DOMINIO}</a>
+          </li>
+        </ul>
+      </nav>
 
       <FiltrosTrayectoria
         url={`${urlAcompanamiento}/funcion-ejecutiva`}
@@ -167,7 +182,7 @@ export default async function FuncionEjecutivaPage({ params, searchParams }: Pro
 
         {filtrada.noMostradas.length > 0 ? (
           <section aria-labelledby="citas-no-mostradas" className="flex flex-col gap-3">
-            <h2 id="citas-no-mostradas" className="text-xl font-semibold">
+            <h2 id="citas-no-mostradas" className="text-2xl">
               {TITULO_NO_MOSTRADAS}
             </h2>
             <ul className="flex flex-col gap-3">

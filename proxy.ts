@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Proxy de Next 16 (antes "middleware"). Corre antes de cada petición que coincide con
 // el matcher y solo refresca la sesión de Supabase. Ver lib/supabase/proxy.ts.

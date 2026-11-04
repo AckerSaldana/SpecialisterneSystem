@@ -12,7 +12,7 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
-import { errorPasoPlantilla, PLANTILLA_NO_DISPONIBLE, PLANTILLA_YA_ARCHIVADA } from "@/components/coach/desglose/textos";
+import { avisoCopiaPlantilla, errorPasoPlantilla, PLANTILLA_NO_DISPONIBLE, PLANTILLA_YA_ARCHIVADA, STATUS_AVISO_COPIA } from "@/components/coach/desglose/textos";
 import { AplicarPlantillaRequest, ArchivarPlantillaRequest, GuardarPlantillaRequest, type DesgloseCreadoResponse, type GuardarPlantillaResponse } from "@/lib/api/contracts";
 import { conError, type RespuestaRuta, type UsuarioRuta } from "@/lib/api/ruta";
 import { exigirConsentimiento } from "@/lib/consent";
@@ -22,6 +22,7 @@ import { perfilMarcaIniciacion, refsDeInicio } from "@/lib/desglose/adaptaciones
 import {
   ACCION_PLANTILLA,
   chequeosDelPedido,
+  fuentesDelCoach,
   generarPasos,
   MENSAJES_DESGLOSE,
   MODELO_REAL,
@@ -35,6 +36,7 @@ import {
 import { PasoPlantilla } from "@/lib/desglose/schema";
 import { mensajeBloqueoPlantilla, revisarTextoDesglose, tieneNombre, validarPasos } from "@/lib/desglose/validate";
 import { logError } from "@/lib/log";
+import { copiasEn } from "@/lib/sessions/copiado";
 import { PROMPT_VERSION_DESGLOSE } from "@/lib/prompts";
 
 // Sin texto en la spec, salvo los que vienen de components/coach/desglose/textos.ts.
@@ -70,7 +72,7 @@ export function bloqueoDePlantilla(plantilla: TextoPlantilla, nombrePila: string
 export async function guardarPlantilla(user: UsuarioRuta, body: unknown): Promise<RespuestaRuta> {
   const parsed = GuardarPlantillaRequest.safeParse(body);
   if (!parsed.success) return conError(400, MENSAJES_PLANTILLAS.guardarInvalido);
-  const { breakdownId, puesto, titulo, tarea, pasos } = parsed.data;
+  const { breakdownId, puesto, titulo, tarea, pasos, aceptoAviso } = parsed.data;
 
   try {
     return await withRls(user.claims, async (tx) => {
@@ -85,6 +87,13 @@ export async function guardarPlantilla(user: UsuarioRuta, body: unknown): Promis
 
       const bloqueo = bloqueoDePlantilla({ puesto, titulo, tarea, pasos }, origen.nombrePila);
       if (bloqueo) return conError(400, bloqueo);
+
+      // R-010.56: avisa, no bloquea. Con aceptoAviso el coach ya lo vio y decidió guardar.
+      if (!aceptoAviso) {
+        const textos = [puesto, titulo, tarea, ...pasos.flatMap((p) => [p.accion, p.criterioTerminado])];
+        const copias = copiasEn(textos, await fuentesDelCoach(tx, origen.engagementId));
+        if (copias.length > 0) return conError(STATUS_AVISO_COPIA, avisoCopiaPlantilla(origen.nombrePila, copias));
+      }
 
       const id = randomUUID();
       await tx.insert(taskTemplates).values({

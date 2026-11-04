@@ -40,18 +40,22 @@ export default async function ProposalPage({ params }: Props) {
   const urlPerfil = `/coach/engagements/${id}`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-sm">
-        <Link href={urlPerfil} className="underline underline-offset-4">
-          Volver al perfil de {nombre}
-        </Link>
-      </p>
-      <h1 className="text-2xl font-semibold">Propuesta de la sesión</h1>
-      {vista.sesion ? (
+    <div className="flex flex-col gap-8">
+      {/* Spec 012 (R-012.29): título en serif y la sesión como metadato. */}
+      <header className="flex flex-col gap-3">
         <p>
-          {textoTipoSesion(vista.sesion.tipo, nombre)}, el {formatFecha(vista.sesion.fecha)}.
+          <Link href={urlPerfil} className="underline underline-offset-4">
+            Volver al perfil de {nombre}
+          </Link>
         </p>
-      ) : null}
+        <h1 className="text-4xl leading-tight">Propuesta de la sesión</h1>
+        {vista.sesion ? (
+          <p className="text-muted-foreground">
+            {textoTipoSesion(vista.sesion.tipo, nombre)}, el {formatFecha(vista.sesion.fecha)}.
+            {vista.sesion.observador ? ` Observó: ${vista.sesion.observador}.` : ""}
+          </p>
+        ) : null}
+      </header>
       {vista.status === "proposed" ? (
         <ProposalReview vista={vista} nombre={nombre} />
       ) : (

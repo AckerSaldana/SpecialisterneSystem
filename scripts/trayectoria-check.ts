@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pruebas de ruta de la spec 008 (tarea 18): CA-008.1, .26, .27, .29, .30, .34 a .38 y .49. Llama a las
 // funciones de lib/ que usan los route.ts, con un modelo simulado y cuentas sintéticas. Sin red y sin

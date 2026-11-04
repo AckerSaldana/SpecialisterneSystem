@@ -22,9 +22,11 @@ type Props = {
   perfil: Perfil;
   // sessionId -> fecha ya formateada, para mostrar de qué sesión sale cada cita.
   fechasSesion: Record<string, string>;
+  // sessionId -> rol de quien observó, cuando se registró (R-011.11).
+  observadores?: Record<string, string>;
 };
 
-function Evidencia({ evidencia, fechasSesion }: { evidencia: EvidenciaGuardada[]; fechasSesion: Record<string, string> }) {
+function Evidencia({ evidencia, fechasSesion, observadores = {} }: { evidencia: EvidenciaGuardada[]; fechasSesion: Record<string, string>; observadores?: Record<string, string> }) {
   const n = evidencia.length;
   return (
     <details className="mt-3">
@@ -32,13 +34,13 @@ function Evidencia({ evidencia, fechasSesion }: { evidencia: EvidenciaGuardada[]
         Ver evidencia ({n} {n === 1 ? "cita" : "citas"})
       </summary>
       <div className="mt-3">
-        <Citas citas={evidencia.map((e) => ({ cita: e.cita, fecha: fechasSesion[e.sessionId] }))} />
+        <Citas citas={evidencia.map((e) => ({ cita: e.cita, fecha: fechasSesion[e.sessionId], detalle: observadores[e.sessionId] ? `Observó: ${observadores[e.sessionId]}` : undefined }))} />
       </div>
     </details>
   );
 }
 
-export function ProfileView({ perfil, fechasSesion }: Props) {
+export function ProfileView({ perfil, fechasSesion, observadores }: Props) {
   return (
     <div className="flex flex-col gap-8">
       {SECCIONES.map((seccion) => {
@@ -73,7 +75,7 @@ export function ProfileView({ perfil, fechasSesion }: Props) {
                             </p>
                           ) : null}
                           <p className="mt-2 text-xs text-muted-foreground">Actualizado el {formatFecha(dim.actualizadoEn)}</p>
-                          <Evidencia evidencia={dim.evidencia} fechasSesion={fechasSesion} />
+                          <Evidencia evidencia={dim.evidencia} fechasSesion={fechasSesion} observadores={observadores} />
                         </CardContent>
                       </Card>
                     </li>

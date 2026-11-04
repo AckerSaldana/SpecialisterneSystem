@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Caso de demo de la spec 007 (R-007.58, R-007.69): esquema y validación. Funciones puras, sin red
 // ni base, para que las usen eval/compare.ts y scripts/seed-demo.ts. Vive aparte porque compare.ts

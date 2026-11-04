@@ -5,6 +5,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { signOut } from "@/app/auth/actions";
+import { PasoAlta } from "@/components/persona/paso-alta";
 import { Button } from "@/components/ui/button";
 import { puertaPersona } from "@/lib/persona/puerta";
 
@@ -14,9 +15,9 @@ export default async function NoPorAhoraPage() {
   // Mismo paso que el aviso: si ya hay consentimiento vigente, la puerta manda a /persona.
   await puertaPersona("aviso");
 
+  // Sigue en el paso 3: es la otra respuesta al aviso.
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">No por ahora</h1>
+    <PasoAlta paso={3} titulo="No por ahora">
       <p className="prose-measure">
         Está bien. No registramos nada. Mientras no des tu consentimiento, tu coach no puede guardar notas sobre ti en
         este sistema. Si cambias de opinión, entra otra vez y elige «Dar mi consentimiento».
@@ -31,6 +32,6 @@ export default async function NoPorAhoraPage() {
           </Button>
         </form>
       </div>
-    </div>
+    </PasoAlta>
   );
 }

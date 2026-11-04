@@ -25,6 +25,7 @@ import { PayloadPlanIA, esVisiblePersona, type EvidenciaPlan } from "@/lib/plan/
 import { esUuid, MENSAJES, respuestaError, violaUnico } from "@/lib/plan/server";
 import { sanitizePlan } from "@/lib/plan/validate";
 import { DominioFE } from "@/lib/profile/schema";
+import { notasDelAcompanamiento } from "@/lib/sessions/copiado";
 import { PROMPT_VERSION_PLAN } from "@/lib/prompts";
 
 const ACCION = "propose_plan";
@@ -38,6 +39,7 @@ type Contexto =
       engagementType: (typeof engagements.$inferSelect)["type"];
       snapshot: { id: string; perfil: (typeof profileSnapshots.$inferSelect)["perfil"] };
       fichas: FichaPrompt[];
+      notas: string[]; // R-003.62: solo para las banderas, no van al modelo
     };
 
 export async function POST(_req: Request, ctx: RouteContext<"/api/engagements/[id]/plans">) {
@@ -99,7 +101,8 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/engagements/[i
         .where(eq(knowledgeCards.verificada, true))
         .orderBy(knowledgeCards.id);
 
-      return { ok: true, nombrePila, engagementType: engagement.type, snapshot, fichas };
+      const notas = await notasDelAcompanamiento(tx, engagementId);
+      return { ok: true, nombrePila, engagementType: engagement.type, snapshot, fichas, notas };
     });
   } catch (e) {
     logError("plans: error al leer el acompañamiento", e);
@@ -171,7 +174,7 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/engagements/[i
   const { indice } = resultado;
   let payload: PayloadPlanIA;
   try {
-    const limpio = sanitizePlan(resultado.propuesta, { fichasEnviadas, indice });
+    const limpio = sanitizePlan(resultado.propuesta, { fichasEnviadas, indice, notas: contexto.notas });
     payload = PayloadPlanIA.parse({
       propuesta: limpio.propuesta,
       descartados: limpio.descartados,

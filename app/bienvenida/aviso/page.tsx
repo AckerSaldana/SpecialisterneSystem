@@ -10,6 +10,7 @@ import type { Metadata } from "next";
 import { formatFecha } from "@/components/coach/labels";
 import { AvisoTexto, tituloDeAviso } from "@/components/persona/aviso-texto";
 import { ConsentimientoPersona } from "@/components/persona/consentimiento";
+import { PasoAlta } from "@/components/persona/paso-alta";
 import { AVISO_VERSION, bloquesDeAviso, leerAviso } from "@/lib/legal/aviso";
 import { puertaPersona } from "@/lib/persona/puerta";
 import { FormularioConsentimiento } from "./formulario";
@@ -21,14 +22,11 @@ export default async function AvisoPage() {
   const bloques = bloquesDeAviso(await leerAviso());
 
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{tituloDeAviso(bloques)}</h1>
-        <p className="prose-measure">
-          Hola, {user.nombrePila}. Antes de empezar, lee qué datos guarda este sistema y quién los ve. Puedes tomarte el
-          tiempo que necesites.
-        </p>
-      </header>
+    <PasoAlta paso={3} titulo={tituloDeAviso(bloques)} ancho="amplio">
+      <p className="prose-measure">
+        Hola, {user.nombrePila}. Antes de empezar, lee qué datos guarda este sistema y quién los ve. Puedes tomarte el
+        tiempo que necesites.
+      </p>
 
       {consentimiento?.estado === "retirado" ? (
         <ConsentimientoPersona
@@ -43,13 +41,13 @@ export default async function AvisoPage() {
       <section
         id="dar-consentimiento"
         aria-labelledby="dar-consentimiento-titulo"
-        className="flex scroll-mt-4 flex-col gap-3 border-t pt-6"
+        className="flex scroll-mt-4 flex-col gap-4 border-t border-border pt-6"
       >
-        <h2 id="dar-consentimiento-titulo" className="text-xl font-semibold">
+        <h2 id="dar-consentimiento-titulo" className="text-2xl">
           ¿Das tu consentimiento?
         </h2>
         <FormularioConsentimiento />
       </section>
-    </div>
+    </PasoAlta>
   );
 }

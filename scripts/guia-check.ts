@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pruebas de ruta de la spec 009 (tarea 17): CA-009.4, .7, .8, .13, .14, .18 a .26, .28, .31, .43, .45, .46,
 // .53, .55, .58 y .59. Lo que leen las pantallas (tareas 18 a 20): CA-009.13, .29, .34, .39, .40 y .56. Y la

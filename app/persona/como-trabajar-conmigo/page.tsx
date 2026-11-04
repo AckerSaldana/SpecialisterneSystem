@@ -30,7 +30,7 @@ export default async function ComoTrabajarConmigoPage() {
   if (!acompanamiento) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">{TITULO}</h1>
+        <h1 className="text-5xl leading-tight">{TITULO}</h1>
         <p className="prose-measure">{SIN_ACOMPANAMIENTO}</p>
       </div>
     );
@@ -41,15 +41,16 @@ export default async function ComoTrabajarConmigoPage() {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{TITULO}</h1>
-        <p className="prose-measure">{INTRO}</p>
+        <h1 className="text-5xl leading-tight">{TITULO}</h1>
+        <p className="prose-measure text-muted-foreground">{INTRO}</p>
       </header>
 
       <AvisoGuia />
 
       {!borrador && versiones.length === 0 ? (
-        <section aria-labelledby={ID_TITULO_PEDIR} className="flex flex-col gap-3">
-          <TituloEnfocable id={ID_TITULO_PEDIR} nivel={2} className="text-xl font-semibold">
+        // Spec 012 (R-012.34): una tarjeta con una sola acción.
+        <section aria-labelledby={ID_TITULO_PEDIR} className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-6 md:px-8">
+          <TituloEnfocable id={ID_TITULO_PEDIR} nivel={2} className="text-3xl">
             {PEDIR}
           </TituloEnfocable>
           <p className="prose-measure">{SIN_BORRADOR}</p>

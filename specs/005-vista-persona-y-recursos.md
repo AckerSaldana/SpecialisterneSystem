@@ -1,4 +1,4 @@
-<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
+<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado -->
 
 # 005 · Vista de la persona y recursos
 
@@ -420,6 +420,8 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 - ¿Tienen un perfil en blanco o inventado que nos puedan compartir?
 
 ## Cambios
+
+2026-11-03, sin cambiar de versión: las opciones de R-005.29 (fuentes, tamaños, interletrado, interlineado y ancho) cambian por R-012.5 de la spec 012. Siguen en la cookie del navegador, no en la cuenta.
 
 Versión 9 · 2026-11-01 · tareas 14 y 15: recorrido en el navegador y cierre de la parte construida
 

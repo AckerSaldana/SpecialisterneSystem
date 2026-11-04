@@ -49,6 +49,7 @@ export function citasDePropuesta(update: FollowupUpdate): string[] {
     ...update.cambios.flatMap((c) => c.evidencia),
     ...update.senales.flatMap((s) => s.evidencia),
     ...update.relacionesConPerfilPrevio.flatMap((r) => r.evidencia),
+    ...update.relacionesConPerfilPrevio.flatMap((r) => (r.citaPrevia ? [{ cita: r.citaPrevia }] : [])), // R-011.5
     ...update.avance.flatMap((a) => a.evidencia),
     ...update.contexto.flatMap((c) => c.evidencia),
     ...(update.siguientePaso?.evidencia ?? []),

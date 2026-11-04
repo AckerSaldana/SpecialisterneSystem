@@ -25,7 +25,7 @@ type Props = {
 export function SeccionPlan({ engagementId, nombre, datos }: Props) {
   return (
     <section aria-labelledby={ID_SECCION} className="flex flex-col gap-6">
-      <TituloEnfocable id={ID_SECCION} nivel={2} className="text-xl font-semibold">
+      <TituloEnfocable id={ID_SECCION} nivel={2} className="scroll-mt-6 text-3xl">
         Plan de acompañamiento
       </TituloEnfocable>
       <Contenido engagementId={engagementId} nombre={nombre} datos={datos} />
@@ -89,7 +89,7 @@ function Contenido({ engagementId, nombre, datos }: Props) {
       )}
 
       {plan.hayHistorial ? (
-        <p className="text-sm">
+        <p>
           <Link href={`/coach/engagements/${engagementId}/plan/historial`} className="underline underline-offset-4">
             Ver historial del plan
           </Link>

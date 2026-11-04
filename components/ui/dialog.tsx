@@ -1,5 +1,10 @@
 "use client"
 
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+//
+// Generado con shadcn y ajustado a docs/DISENO.md (spec 012): solo tokens, sin desenfoque ni zoom. Entra y sale con un
+// fundido de opacidad que dura --motion-duration; en Calma y con movimiento reducido es instantáneo (C-14).
+
 import * as React from "react"
 import { cn } from "cn"
 import { Dialog as DialogPrimitive } from "radix-ui"
@@ -39,7 +44,7 @@ function DialogOverlay({
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
       className={cn(
-        "fixed inset-0 isolate z-50 bg-black/10 duration-100 supports-backdrop-filter:backdrop-blur-xs data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
+        "fixed inset-0 isolate z-50 bg-foreground/30 duration-(--motion-duration) ease-(--motion-ease) data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
         className
       )}
       {...props}
@@ -61,7 +66,7 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot="dialog-content"
         className={cn(
-          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-sm text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          "fixed top-1/2 left-1/2 z-50 grid w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-lg border-(length:--border-w) border-border bg-popover p-6 text-base text-popover-foreground duration-(--motion-duration) ease-(--motion-ease) outline-none sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-closed:animate-out data-closed:fade-out-0",
           className
         )}
         {...props}
@@ -107,7 +112,7 @@ function DialogFooter({
     <div
       data-slot="dialog-footer"
       className={cn(
-        "-mx-4 -mb-4 flex flex-col-reverse gap-2 rounded-b-xl border-t bg-muted/50 p-4 sm:flex-row sm:justify-end",
+        "-mx-6 -mb-6 flex flex-col-reverse gap-2 rounded-b-lg border-t border-border bg-muted p-6 sm:flex-row sm:justify-end",
         className
       )}
       {...props}
@@ -130,7 +135,7 @@ function DialogTitle({
     <DialogPrimitive.Title
       data-slot="dialog-title"
       className={cn(
-        "font-heading text-base leading-none font-medium",
+        "font-heading text-xl leading-snug font-medium",
         className
       )}
       {...props}
@@ -146,7 +151,7 @@ function DialogDescription({
     <DialogPrimitive.Description
       data-slot="dialog-description"
       className={cn(
-        "text-sm text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
+        "text-base text-muted-foreground *:[a]:underline *:[a]:underline-offset-3 *:[a]:hover:text-foreground",
         className
       )}
       {...props}

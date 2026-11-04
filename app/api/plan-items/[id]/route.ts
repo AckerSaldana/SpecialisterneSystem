@@ -29,6 +29,7 @@ import {
   vistaItem,
   violaUnico,
 } from "@/lib/plan/server";
+import { notasDelAcompanamiento } from "@/lib/sessions/copiado";
 
 type Resultado<T> = { ok: true; respuesta: T } | { ok: false; status: number; mensaje: string };
 
@@ -138,7 +139,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/plan-items/[id
         .returning(columnasItem);
 
       // R-003.27: banderas recalculadas con el texto guardado.
-      return { ok: true, respuesta: { item: vistaItem(fila, citasDelPerfil(plan.perfil)) } };
+      return { ok: true, respuesta: { item: vistaItem(fila, citasDelPerfil(plan.perfil), await notasDelAcompanamiento(tx, plan.engagementId)) } };
     });
   } catch (e) {
     if (violaUnico(e, "plan_items_origen_unico")) return respuestaError(400, MENSAJES.origenInvalido);

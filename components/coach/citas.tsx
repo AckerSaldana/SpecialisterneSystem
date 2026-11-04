@@ -14,10 +14,12 @@ export function Citas({ citas }: { citas: CitaVista[] }) {
         <li key={i}>
           <figure className="prose-measure">
             <blockquote className="border-l-4 border-border pl-3 italic">“{c.cita}”</blockquote>
-            {c.fecha ? (
-              <figcaption className="mt-1 pl-4 text-xs text-muted-foreground">Sesión del {c.fecha}</figcaption>
+            {c.fecha || c.detalle ? (
+              <figcaption className="mt-1 flex flex-col gap-1 pl-4">
+                {c.detalle ? <span className="text-sm">{c.detalle}</span> : null}
+                {c.fecha ? <span className="text-xs text-muted-foreground">Sesión del {c.fecha}</span> : null}
+              </figcaption>
             ) : null}
-            {c.detalle ? <p className="mt-1 pl-4 text-sm">{c.detalle}</p> : null}
           </figure>
         </li>
       ))}

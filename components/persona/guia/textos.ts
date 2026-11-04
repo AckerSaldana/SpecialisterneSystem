@@ -233,6 +233,11 @@ export const VISTA_PREVIA = {
 // Hoja para el líder: solo en pantalla, fuera de la hoja
 // ---------------------------------------------------------------------------
 
+// Spec 012 (R-012.43): el panel de papel de la hoja en pantalla. Al imprimir no deja borde, fondo ni margen, así la
+// hoja sale igual que antes (R-009.43). Lo usan la hoja y la vista previa.
+export const PANEL_HOJA =
+  "mx-auto w-full max-w-3xl rounded-lg border-(length:--border-w) border-border bg-card px-6 py-8 sm:px-10 print:mx-0 print:max-w-none print:rounded-none print:border-0 print:bg-transparent print:p-0";
+
 export const HOJA = {
   imprimir: "Imprimir o guardar como PDF",
   ayuda: 'En la ventana de impresión, elige "Guardar como PDF" si quieres un archivo. Si no quieres que salga la dirección de la página, quita "Encabezados y pies de página".',

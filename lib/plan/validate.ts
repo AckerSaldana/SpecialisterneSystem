@@ -33,10 +33,11 @@ export { TERMINOS_CONDICION };
 // ---------------------------------------------------------------------------
 
 // Todas las banderas de un ítem. La usan sanitizePlan, las rutas de edición (R-003.27) y la
-// aprobación (R-003.30). "citas" son las citas del snapshot base del plan.
+// aprobación (R-003.30). "citas" son las citas del snapshot base del plan; "notas", las de las sesiones del
+// acompañamiento, que solo cuentan en textoPersona (R-003.62).
 export function banderasDeItem(
   item: { tipo: TipoItemPlan; descripcion: string; textoPersona: string | null },
-  ctx: { citas: string[]; ruta: string },
+  ctx: { citas: string[]; ruta: string; notas?: string[] },
 ): BanderaPlan[] {
   const banderas: BanderaPlan[] = [];
   const agregar = (campo: BanderaPlan["campo"], motivo: BanderaPlan["motivo"], terminos: string[]) => {
@@ -53,9 +54,9 @@ export function banderasDeItem(
   }
 
   // textoPersona: lo lee la persona. La misma revisión que el resumen del perfil: además de lo anterior, términos
-  // clínicos, nada interno, citas ni pedazos de citas (R-003.17, R-003.46, R-004.59).
+  // clínicos, nada interno, citas ni pedazos de citas o de notas (R-003.17, R-003.46, R-003.62, R-004.59).
   if (item.textoPersona !== null) {
-    for (const { termino, motivo } of revisarTextoPersona(item.textoPersona, ctx.citas)) agregar("textoPersona", motivo, [termino]);
+    for (const { termino, motivo } of revisarTextoPersona(item.textoPersona, ctx.citas, ctx.notas ?? [])) agregar("textoPersona", motivo, [termino]);
   }
 
   return banderas;
@@ -82,7 +83,7 @@ const IDS_DOMINIOS: readonly string[] = DOMINIOS_FE.map((d) => d.id);
 
 export function sanitizePlan(
   propuesta: PlanProposal,
-  ctx: { fichasEnviadas: string[]; indice: IndiceEvidencia },
+  ctx: { fichasEnviadas: string[]; indice: IndiceEvidencia; notas?: string[] },
 ): { propuesta: PlanProposal; descartados: DescartadoPlan[]; banderas: BanderaPlan[] } {
   const descartados: DescartadoPlan[] = [];
   const fichas = new Set(ctx.fichasEnviadas);
@@ -129,7 +130,7 @@ export function sanitizePlan(
 
   // 5. Banderas sobre la propuesta limpia.
   const citas = ctx.indice.lista.map((e) => e.cita);
-  const banderas = items.flatMap((item, k) => banderasDeItem(item, { citas, ruta: `items[${k}]` }));
+  const banderas = items.flatMap((item, k) => banderasDeItem(item, { citas, ruta: `items[${k}]`, notas: ctx.notas }));
 
   return { propuesta: { items }, descartados, banderas };
 }

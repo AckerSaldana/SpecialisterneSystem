@@ -7,6 +7,7 @@
 // vuelve a ejecutar al navegar entre sus páginas; la lectura se hace una vez por petición.
 import { AppHeader, type NavLink } from "@/components/app-header";
 import { RUTA_DESGLOSES, TITULO as TITULO_DESGLOSES } from "@/components/persona/desglose/textos";
+import { PedirAyuda } from "@/components/persona/pedir-ayuda";
 import { SiteFooter } from "@/components/site-footer";
 import { TITULO_GUIA } from "@/lib/guia/schema-cliente";
 import { puertaPersona } from "@/lib/persona/puerta";
@@ -21,13 +22,17 @@ const links: NavLink[] = [
 export default async function PersonaLayout({ children }: LayoutProps<"/persona">) {
   const { user } = await puertaPersona("persona");
 
+  // data-pantalla="persona": texto de al menos 18px (spec 012, R-012.13). "contents" no cambia el acomodo.
   return (
-    <>
+    <div data-pantalla="persona" className="contents">
       <AppHeader nombrePila={user.nombrePila} inicio="/persona" links={links} />
       <main id="contenido" className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         {children}
       </main>
+      <div className="px-4 pb-8">
+        <PedirAyuda />
+      </div>
       <SiteFooter />
-    </>
+    </div>
   );
 }

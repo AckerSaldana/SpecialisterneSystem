@@ -23,6 +23,7 @@ import {
   vistaItem,
   violaUnico,
 } from "@/lib/plan/server";
+import { notasDelAcompanamiento } from "@/lib/sessions/copiado";
 
 type Resultado = { ok: true; respuesta: ItemPlanRespuesta } | { ok: false; status: number; mensaje: string };
 
@@ -90,7 +91,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/plans/[id]/item
         })
         .returning(columnasItem);
 
-      return { ok: true, respuesta: { item: vistaItem(fila, citasDelPerfil(plan.perfil)) } };
+      return { ok: true, respuesta: { item: vistaItem(fila, citasDelPerfil(plan.perfil), await notasDelAcompanamiento(tx, plan.engagementId)) } };
     });
   } catch (e) {
     if (violaUnico(e, "plan_items_origen_unico")) return respuestaError(400, MENSAJES.origenInvalido);

@@ -21,7 +21,10 @@
 //    En cambios[i].resumen, que llega a la persona, también busca condiciones, términos clínicos, términos internos,
 //    citas copiadas y pedazos de la nota (R-004.59). La ruta de decisión repite esa revisión con el texto final. "citasPrevias"
 //    son las de las observaciones previas que recibió el modelo (R-008.6): solo agregan banderas.
-import type { Bandera, CambioDimension, Descartado, DimensionId, ProfileUpdate } from "@/lib/profile/schema";
+//
+// 4. Frase del perfil previo (R-011.5, R-011.6): citaPrevia tiene que estar en el perfil aprobado. Se guarda
+//    como está en el perfil, con su sesión. La que no está queda en null y se anota; la relación se conserva.
+import { PERFIL_VACIO, type Bandera, type CambioDimension, type Descartado, type DimensionId, type EvidenciaGuardada, type Perfil, type ProfileUpdate, type RelacionConPerfil } from "@/lib/profile/schema";
 import { buscarTerminos, citaEnNota, MIN_CITA, normalizar, revisarTextoPersona } from "@/lib/profile/terminos";
 
 export { buscarTerminos, citaEnNota, MIN_CITA, normalizar };
@@ -36,7 +39,21 @@ export type ResultadoSanitizado = {
   banderas: Bandera[];
 };
 
-export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias: string[] = []): ResultadoSanitizado {
+// R-011.5: busca la frase en las citas de las dimensiones del perfil, que es lo que recibe el modelo. Primero en la
+// dimensión de la relación y después en las demás, porque dos notas pueden repetir una frase; en cada grupo gana la
+// coincidencia exacta. Dentro de una dimensión, las citas nuevas van al final.
+function buscarCitaPrevia(citaPrevia: string, dimension: DimensionId, perfil: Perfil): EvidenciaGuardada | undefined {
+  const buscada = normalizar(citaPrevia);
+  const propia = perfil.dimensiones[dimension]?.evidencia ?? [];
+  const otras = Object.entries(perfil.dimensiones).flatMap(([id, d]) => (id === dimension ? [] : (d?.evidencia ?? [])));
+  for (const grupo of [propia, otras]) {
+    const encontrada = grupo.findLast((e) => normalizar(e.cita) === buscada) ?? grupo.findLast((e) => citaEnNota(buscada, normalizar(e.cita)));
+    if (encontrada) return encontrada;
+  }
+  return undefined;
+}
+
+export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias: string[] = [], perfilPrevio: Perfil = PERFIL_VACIO): ResultadoSanitizado {
   const notaNormal = normalizar(nota);
   const descartados: Descartado[] = [];
 
@@ -72,10 +89,26 @@ export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias
     cambios.push(conEvidencia);
   });
 
+  const relaciones: RelacionConPerfil[] = [];
+  const citasDelModelo: string[] = [];
+  update.relacionesConPerfilPrevio.forEach((r, i) => {
+    const ruta = `relacionesConPerfilPrevio[${i}]`;
+    const conEvidencia = filtrarEvidencia(r, ruta);
+    if (!conEvidencia) return;
+    if (conEvidencia.citaPrevia == null) {
+      relaciones.push(conEvidencia);
+      return;
+    }
+    citasDelModelo.push(conEvidencia.citaPrevia);
+    const previa = buscarCitaPrevia(conEvidencia.citaPrevia, conEvidencia.dimension, perfilPrevio);
+    if (!previa) descartados.push({ ruta, cita: conEvidencia.citaPrevia, motivo: "cita_previa_no_encontrada" });
+    relaciones.push({ ...conEvidencia, citaPrevia: previa?.cita ?? null, sesionPrevia: previa?.sessionId ?? null });
+  });
+
   const limpio: ProfileUpdate = {
     cambios,
     senales: filtrarLista(update.senales, "senales"),
-    relacionesConPerfilPrevio: filtrarLista(update.relacionesConPerfilPrevio, "relacionesConPerfilPrevio"),
+    relacionesConPerfilPrevio: relaciones,
     preguntasParaSiguienteSesion: [...update.preguntasParaSiguienteSesion],
   };
 
@@ -90,7 +123,9 @@ export function sanitizeUpdate(update: ProfileUpdate, nota: string, citasPrevias
     ...limpio.relacionesConPerfilPrevio.flatMap((r) => r.evidencia),
   ]
     .map((e) => e.cita)
-    .concat(citasPrevias);
+    .concat(citasPrevias)
+    .concat(citasDelModelo)
+    .concat(limpio.relacionesConPerfilPrevio.flatMap((r) => (r.citaPrevia ? [r.citaPrevia] : [])));
   limpio.cambios.forEach((c, i) => {
     for (const { termino, motivo } of revisarTextoPersona(c.resumen, citas, [nota])) {
       banderas.push({ ruta: `cambios[${i}].resumen`, termino, motivo });

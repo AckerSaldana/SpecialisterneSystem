@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pruebas de ruta de la spec 005, fase del 31 oct (tarea 13): llama a las funciones de lib/ que usan
 // los route.ts, con cuentas sintéticas. Sin red, sin modelo y sin caminos de prueba en el servidor.

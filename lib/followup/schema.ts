@@ -19,6 +19,7 @@ import {
   ListaEvidenciaEtiquetada,
   ListaEvidenciaFE,
   ProfileUpdate,
+  RelacionSinCitaPrevia,
   ProfileUpdateEtiquetado,
 } from "@/lib/profile/schema";
 
@@ -74,6 +75,7 @@ export type FollowupUpdate = z.infer<typeof FollowupUpdate>;
 // es el esquema de lectura y también aceptaría una cita sin etiquetas (R-008.4).
 export const FollowupUpdateEtiquetado = FollowupUpdate.extend({
   cambios: ProfileUpdateEtiquetado.shape.cambios,
+  relacionesConPerfilPrevio: z.array(RelacionSinCitaPrevia).max(10), // R-011.4
   avance: z.array(AvancePropuesto.extend({ evidencia: ListaEvidenciaEtiquetada })),
 });
 export type FollowupUpdateEtiquetado = z.infer<typeof FollowupUpdateEtiquetado>;

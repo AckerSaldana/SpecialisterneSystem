@@ -261,6 +261,8 @@ export const sessions = app.table(
     audioPath: text("audio_path"),
     // Spec 004 (R-004.1): con la persona o con su red de apoyo.
     tipo: sessionType("tipo").notNull().default("persona"),
+    // Spec 011 (R-011.2): el rol de quien observó. Nunca va al modelo (R-011.3).
+    observador: text("observador"),
     realizadaEn: timestamp("realizada_en", { withTimezone: true }).notNull().defaultNow(),
     createdAt: createdAt(),
   },

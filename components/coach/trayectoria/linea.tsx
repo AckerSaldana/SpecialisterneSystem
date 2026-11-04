@@ -40,8 +40,9 @@ export function LineaTrayectoria({ linea, contexto }: { linea: Linea; contexto: 
   const ultima = linea.correcciones.at(-1);
 
   return (
-    <li className="flex flex-col gap-3 rounded-lg border p-4">
-      <TituloEnfocable id={idLinea(linea.lineaId)} nivel={3} className="text-sm font-medium">
+    // Spec 012 (R-012.31): una barra fina a la izquierda separa cada línea, sin otra tarjeta dentro del dominio.
+    <li className="flex flex-col gap-3 border-l-2 border-border pl-5">
+      <TituloEnfocable id={idLinea(linea.lineaId)} nivel={3} className="font-semibold">
         {textoTipoSesion(linea.tipoSesion, nombre)}, el {formatFecha(linea.fecha)}.
       </TituloEnfocable>
       <Citas citas={[{ cita: linea.cita }]} />

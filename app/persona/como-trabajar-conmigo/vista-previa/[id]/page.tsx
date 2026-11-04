@@ -11,7 +11,7 @@ import { withRls } from "@/lib/db/rls";
 import { leerVistaPrevia } from "@/lib/guia/lectura";
 import { puertaPersona } from "@/lib/persona/puerta";
 import { HojaLider } from "@/components/guia/hoja-lider";
-import { RUTA_GUIA, VISTA_PREVIA } from "@/components/persona/guia/textos";
+import { PANEL_HOJA, RUTA_GUIA, VISTA_PREVIA } from "@/components/persona/guia/textos";
 
 export const metadata: Metadata = { title: VISTA_PREVIA.titulo };
 
@@ -26,18 +26,23 @@ export default async function VistaPreviaPage({ params }: Props) {
   if (!documento) notFound();
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-3 print:hidden">
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 print:hidden">
         <p>
-          <Link href={RUTA_GUIA}>{VISTA_PREVIA.volver}</Link>
+          <Link href={RUTA_GUIA} className="underline underline-offset-4">
+            {VISTA_PREVIA.volver}
+          </Link>
         </p>
-        <p role="note" className="prose-measure rounded-lg border-2 border-primary bg-accent p-3 font-medium">
+        <p role="note" className="prose-measure rounded-md border-l-4 border-primary bg-accent px-4 py-3 font-medium">
           {VISTA_PREVIA.arriba}
         </p>
       </div>
 
-      <div className="print:hidden">
-        <HojaLider documento={documento} />
+      {/* Spec 012 (R-012.43): el mismo panel de papel que la hoja final. */}
+      <div className={PANEL_HOJA}>
+        <div className="print:hidden">
+          <HojaLider documento={documento} />
+        </div>
       </div>
 
       <p className="hidden print:block">{VISTA_PREVIA.alImprimir}</p>

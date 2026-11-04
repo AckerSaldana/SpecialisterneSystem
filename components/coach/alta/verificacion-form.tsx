@@ -24,6 +24,10 @@ type Props = {
 
 const ORDEN = ["casillas", "cedula", "general"] as const;
 
+// Spec 012 (R-012.39): cada casilla es una opción con borde de al menos 48px.
+const CLASE_CASILLA =
+  "flex min-h-12 cursor-pointer items-start gap-3 rounded-md border-(length:--border-w) border-border bg-background px-4 py-3 transition-colors has-checked:border-primary has-checked:bg-accent";
+
 // Lo escrito regresa por el estado, igual que con un error del servidor.
 const guardar = conFalloDeRed<VerificacionState>(guardarVerificacion, (_previo, datos) => ({
   errores: { general: ERROR_SIN_RESPUESTA },
@@ -51,7 +55,7 @@ export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: 
   const { errores, valores } = state;
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-4" noValidate>
+    <form action={formAction} className="flex max-w-xl flex-col gap-5" noValidate>
       <input type="hidden" name="engagementId" value={engagementId} />
 
       <fieldset
@@ -59,7 +63,7 @@ export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: 
         aria-describedby={errores.casillas ? "error-casillas" : undefined}
       >
         <legend className="sr-only">Revisión del documento</legend>
-        <label htmlFor="revisoDocumento" className="flex cursor-pointer items-start gap-3">
+        <label htmlFor="revisoDocumento" className={CLASE_CASILLA}>
           <input
             id="revisoDocumento"
             name="revisoDocumento"
@@ -81,7 +85,7 @@ export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: 
           </a>
         </p>
 
-        <label htmlFor="consultoSep" className="flex cursor-pointer items-start gap-3">
+        <label htmlFor="consultoSep" className={CLASE_CASILLA}>
           <input
             id="consultoSep"
             name="consultoSep"
@@ -107,7 +111,9 @@ export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: 
       </fieldset>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="cedula">Cédula profesional de quien firma el diagnóstico</Label>
+        <Label htmlFor="cedula" className="font-semibold">
+          Cédula profesional de quien firma el diagnóstico
+        </Label>
         <p id="ayuda-cedula" className="text-sm text-muted-foreground">
           Solo números.
         </p>
@@ -151,14 +157,14 @@ export function VerificacionForm({ engagementId, cedulaGuardada, urlCancelar }: 
         </Alert>
       ) : null}
 
-      <div className="flex flex-wrap items-center gap-4">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" size="lg" disabled={pending}>
           {pending ? "Guardando…" : "Guardar verificación"}
         </Button>
         {urlCancelar ? (
-          <Link href={urlCancelar} className="text-sm underline underline-offset-4">
-            Cancelar
-          </Link>
+          <Button asChild variant="outline" size="lg">
+            <Link href={urlCancelar}>Cancelar</Link>
+          </Button>
         ) : null}
       </div>
     </form>

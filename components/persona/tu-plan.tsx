@@ -43,7 +43,7 @@ export function TuPlan({ plan, estados }: Props) {
 
   return (
     <section aria-labelledby="tu-plan" className="flex flex-col gap-3">
-      <h2 id="tu-plan" className="text-xl font-semibold">
+      <h2 id="tu-plan" className="text-2xl">
         Tu plan
       </h2>
       {!plan ? (

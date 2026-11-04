@@ -62,7 +62,7 @@ export function PedirBorradorCoach({ engagementId, nombre }: Props) {
       >
         <div>
           <DialogTrigger asChild>
-            <Button type="button" aria-describedby="ayuda-pedir-borrador">
+            <Button type="button" size="lg" aria-describedby="ayuda-pedir-borrador">
               {textoBoton(nombre)}
             </Button>
           </DialogTrigger>

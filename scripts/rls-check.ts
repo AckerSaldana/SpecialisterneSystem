@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pruebas de RLS y permisos contra la base (spec 002, R-002.46; hueco H-8 de 001).
 // Uso: npm run rls-check  (necesita DATABASE_URL en .env.local, las migraciones y el seed).

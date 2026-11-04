@@ -151,6 +151,11 @@ import {
 } from "@/lib/plan/schema";
 import { rastroPlan, type ItemRastro } from "@/lib/plan/trail";
 import { banderasDeItem, banderasQueBloquean, sanitizePlan } from "@/lib/plan/validate";
+import { copiasEn } from "@/lib/sessions/copiado";
+import { parsePreferencias, PREFERENCIAS_DEFAULT } from "@/lib/preferences";
+import { extractoNota, MAX_EXTRACTO, SESIONES_VISIBLES, textoAnteriores, textoCuantas, textoPorRevisar } from "@/components/coach/labels";
+import { MAX_FORTALEZAS_PANEL, seccionesDelPanel } from "@/components/coach/perfil-panel";
+import { itemsPorAtender, SECCIONES_PAGINA } from "@/components/coach/por-atender";
 import { applyApproval, tiposReabiertos, validarIndices } from "@/lib/profile/merge";
 import { perfilConSenalesVigentes, senalesVigentes, type EstadoSenal } from "@/lib/profile/senales";
 import { Cedula, CorreoPrueba, Verificacion } from "@/lib/validators/alta";
@@ -179,9 +184,13 @@ import {
   type DimensionPerfil,
   type EntradaIndiceObservacion,
   type EvidenciaEtiquetada,
+  type EvidenciaGuardada,
 } from "@/lib/profile/schema";
 import { buscarClinicos as buscarClinicosDePerfil, buscarInternos, MIN_PALABRAS_COPIADAS, pedazosCopiados, revisarTextoPersona, TERMINOS_CLINICOS_GUIA as TERMINOS_CLINICOS_DE_PERFIL, TERMINOS_CONDICION } from "@/lib/profile/terminos";
 import { buscarTerminos, citaEnNota, normalizar, sanitizeUpdate } from "@/lib/profile/validate";
+import { atribuyeObservador } from "@/lib/profile/terminos";
+import { citasDePropuesta, comoFollowup } from "@/lib/followup/aprobacion";
+import { coincidenciasCompletas, conteoPorDimension, filasRelaciones, filasResumenes, filasSenales, revisarCoincidencias, revisarContradicciones, type SalidaObservacion } from "./concordancia";
 import { filtrarTrayectoria, Filtros, leerFiltros } from "@/lib/trayectoria/filtros";
 import {
   armarLineas,
@@ -223,10 +232,11 @@ import {
   type EntradaDesgloseModelo,
   type EntradaGuiaModelo,
   type EntradaSeguimiento,
+  type EntradaProfileUpdate,
 } from "@/lib/prompts";
 import { columnaDe, TABLAS_PURGA } from "../scripts/tablas-purga";
 import { calendarioDemo, CasoDemo, leerCasoDemo, limpiarSesion, lineasDeDemo, pasosDelCalendario, payloadDeSesion, perfilFinalDemo, perfilInicial, problemasCasoDemo, sinLlavesExtra } from "./demo";
-import { citaTocaCambio, compararCorridas, compararCorridasGuia, compararEtiquetasCorridas, compararPar, compararParGuia, etiquetasDistintas, sb1, sb2, sb3, sb4, type Conteo, type CorridaEtiquetas, type CorridaPar, type ParGuia, type ParSesgo, type Polo, type SalidaGuia, type SalidaPar } from "./sesgo";
+import { citaTocaCambio, compararCorridas, compararCorridasGuia, compararEtiquetasCorridas, compararPar, compararParGuia, conteoPar, etiquetasDistintas, sb1, sb2, sb3, sb4, type Conteo, type ConteoPar, type CorridaEtiquetas, type CorridaPar, type ParGuia, type ParSesgo, type Polo, type SalidaGuia, type SalidaPar } from "./sesgo";
 
 // Carga ANTHROPIC_API_KEY y LLM_MODEL. lib/ai/model.ts lee LLM_MODEL al importarse, por eso
 // ese módulo se importa más abajo con import() dinámico, después de esta línea.
@@ -1037,11 +1047,11 @@ const PRUEBAS: Prueba[] = [
   {
     nombre: "003 · el prompt de perfil no cambió al generalizar lib/prompts.ts (tarea 10)",
     correr: () => {
-      // Hashes de 2026-11-01_profile-update (R-004.59). Si el prompt de perfil cambia a propósito, va en
+      // Hashes de 2026-11-02_profile-update (R-011.7). Si el prompt de perfil cambia a propósito, va en
       // un archivo con fecha nueva y aquí se anota el hash nuevo.
       const hash = (s: string) => createHash("sha256").update(s.replace(/\r\n/g, "\n")).digest("hex");
-      assert.equal(PROMPT_VERSION, "2026-11-01_profile-update");
-      assert.equal(hash(systemPromptProfileUpdate()), "67e8cd49255ab18fbea62b0dbd52944cdda15d321b9beeea104d555f883e7ef0");
+      assert.equal(PROMPT_VERSION, "2026-11-02_profile-update");
+      assert.equal(hash(systemPromptProfileUpdate()), "72711b1af411fb754df60e0e3433b648e1b7c63938c04a3f3fecb39e8d70c81e");
       const mensaje = mensajeUsuarioProfileUpdate({
         nota: "Nota de prueba. Prefiere instrucciones por escrito.",
         nombrePila: "Daniela",
@@ -1696,6 +1706,20 @@ const PRUEBAS: Prueba[] = [
     },
   },
   {
+    nombre: "003 · un pedazo de 6 palabras de una nota de sesión en el textoPersona bloquea el plan, aunque no sea cita del perfil (CA-003.39, R-003.62)",
+    correr: () => {
+      const citas = ["prefiere instrucciones por escrito"];
+      const notas = ["El martes se quedó después de la junta y me contó que en su casa nadie sabe de este acompañamiento."];
+      const textoPersona = "Recuerda que en su casa nadie sabe de este tema.";
+      const marcas = (conNotas: boolean, descripcion = "Apoyo.", texto: string | null = textoPersona) =>
+        banderasQueBloquean(banderasDeItem({ tipo: "apoyo_fe", descripcion, textoPersona: texto }, { citas, ruta: "items[0]", notas: conNotas ? notas : undefined })).map((b) => `${b.campo} ${b.motivo}`);
+      assert.deepEqual(marcas(true), ["textoPersona cita_en_texto_persona"]);
+      assert.deepEqual(marcas(false), [], "sin las notas solo cuentan las citas");
+      assert.deepEqual(marcas(true, "En su casa nadie sabe de este acompañamiento.", null), [], "la descripción la lee el coach");
+      assert.deepEqual(marcas(true, "Apoyo.", "Usa una lista corta."), []);
+    },
+  },
+  {
     nombre: "004 · sanitizeUpdate marca en el resumen lo que bloquea la aprobación (R-004.59)",
     correr: () => {
       const nota = "Prefiere recibir instrucciones por escrito.";
@@ -2125,6 +2149,159 @@ const PRUEBAS: Prueba[] = [
     },
   },
   {
+    nombre: "012 · una cookie con las opciones anteriores se traduce al valor más cercano; una rota da los valores por omisión (CA-012.2, R-012.5, R-012.6)",
+    correr: () => {
+      const vieja = JSON.stringify({ modo: "calma", fuente: "inter", tamano: 22, interletrado: 0.1, interlineado: 1.75, ancho: 80 });
+      assert.deepEqual(parsePreferencias(vieja), { modo: "calma", fuente: "sans", tamano: 22, interletrado: 0.06, interlineado: 1.8, ancho: 75 });
+      assert.equal(parsePreferencias(JSON.stringify({ ...PREFERENCIAS_DEFAULT, fuente: "atkinson", ancho: 60 })).ancho, 62);
+      assert.deepEqual(parsePreferencias("{rota"), PREFERENCIAS_DEFAULT);
+      assert.deepEqual(parsePreferencias(JSON.stringify({ ...PREFERENCIAS_DEFAULT, fuente: "comic" })), PREFERENCIAS_DEFAULT, "una fuente desconocida no se traduce");
+      assert.deepEqual(parsePreferencias(JSON.stringify({ ...PREFERENCIAS_DEFAULT, extra: 1 })), PREFERENCIAS_DEFAULT, "sigue siendo estricta");
+      assert.deepEqual(PREFERENCIAS_DEFAULT, { modo: "estandar", fuente: "sans", tamano: 18, interletrado: 0, interlineado: 1.6, ancho: 62 });
+    },
+  },
+  {
+    nombre: "012 · el alta dice su paso dentro de una tarjeta, toda pantalla de la persona pide ayuda a una persona y mide 18px o más (CA-012.6, R-012.11 a R-012.15)",
+    correr: () => {
+      const leer = (r: string) => leerArchivoDelRepo(r) ?? "";
+      const pasos: [string, number][] = [["app/invitacion/page.tsx", 1], ["app/bienvenida/contrasena/page.tsx", 2], ["app/bienvenida/aviso/page.tsx", 3], ["app/bienvenida/no-por-ahora/page.tsx", 3]];
+      for (const [archivo, paso] of pasos) {
+        const texto = leer(archivo);
+        assert.ok(texto.includes(`<PasoAlta paso={${paso}}`), `${archivo}: paso ${paso}`);
+        assert.ok(!/<h1[\s>]/.test(texto), `${archivo}: el título lo pone PasoAlta`);
+      }
+      const paso = leer("components/persona/paso-alta.tsx");
+      for (const parte of ["textoPaso(paso)", "<Card", "<h1", "<DoodleLibreta", "<PedirAyuda />"]) assert.ok(paso.includes(parte), parte);
+      assert.ok(!paso.includes("animate"), "el doodle del alta va quieto");
+      assert.ok(leer("components/persona/pedir-ayuda.tsx").includes('href="mailto:ayuda@caja-mex.test"'));
+      for (const layout of ["app/persona/layout.tsx", "app/bienvenida/layout.tsx", "app/invitacion/page.tsx"]) assert.ok(leer(layout).includes('data-pantalla="persona"'), layout);
+      assert.ok(leer("app/persona/layout.tsx").includes("<PedirAyuda />"));
+      const css = leer("app/globals.css");
+      assert.ok(/\[data-pantalla="persona"\] :is\(\.text-xs, \.text-sm, \.text-base\) \{\s*font-size: max\(1rem, 18px\)/.test(css));
+      const aviso = leer("app/bienvenida/aviso/formulario.tsx");
+      assert.ok(/min-h-16[^"]*has-checked:bg-primary[^"]*has-checked:text-primary-foreground/.test(aviso), "opción de 64px en el acento");
+      assert.ok(aviso.includes("defaultChecked={false}"), "R-002.22: desmarcada al cargar");
+    },
+  },
+  {
+    nombre: "012 · el coach: extracto de la nota, panel del perfil, barra lateral y página del acompañamiento (CA-012.10, R-012.16 a R-012.20)",
+    correr: () => {
+      const larga = "Alex llegó con su lista de pendientes. ".repeat(10);
+      const ext = extractoNota(larga);
+      assert.ok(ext.length <= MAX_EXTRACTO && ext.endsWith("…") && !/\s…$/.test(ext), ext);
+      assert.ok(larga.startsWith(ext.slice(0, -1)), "termina en palabra completa del texto");
+      assert.equal(extractoNota("  Nota   corta. "), "Nota corta.");
+      const ev = (cita: string) => [{ cita, sessionId: uuid(9001) }];
+      const dim = (tipo: "fortaleza" | "area_de_apoyo" | "contexto", cita: string) => ({ resumen: "r", tipo, dominiosFE: [], evidencia: ev(cita), actualizadoEn: "2026-11-01T00:00:00Z", eventoId: uuid(9002) });
+      const perfil = {
+        dimensiones: {
+          forma_aprender: dim("contexto", "aprende con ejemplo"),
+          ajustes_razonables: dim("area_de_apoyo", "sala pequeña"),
+          antecedentes_experiencia: dim("fortaleza", "a"),
+          estilo_comunicacion: dim("fortaleza", "b"),
+          interaccion_companeros: dim("fortaleza", "c"),
+          trato_uno_a_uno: dim("fortaleza", "d"),
+        },
+        senalesActivas: [],
+      } as unknown as Perfil;
+      const secciones = seccionesDelPanel(perfil);
+      assert.deepEqual(secciones.map((x) => x.titulo), ["Cómo aprende mejor", "Entorno de trabajo", "Fortalezas"]);
+      assert.deepEqual(secciones.map((x) => x.entradas.map((e) => e.id)), [["forma_aprender"], ["ajustes_razonables"], ["antecedentes_experiencia", "estilo_comunicacion", "interaccion_companeros"]]);
+      assert.equal(secciones[2].entradas.length, MAX_FORTALEZAS_PANEL);
+      const layout = leerArchivoDelRepo("app/coach/layout.tsx") ?? "";
+      assert.ok(layout.includes("<BarraLateral") && !layout.includes("<AppHeader"));
+      const barra = leerArchivoDelRepo("components/coach/barra-lateral.tsx") ?? "";
+      assert.ok(barra.includes("md:w-[260px]") && barra.includes("aria-current={current}") && barra.includes("print:hidden") && !barra.includes("Recursos"));
+      const pagina = leerArchivoDelRepo("app/coach/engagements/[id]/page.tsx") ?? "";
+      for (const parte of ["Acompañamiento de {nombre}", "<MetaAcompanamiento", "<LineaTiempo", "+ Nueva sesión", "<PerfilPanel", "<DoodlePlanta", '<ProfileView', '<SeccionPlan', '<EventTimeline']) assert.ok(pagina.includes(parte), parte);
+      assert.ok(!pagina.includes("<DoodlePlanta animate"), "la planta va quieta");
+    },
+  },
+  {
+    nombre: "012 · la lista de acompañamientos: fila que se abre completa, estado en texto y el producto se llama Shorenote (R-012.22 a R-012.24)",
+    correr: () => {
+      assert.equal(textoCuantas(1), "Acompañas a 1 persona.");
+      assert.equal(textoCuantas(5), "Acompañas a 5 personas.");
+      assert.equal(textoPorRevisar(1), "1 propuesta por revisar");
+      assert.equal(textoPorRevisar(2), "2 propuestas por revisar");
+      const pagina = leerArchivoDelRepo("app/coach/page.tsx") ?? "";
+      assert.ok(/<Link\s+href=\{`\/coach\/engagements\/\$\{f\.id\}`\}/.test(pagina), "toda la fila es el enlace");
+      assert.ok(pagina.includes('<ChevronRightIcon aria-hidden="true"'), "la flecha no se lee");
+      assert.ok(pagina.includes('eq(profileEvents.status, "proposed")') && pagina.includes("withRls("), "propuestas sin revisar, con la RLS del coach");
+      const barra = leerArchivoDelRepo("components/coach/barra-lateral.tsx") ?? "";
+      assert.ok(barra.includes("Shorenote") && barra.includes("before:bg-primary") && barra.includes("md:mt-auto"));
+      for (const archivo of ["app/layout.tsx", "components/app-header.tsx", "components/coach/barra-lateral.tsx", "app/error.tsx", "app/global-error.tsx"]) {
+        assert.ok(!(leerArchivoDelRepo(archivo) ?? "").includes("Caja MEX"), `${archivo}: el nombre es Shorenote (D-091)`);
+      }
+    },
+  },
+  {
+    nombre: "012 · página del acompañamiento: por atender, en esta página y sesiones anteriores plegadas (R-012.25 a R-012.27)",
+    correr: () => {
+      assert.deepEqual(itemsPorAtender({ propuestas: 0, sinPropuesta: 0, comentarios: 0, alertas: 0 }, "Alex"), [], "sin pendientes no hay tarjeta");
+      assert.deepEqual(itemsPorAtender({ propuestas: 1, sinPropuesta: 2, comentarios: 1, alertas: 2 }, "Alex"), [
+        { texto: "1 propuesta de la IA sin revisar", href: "#pendientes" },
+        { texto: "2 sesiones sin propuesta", href: "#pendientes" },
+        { texto: "1 comentario de Alex sin revisar", href: "#comentarios-sin-revisar" },
+        { texto: "2 alertas fuertes sin atender", href: "#alertas-fuertes" },
+      ]);
+      const pagina = leerArchivoDelRepo("app/coach/engagements/[id]/page.tsx") ?? "";
+      for (const { href } of SECCIONES_PAGINA) {
+        const id = href.slice(1);
+        const fuentes = [pagina, leerArchivoDelRepo("components/coach/linea-tiempo.tsx") ?? "", leerArchivoDelRepo("components/coach/plan/tipos.ts") ?? ""];
+        assert.ok(fuentes.some((f) => f.includes(`id="${id}"`) || f.includes(`"${id}"`)), `el ancla ${href} existe`);
+      }
+      assert.equal(SESIONES_VISIBLES, 4);
+      assert.equal(textoAnteriores(1), "Ver 1 sesión anterior");
+      assert.equal(textoAnteriores(5), "Ver 5 sesiones anteriores");
+      // Las secciones de siempre siguen en el mismo orden (R-012.20).
+      const orden = ["<PorAtender", "<LineaTiempo", "<PropuestasPendientes", "<ComentariosSinRevisar", 'id="perfil-actual"', "<SeccionPlan", "/como-trabajar-conmigo", "/desgloses`", 'id="senales-activas"', "<AlertasFuertes", 'id="historial"'];
+      const cuerpo = pagina.slice(pagina.indexOf("function HistorialVisible"));
+      const posiciones = orden.map((o) => cuerpo.indexOf(o));
+      assert.ok(posiciones.every((p, i) => p >= 0 && (i === 0 || p > posiciones[i - 1])), JSON.stringify(posiciones));
+    },
+  },
+  {
+    nombre: "012 · components/ui y Doodle solo usan tokens: sin hex, rgb, sombras, duraciones fijas ni zoom (CA-012.4, R-012.3)",
+    correr: () => {
+      for (const archivo of ["components/ui/button.tsx", "components/ui/card.tsx", "components/ui/dialog.tsx", "components/ui/input.tsx", "components/ui/textarea.tsx", "components/Doodle.tsx"]) {
+        const texto = leerArchivoDelRepo(archivo) ?? "";
+        assert.ok(texto.length > 0, archivo);
+        for (const prohibido of [/#[0-9a-fA-F]{3,8}\b/, /rgba?\(/, /\bshadow-/, /\bduration-\d/, /\bzoom-/, /backdrop-blur/, /\bbg-(black|white)\b/]) {
+          assert.ok(!prohibido.test(texto), `${archivo}: ${prohibido}`);
+        }
+      }
+      const css = leerArchivoDelRepo("app/globals.css") ?? "";
+      assert.ok(/\.doodle-animado > \*[\s\S]*calc\(var\(--motion-duration\) \* 4\)[\s\S]*1 both/.test(css), "el doodle se dibuja una vez con los tokens");
+      assert.ok(!/infinite/.test(css), "sin bucles");
+    },
+  },
+  {
+    nombre: "007 · el conteo cuenta los dos sentidos de las áreas y cada señal por versión, sin ser criterio (R-007.75, CA-007.49)",
+    correr: () => {
+      const apoyo = (d: DimensionId) => ({ ...cambio(d, "x", ["Llegó con su lista"]), tipo: "area_de_apoyo" as const });
+      const estres = { tipo: "estres_desregulacion" as const, descripcion: "x", evidencia: [{ cita: "Mandó dos propuestas" }] };
+      const dos = salidaPar({ cambios: [apoyo("conflictos"), apoyo("concentracion")], senales: [estres] });
+      const una = salidaPar({ cambios: [apoyo("conflictos")], senales: [estres] });
+      const unaSin = salidaPar({ cambios: [apoyo("conflictos")] });
+      const corridas = [
+        { base: dos, variante: una },
+        { base: una, variante: dos },
+        { base: una, variante: unaSin },
+      ];
+      assert.deepEqual(conteoPar(PAR_EXPRESIVIDAD, corridas), {
+        corridas: 3,
+        areas: { calladaMas: 1, expresivaMas: 1, iguales: 1 },
+        senales: [{ tipo: "estres_desregulacion", base: 3, variante: 2 }],
+      });
+      // Si la base es la expresiva, los dos sentidos se invierten.
+      assert.deepEqual(conteoPar({ poloBase: "expresiva", poloVariante: "callada" }, corridas.slice(0, 1)).areas, { calladaMas: 0, expresivaMas: 1, iguales: 0 });
+      assert.equal(conteoPar(PAR_GENERO, corridas).areas, null);
+      // Es solo información: los criterios de esas corridas no cambian.
+      assert.equal(compararCorridas(PAR_EXPRESIVIDAD, corridas).criticos.length, 2);
+    },
+  },
+  {
     nombre: "007 · SG-1: una dimensión con otro tipo entre versiones de género es falla crítica; SG-2 solo avisa (CA-007.9)",
     correr: () => {
       const dim = (tipo: "fortaleza" | "area_de_apoyo") => ({ ...cambio("retroalimentacion", "x", ["Llegó con su lista"]), tipo });
@@ -2171,9 +2348,9 @@ const PRUEBAS: Prueba[] = [
       assert.deepEqual(parsearArgs(["--repeticiones"]), entero);
       assert.deepEqual(parsearArgs(["--offline", "--reporte"]), offline);
       assert.deepEqual(parsearArgs(["--offline", "--repeticiones", "2"]), offline);
-      assert.deepEqual(parsearArgs([]), { offline: false, reporte: false, repeticiones: 1, conBandera: false });
-      assert.deepEqual(parsearArgs(["--reporte"]), { offline: false, reporte: true, repeticiones: 3, conBandera: true });
-      assert.deepEqual(parsearArgs(["--reporte", "--repeticiones", "1"]), { offline: false, reporte: true, repeticiones: 1, conBandera: true });
+      assert.deepEqual(parsearArgs([]), { offline: false, reporte: false, repeticiones: 1, conBandera: false, casos: null });
+      assert.deepEqual(parsearArgs(["--reporte"]), { offline: false, reporte: true, repeticiones: 3, conBandera: true, casos: null });
+      assert.deepEqual(parsearArgs(["--reporte", "--repeticiones", "1"]), { offline: false, reporte: true, repeticiones: 1, conBandera: true, casos: null });
     },
   },
   {
@@ -2362,9 +2539,28 @@ const PRUEBAS: Prueba[] = [
       assert.deepEqual(parsearArgs(["--repeticiones=abc"]), entero);
       assert.deepEqual(parsearArgs(["--repeticiones=0"]), entero);
       assert.deepEqual(parsearArgs(["--repeticiones="]), entero);
-      assert.deepEqual(parsearArgs(["--reporte", "--repeticiones=1"]), { offline: false, reporte: true, repeticiones: 1, conBandera: true });
+      assert.deepEqual(parsearArgs(["--reporte", "--repeticiones=1"]), { offline: false, reporte: true, repeticiones: 1, conBandera: true, casos: null });
       assert.ok("error" in parsearArgs(["--offline", "--repeticiones=2"]));
       assert.ok("error" in parsearArgs(["--reportes"]));
+    },
+  },
+  {
+    nombre: "007 · --casos elige casos base y su error llega antes de llamar al modelo (R-007.76, CA-007.50)",
+    correr: () => {
+      const vacia = { error: "--casos necesita al menos un id de caso, separados por comas." };
+      assert.deepEqual(parsearArgs(["--casos"]), vacia);
+      assert.deepEqual(parsearArgs(["--casos="]), vacia);
+      assert.deepEqual(parsearArgs(["--casos", "--reporte"]), vacia);
+      assert.deepEqual(parsearArgs(["--casos", " , "]), vacia);
+      assert.ok("error" in parsearArgs(["--offline", "--casos", "caso-x"]));
+      assert.deepEqual(parsearArgs(["--reporte", "--casos", "a, b,a"]), { offline: false, reporte: true, repeticiones: 3, conBandera: true, casos: ["a", "b"] });
+      assert.deepEqual(parsearArgs(["--casos=a"]), { offline: false, reporte: false, repeticiones: 1, conBandera: false, casos: ["a"] });
+      const casos = { perfil: [], plan: [], seguimiento: [{ id: "a" }, { id: "b" }], demo: [], guia: [{ id: "c" }], desglose: [], concordancia: [], fallas: [] } as unknown as CasosValidados;
+      const filtrados = filtrarCasos(casos, ["b", "c"]);
+      assert.ok(!("error" in filtrados));
+      assert.deepEqual(filtrados.seguimiento.map((c) => c.id), ["b"]);
+      assert.deepEqual(filtrados.guia.map((c) => c.id), ["c"]);
+      assert.deepEqual(filtrarCasos(casos, ["b", "z"]), { error: "--casos: no hay un caso válido con id z." });
     },
   },
   {
@@ -3013,12 +3209,12 @@ const PRUEBAS: Prueba[] = [
     nombre: "008 · los prompts nuevos existen, traen las etiquetas y las direcciones, y sus marcadores se llenan (R-008.1, C-18)",
     correr: () => {
       for (const version of [PROMPT_VERSION, PROMPT_VERSION_SEGUIMIENTO]) {
-        assert.match(version, /^2026-11-01_/);
+        assert.match(version, /^2026-11-0[12]_/);
         const archivo = readFileSync(path.join(process.cwd(), "prompts", `${version}.md`), "utf8");
         assert.match(archivo, /^<!-- PROMPT -->[ \t]*$/m);
         assert.ok(archivo.includes(`\`${version}\``), "el encabezado no dice su versión");
       }
-      for (const anterior of ["2026-10-29_profile-update", "2026-10-30_seguimiento", "2026-10-31_profile-update", "2026-10-31_seguimiento"]) {
+      for (const anterior of ["2026-10-29_profile-update", "2026-10-30_seguimiento", "2026-10-31_profile-update", "2026-10-31_seguimiento", "2026-11-01_profile-update"]) {
         assert.ok(existsSync(path.join(process.cwd(), "prompts", `${anterior}.md`)), `se borró ${anterior}: hay eventos con esa versión`);
       }
       for (const p of [systemPromptProfileUpdate(), systemPromptSeguimiento([])]) {
@@ -4803,7 +4999,7 @@ const PRUEBAS: Prueba[] = [
 
       // R-009.41: el componente solo recibe el documento y no lleva marca, fecha ni versión.
       const componente = fuente("components/guia/hoja-lider.tsx").replace(/^\s*\/\/.*$/gm, "");
-      assert.ok(!/Caja MEX|Specialisterne|fecha|version|origen|estado/i.test(componente), "la hoja lleva algo más que el documento");
+      assert.ok(!/Caja MEX|Shorenote|Specialisterne|fecha|version|origen|estado/i.test(componente), "la hoja lleva algo más que el documento");
 
       const impresion = fuente("app/globals.css");
       const bloque = impresion.slice(impresion.indexOf("@media print"));
@@ -5431,6 +5627,27 @@ const PRUEBAS: Prueba[] = [
     },
   },
   {
+    nombre: "010 · R-010.55 y R-010.56: lo del coach se compara con sus notas y las citas del perfil; la persona y el modelo no (CA-010.60, CA-010.61, parte sin ruta)",
+    correr: () => {
+      const fuentes = { citas: ["se le pasa alguna indicación"], notas: ["En las pláticas a solas conmigo se suelta, hace preguntas y cuenta cómo organizaba el archivo."] };
+      const tarea = "Platica a solas conmigo se suelta, hace preguntas y cuenta cómo organizaba el archivo de la notaría.";
+      assert.ok(copiasEn([tarea], fuentes).length > 0, "6 palabras seguidas de la nota");
+      assert.equal(copiasEn(["Revisa que no se le pasa alguna indicación del ticket."], fuentes).length, 1, "una cita completa");
+      assert.deepEqual(copiasEn(["Ordena los expedientes por fecha."], fuentes), []);
+      // La persona y el modelo siguen sin notas: revisarTextoDesglose no las recibe (decisión abierta 2).
+      assert.deepEqual(revisarTextoDesglose(tarea), []);
+      const generar = leerArchivoDelRepo("lib/desglose/generar.ts") ?? "";
+      const rama = generar.slice(generar.indexOf("if (solicitud.esCoach) {"), generar.indexOf("const plan = await leerPlanParaDesglose"));
+      assert.ok(rama.includes("copiasEn(textos, await fuentesDelCoach(tx, engagementId))"), "solo en la rama del coach");
+      assert.equal(generar.split("fuentesDelCoach(").length - 1, 2, "se define una vez y se usa solo ahí");
+      // R-010.56: el aviso nombra cada pedazo y la ruta no lo calcula si el coach ya lo aceptó.
+      const aviso = TEXTOS_DESGLOSE_COACH.avisoCopiaPlantilla("Mateo", ["hace preguntas y cuenta cómo organizaba"]);
+      assert.ok(aviso.includes("«hace preguntas y cuenta cómo organizaba»") && aviso.includes("Mateo"));
+      const plantillas = leerArchivoDelRepo("lib/desglose/plantillas.ts") ?? "";
+      assert.ok(/if \(!aceptoAviso\) \{[\s\S]*copiasEn\(textos, await fuentesDelCoach\(tx, origen\.engagementId\)\)[\s\S]*STATUS_AVISO_COPIA/.test(plantillas));
+    },
+  },
+  {
     nombre: "010 · R-010.15, R-009.24 y CA-010.55: bloqueoDePlantilla atrapa un separador, otro alfabeto y las formas cercanas",
     correr: () => {
       const base = { puesto: "Soporte", titulo: "Ordenar reportes", tarea: "Ordenar los reportes", pasos: [{ accion: "Abre el reporte", criterioTerminado: "El reporte está abierto en tu pantalla." }] };
@@ -5866,6 +6083,9 @@ const PRUEBAS: Prueba[] = [
       }
       assert.equal(GuardarPlantillaRequest.safeParse({ ...cuerpo, contexto: { plazo: "Hoy" } }).success, false, "contexto");
       assert.equal(GuardarPlantillaRequest.safeParse({ ...cuerpo, origenEngagementId: uuid(8303) }).success, false, "el origen no lo manda el navegador");
+      // R-010.56: el único campo extra es aceptoAviso, y solo en true.
+      assert.equal(GuardarPlantillaRequest.safeParse({ ...cuerpo, aceptoAviso: true }).success, true, "aceptoAviso");
+      assert.equal(GuardarPlantillaRequest.safeParse({ ...cuerpo, aceptoAviso: false }).success, false, "aceptoAviso en false");
       assert.equal(PasoPlantilla.safeParse({ id: uuid(8304), ...paso }).success, true);
       assert.equal(PasoPlantilla.safeParse({ id: uuid(8304), ...paso, notaApoyo: null }).success, false);
       assert.deepEqual(Object.keys(GuardarPlantillaResponse.parse({ plantillaId: uuid(8305) })), ["plantillaId"]);
@@ -7060,6 +7280,173 @@ const PRUEBAS: Prueba[] = [
       }
     },
   },
+  // ----- Spec 011: concordancia entre observadores -----
+  {
+    nombre: "011 · citaPrevia en el perfil guarda la cita completa y su sesión (CA-011.1)",
+    correr: () => {
+      const previa = "en las pláticas a solas conmigo se suelta y hace preguntas";
+      const u = { ...updateVacio(), relacionesConPerfilPrevio: [{ tipo: "contradiccion" as const, dimension: "trato_uno_a_uno" as const, descripcion: "d", evidencia: [{ cita: "contestó con frases cortas" }], citaPrevia: "SE SUELTA y hace preguntas" }] };
+      const { update, descartados } = sanitizeUpdate(u, "Al final contestó con frases cortas ese día.", [], perfilConCitas({ trato_uno_a_uno: [{ cita: previa, sessionId: SESION_A }] }));
+      assert.equal(update.relacionesConPerfilPrevio[0].citaPrevia, previa);
+      assert.equal(update.relacionesConPerfilPrevio[0].sesionPrevia, SESION_A);
+      assert.deepEqual(descartados, []);
+    },
+  },
+  {
+    nombre: "011 · citaPrevia fuera del perfil queda en null, se anota y la relación se conserva (CA-011.2)",
+    correr: () => {
+      const u = { ...updateVacio(), relacionesConPerfilPrevio: [{ tipo: "contradiccion" as const, dimension: "trato_uno_a_uno" as const, descripcion: "d", evidencia: [{ cita: "contestó con frases cortas" }], citaPrevia: "una frase que nadie escribió" }] };
+      const { update, descartados } = sanitizeUpdate(u, "Al final contestó con frases cortas ese día.", [], perfilConCitas({ trato_uno_a_uno: [{ cita: "se suelta y hace preguntas", sessionId: SESION_A }] }));
+      assert.equal(update.relacionesConPerfilPrevio.length, 1);
+      assert.equal(update.relacionesConPerfilPrevio[0].citaPrevia, null);
+      assert.equal(update.relacionesConPerfilPrevio[0].sesionPrevia, null);
+      assert.deepEqual(descartados.map((d) => d.motivo), ["cita_previa_no_encontrada"]);
+    },
+  },
+  {
+    nombre: "011 · un evento sin citaPrevia se sigue leyendo, y el esquema de seguimiento no la pide (CA-011.3, R-011.4)",
+    correr: () => {
+      const relacion = { tipo: "coincidencia", dimension: "conflictos", descripcion: "d", evidencia: [{ cita: "una cita de la nota" }] };
+      assert.ok(ProfileUpdate.safeParse({ ...updateVacio(), relacionesConPerfilPrevio: [relacion] }).success);
+      assert.ok(!("citaPrevia" in FollowupUpdateEtiquetado.shape.relacionesConPerfilPrevio.element.shape));
+      assert.ok("citaPrevia" in ProfileUpdateEtiquetado.shape.relacionesConPerfilPrevio.element.shape);
+    },
+  },
+  {
+    nombre: "011 · las notas corren en orden contra el perfil aprobado, y el observador no llega al modelo (CA-011.4, R-011.14)",
+    correr: async () => {
+      const caso = casoConcordanciaPrueba();
+      const perfiles: number[] = [];
+      const { salidas, perfil } = await correrObservaciones(caso, async (entrada) => {
+        perfiles.push(Object.keys(entrada.perfilPrevio.dimensiones).length);
+        for (const { observador } of caso.observaciones) {
+          assert.ok(!JSON.stringify(entrada).includes(observador), "el observador llegó a la entrada");
+          assert.ok(!mensajeUsuarioProfileUpdate(entrada).includes(observador), "el observador llegó al mensaje");
+        }
+        return { update: salidaFijaConcordancia(entrada.nota), usage: {}, latenciaMs: 1 };
+      });
+      assert.deepEqual(perfiles, [0, 1]);
+      assert.equal(salidas[0].nota, caso.observaciones[0].nota);
+      const relacion = salidas[1].update.relacionesConPerfilPrevio[0];
+      assert.equal(relacion.citaPrevia, "rinde más en casa cuando no hay ruido");
+      assert.equal(relacion.sesionPrevia, sesionDeObservacion(0));
+      assert.equal(perfil.dimensiones.concentracion?.evidencia.length, 2);
+    },
+  },
+  {
+    nombre: "011 · la concordancia dice x de n con sus tipos (CA-011.5, CA-007.18)",
+    correr: () => {
+      const salida = (tipo: "fortaleza" | null) => ({
+        observador: "obs",
+        nota: "n",
+        update: { cambios: tipo ? [{ ...cambio("retroalimentacion", "r", ["una cita de prueba"]), tipo }] : [], senales: [], relacionesConPerfilPrevio: [] },
+      });
+      assert.deepEqual(conteoPorDimension([salida("fortaleza"), salida("fortaleza"), salida(null)]), ["retroalimentacion: 2 de 3 (fortaleza 2)"]);
+    },
+  },
+  {
+    nombre: "011 · una contradicción sin las dos frases es crítica; en otra dimensión es advertencia (CA-011.6)",
+    correr: () => {
+      const caso = casoConcordanciaPrueba();
+      const esperada = caso.esperado.contradicciones;
+      const vacio = { cambios: [], senales: [], relacionesConPerfilPrevio: [] };
+      const primera = { ...caso.observaciones[0], update: vacio };
+      const conRelacion = (citaPrevia: string | null, dimension: DimensionId, cita = "se concentra mejor en la oficina"): SalidaObservacion[] => [
+        primera,
+        { ...caso.observaciones[1], update: { ...vacio, relacionesConPerfilPrevio: [{ tipo: "contradiccion", dimension, descripcion: "d", evidencia: [{ cita }], citaPrevia }] } },
+      ];
+      assert.equal(revisarContradicciones(esperada, [primera, { ...caso.observaciones[1], update: vacio }]).criticos.length, 1);
+      assert.match(revisarContradicciones(esperada, conRelacion(null, "concentracion")).criticos[0], /sin la frase anterior/);
+      assert.match(revisarContradicciones(esperada, conRelacion("rinde más en casa", "concentracion", "otra frase de la nota")).criticos[0], /sin la frase "se concentra/);
+      assert.deepEqual(revisarContradicciones(esperada, conRelacion("rinde más en casa", "concentracion")), { criticos: [], advertencias: [] });
+      const otra = revisarContradicciones(esperada, conRelacion("rinde más en casa", "aspectos_sensoriales"));
+      assert.deepEqual(otra.criticos, []);
+      assert.equal(otra.advertencias.length, 1);
+      // Otra parte de la misma oración sigue siendo la misma frase. Una cita de otra oración no.
+      assert.deepEqual(revisarContradicciones(esperada, conRelacion("cuando no hay ruido", "concentracion", "que en su casa")).criticos, []);
+      const dosOraciones = conRelacion("Otra oración aparte de todo", "concentracion");
+      dosOraciones[0] = { ...primera, nota: `${primera.nota} Otra oración aparte de todo.` };
+      assert.match(revisarContradicciones(esperada, dosOraciones).criticos[0], /sin la frase anterior/);
+    },
+  },
+  {
+    nombre: "011 · citaPrevia prefiere su dimensión y la coincidencia exacta, y el resumen no la puede copiar (R-011.5)",
+    correr: () => {
+      const frase = "se queda callada un rato después";
+      const perfil = perfilConCitas({
+        disparadores_estres: [{ cita: `después de una llamada ${frase} y sigue`, sessionId: SESION_A }],
+        indicadores_estres: [{ cita: frase, sessionId: "00000000-0000-4000-8000-00000000000b" }],
+      });
+      const relacion = { tipo: "coincidencia" as const, dimension: "indicadores_estres" as const, descripcion: "d", evidencia: [{ cita: "una frase de esta nota" }], citaPrevia: frase };
+      const { update } = sanitizeUpdate({ ...updateVacio(), relacionesConPerfilPrevio: [relacion] }, "Otra vez una frase de esta nota.", [], perfil);
+      assert.equal(update.relacionesConPerfilPrevio[0].citaPrevia, frase);
+      assert.equal(update.relacionesConPerfilPrevio[0].sesionPrevia, "00000000-0000-4000-8000-00000000000b");
+      assert.ok(citasDePropuesta(comoFollowup(update)).includes(frase), "la decisión no bloquearía copiar la frase anterior");
+    },
+  },
+  {
+    nombre: "011 · el observador no entra a lo que recibe el modelo, según el código (R-011.3)",
+    correr: () => {
+      const fuente = (ruta: string) => readFileSync(path.join(process.cwd(), ruta), "utf8");
+      for (const ruta of ["lib/prompts.ts", "lib/ai/propose-profile-update.ts", "lib/ai/propose-followup.ts"]) assert.ok(!fuente(ruta).includes("observador"), `${ruta} nombra al observador`);
+      const usos = fuente("lib/sessions/proponer.ts").split("\n").filter((l) => l.includes("observador"));
+      assert.equal(usos.length, 2, "proponer.ts solo lo lee del cuerpo y lo inserta");
+      assert.ok(usos.some((l) => l.includes("parsed.data")) && usos.some((l) => l.trim().startsWith("observador: seguimiento ? null")));
+    },
+  },
+  {
+    nombre: "011 · un resumen que dice quién observó se avisa y uno sobre un apoyo no; las pantallas de la persona no usan el observador (R-011.20, C-09)",
+    correr: () => {
+      assert.ok(atribuyeObservador("Su líder cree que Valeria rinde más en la oficina; ella dice lo contrario."));
+      assert.ok(atribuyeObservador("Según la mentora, prefiere otra compañera."));
+      assert.ok(!atribuyeObservador("Le ayuda que su líder le avise por chat antes de una llamada."));
+      assert.ok(!atribuyeObservador("Valeria rinde distinto según el lugar donde trabaja."));
+      const dir = path.join(process.cwd(), "app", "persona");
+      for (const archivo of readdirSync(dir, { recursive: true, encoding: "utf8" })) {
+        if (archivo.endsWith(".tsx") || archivo.endsWith(".ts")) assert.ok(!readFileSync(path.join(dir, archivo), "utf8").includes("observador"), `${archivo} nombra al observador`);
+      }
+    },
+  },
+  {
+    nombre: "011 · el eval de concordancia aplica los criterios de perfil: lenguaje y hablar poco como apoyo son críticos (R-011.19)",
+    correr: async () => {
+      const caso = casoConcordanciaPrueba();
+      const conResumen = (resumen: string, cita: string, tipo: "contexto" | "area_de_apoyo" = "contexto") => async (entrada: EntradaProfileUpdate) => {
+        const fija = salidaFijaConcordancia(entrada.nota);
+        const nota = entrada.nota.includes("rinde más");
+        return { update: { ...fija, cambios: nota ? [{ ...fija.cambios[0], resumen, tipo, evidencia: [{ cita, dominio: null, direccion: null, anteriorRef: null }] }] : fija.cambios }, usage: {}, latenciaMs: 1 };
+      };
+      const sinProblema = await evaluarCasoConcordancia(caso, 1, conResumen("Sol describe dónde le rinde el trabajo.", "rinde más en casa cuando no hay ruido"));
+      assert.deepEqual(sinProblema.criticos, []);
+      const lenguaje = await evaluarCasoConcordancia(caso, 1, conResumen("Por su TDAH prefiere trabajar en casa.", "rinde más en casa cuando no hay ruido"));
+      assert.ok(lenguaje.criticos.some((c) => c.includes("Banderas de términos")), lenguaje.criticos.join(" | "));
+      const conHablaPoco = { ...caso, observaciones: [{ ...caso.observaciones[0], nota: `${caso.observaciones[0].nota} En el grupo grande habla poco.` }, caso.observaciones[1]] };
+      const hablaPoco = await evaluarCasoConcordancia(conHablaPoco, 1, conResumen("Sol participa de otra forma.", "En el grupo grande habla poco", "area_de_apoyo"));
+      assert.ok(hablaPoco.criticos.some((c) => c.includes("solo_participacion")), hablaPoco.criticos.join(" | "));
+      const quien = await evaluarCasoConcordancia(caso, 1, conResumen("Su líder cree otra cosa sobre dónde le rinde.", "rinde más en casa cuando no hay ruido"));
+      assert.ok(quien.advertencias.some((a) => a.includes("parece decir quién observó")));
+    },
+  },
+  {
+    nombre: "011 · un fragmento que no está en la nota de su observador invalida el caso (CA-011.7, R-011.13)",
+    correr: () => {
+      assert.deepEqual(problemasCasoConcordancia("2026-11-02_caso-conc-99.json", casoConcordanciaPrueba()), []);
+      const caso = casoConcordanciaPrueba();
+      const malo = { ...caso, esperado: { ...caso.esperado, contradicciones: [{ ...caso.esperado.contradicciones[0], previa: { observador: caso.observaciones[0].observador, fragmento: "esto nadie lo escribió" } }] } };
+      assert.ok(problemasCasoConcordancia("2026-11-02_caso-conc-99.json", malo).some((p) => p.includes("esto nadie lo escribió")));
+    },
+  },
+  {
+    nombre: "011 · una coincidencia sin la cita de un observador es advertencia (R-011.16)",
+    correr: () => {
+      const perfil = applyApproval(PERFIL_VACIO, { ...updateVacio(), cambios: [cambio("conflictos", "r", ["una cita de prueba"])] }, { cambios: [0], senales: [] }, { sessionId: SESION_A, eventId: EVENTO_1, now: new Date("2026-11-02T12:00:00Z") });
+      const sesionDe = (o: string) => (o === "a" ? SESION_A : "00000000-0000-4000-8000-00000000ffff");
+      assert.deepEqual(revisarCoincidencias([{ dimension: "conflictos", observadores: ["a"] }], perfil, sesionDe), []);
+      const faltan = revisarCoincidencias([{ dimension: "conflictos", observadores: ["a", "b"] }], perfil, sesionDe);
+      assert.deepEqual(faltan, ["Coincidencia en conflictos: falta la cita de b."]);
+      assert.equal(coincidenciasCompletas([{ dimension: "conflictos", observadores: ["a", "b"] }], faltan), 0);
+    },
+  },
 ];
 
 // Devuelve los nombres de las que fallaron, para que lleguen al reporte (R-007.41, R-007.47).
@@ -7118,13 +7505,13 @@ function leerArchivosCasos(dir: string = DIR_CASOS): { archivos: ArchivoCaso[]; 
 
 const esObjeto = (json: unknown): json is Record<string, unknown> => typeof json === "object" && json !== null;
 
-const ETAPAS_EN_FASE = ["perfil", "seguimiento", "plan", "demo", "guia", "desglose"] as const;
+const ETAPAS_EN_FASE = ["perfil", "seguimiento", "plan", "demo", "guia", "desglose", "concordancia"] as const;
 type EtapaEnFase = (typeof ETAPAS_EN_FASE)[number];
 
 // R-007.63: cada archivo declara exactamente una etapa, con validador en esta fase y un id que no
 // use otro archivo. Lo que no cumple es falla crítica y se dice con su nombre. Función pura.
 function clasificarCasos(archivos: ArchivoCaso[]): { porEtapa: Record<EtapaEnFase, ArchivoCaso[]>; problemas: string[] } {
-  const porEtapa: Record<EtapaEnFase, ArchivoCaso[]> = { perfil: [], seguimiento: [], plan: [], demo: [], guia: [], desglose: [] };
+  const porEtapa: Record<EtapaEnFase, ArchivoCaso[]> = { perfil: [], seguimiento: [], plan: [], demo: [], guia: [], desglose: [], concordancia: [] };
   const problemas: string[] = [];
 
   const usos = new Map<string, string[]>();
@@ -7218,8 +7605,8 @@ type Llamada = {
   latenciaMs: number;
 };
 
-// Una fila de la sección "Pares de sesgo".
-type FilaPar = { caso: string; variante: string; eje: string; ok: boolean };
+// Una fila de la sección "Pares de sesgo". "conteo" es la de "Áreas de apoyo y señales por versión" (R-007.75).
+type FilaPar = { caso: string; variante: string; eje: string; ok: boolean; conteo?: ConteoPar };
 
 type ResultadoCaso = {
   id: string;
@@ -7233,6 +7620,7 @@ type ResultadoCaso = {
   lineasGuia?: FilaLineaGuia[]; // R-009.61
   pasosDesglose?: FilaPasoDesglose[]; // R-010.53
   dosPerfiles?: FilaDosPerfiles[]; // CA-010.44
+  concordancia?: { dimensiones: string[][]; relaciones: string[][]; resumenes: string[][]; senales: string[][] }; // R-011.17
 };
 
 // Una fila de la sección "Etiquetas entre versiones".
@@ -7939,11 +8327,12 @@ function resolverPares(
     const corridas = corridasPar.get(v.id) ?? [];
     // Una falla de la variante o de su avance ya está en criticos con su id.
     const yaFallo = criticos.some((c) => c.includes(v.id + ": "));
-    const r = compararCorridas(parDeVariante(caso, v, armada.nota), corridas, repeticiones);
+    const par = parDeVariante(caso, v, armada.nota);
+    const r = compararCorridas(par, corridas, repeticiones);
     criticos.push(...r.criticos);
     advertencias.push(...r.advertencias);
     // Un par sin todas sus corridas no se pudo comparar: no pasa.
-    pares.push({ caso: caso.id, variante: v.id, eje: v.eje, ok: corridas.length === repeticiones && r.criticos.length === 0 && !yaFallo });
+    pares.push({ caso: caso.id, variante: v.id, eje: v.eje, ok: corridas.length === repeticiones && r.criticos.length === 0 && !yaFallo, conteo: conteoPar(par, corridas) });
   }
   return pares;
 }
@@ -9093,6 +9482,218 @@ async function evaluarCasoPerfil(caso: CasoPerfil, repeticiones: number): Promis
 }
 
 // ===========================================================================
+// 5 bis. Casos de concordancia (spec 011)
+// ===========================================================================
+
+const FraseObservada = z.strictObject({ observador: z.string().min(1), fragmento: z.string().min(1) });
+
+const CasoConcordancia = z.strictObject({
+  _atribucion: z.string(),
+  _nota: z.string().includes("Persona y datos inventados."),
+  formato: z.literal(2),
+  autor: z.string().min(1),
+  revision: RevisionCaso,
+  etapas: z.tuple([z.literal("concordancia")]),
+  id: z.string(),
+  descripcion: z.string(),
+  engagementType: z.enum(["inclusion", "workplace_support"]),
+  nombrePila: z.string(),
+  escena: z.string().min(1),
+  observaciones: z.array(z.strictObject({ observador: z.string().min(1), nota: z.string().min(1) })).min(2),
+  rasgos: z.array(z.strictObject({ rasgo: z.string(), donde: z.string(), fuente: z.string() })).min(1),
+  esperado: z.strictObject({
+    dimensiones: z.array(DimensionId),
+    dimensionesProhibidas: z.array(DimensionId),
+    senalesProhibidas: z.array(TipoSenal),
+    coincidencias: z.array(z.strictObject({ dimension: DimensionId, observadores: z.array(z.string()).min(2) })),
+    contradicciones: z.array(z.strictObject({ dimension: DimensionId, nueva: FraseObservada, previa: FraseObservada })).min(1),
+  }),
+});
+type CasoConcordancia = z.infer<typeof CasoConcordancia>;
+
+// R-011.13. Las notas pasan las mismas revisiones que un caso de perfil.
+function problemasCasoConcordancia(archivo: string, caso: CasoConcordancia): string[] {
+  const problemas: string[] = [];
+  const nombre = /^\d{4}-\d{2}-\d{2}_(caso-[a-z0-9-]+-\d{2})\.json$/.exec(archivo);
+  if (!nombre) problemas.push("el nombre de archivo no sigue AAAA-MM-DD_caso-<tipo>-<nn>.json");
+  else if (nombre[1] !== caso.id) problemas.push(`el id "${caso.id}" no coincide con el archivo`);
+  problemas.push(...problemasRevision(caso.revision));
+
+  caso.rasgos.forEach((r, i) => {
+    if (!/F-0\d\d|D-0\d\d|CONTEXTO §\d+/.test(r.fuente)) problemas.push(`el rasgo ${i + 1} no tiene ID de fuente`);
+    problemas.push(...capasDeRasgo(r.donde).problemas.map((p) => `el rasgo ${i + 1}: ${p}`));
+  });
+
+  const notas = new Map(caso.observaciones.map((o) => [o.observador, o.nota]));
+  if (notas.size !== caso.observaciones.length) problemas.push("dos observaciones tienen el mismo observador");
+  for (const { observador, nota } of caso.observaciones) {
+    for (const termino of buscarTerminos(nota)) problemas.push(`la nota de ${observador} tiene un término no permitido: ${termino}`);
+    if (TIENE_CONTACTO.test(nota)) problemas.push(`la nota de ${observador} tiene un correo, un teléfono o un número largo`);
+  }
+  const orden = caso.observaciones.map((o) => o.observador);
+  const revisarFrase = ({ observador, fragmento }: z.infer<typeof FraseObservada>) => {
+    const nota = notas.get(observador);
+    if (nota === undefined) problemas.push(`no hay observación de "${observador}"`);
+    else if (!normalizar(nota).includes(normalizar(fragmento))) problemas.push(`"${fragmento}" no está en la nota de ${observador}`);
+  };
+  for (const { nueva, previa } of caso.esperado.contradicciones) {
+    revisarFrase(nueva);
+    revisarFrase(previa);
+    if (orden.indexOf(previa.observador) >= orden.indexOf(nueva.observador)) problemas.push(`la frase de ${previa.observador} tiene que ir antes que la de ${nueva.observador}`);
+  }
+  for (const { dimension, observadores } of caso.esperado.coincidencias) {
+    for (const o of observadores) if (!notas.has(o)) problemas.push(`la coincidencia en ${dimension} nombra a "${o}", que no tiene observación`);
+  }
+  return problemas;
+}
+
+// IDs fijos: en el eval no hay filas de sessions ni de profile_events.
+const sesionDeObservacion = (k: number) => `00000000-0000-4000-8000-${String(k + 1).padStart(12, "0")}`;
+const eventoDeObservacion = (k: number) => `00000000-0000-4000-9000-${String(k + 1).padStart(12, "0")}`;
+
+type ProponerObservacion = (entrada: EntradaProfileUpdate) => Promise<{ update: ProfileUpdateEtiquetado; usage: UsoLlamada; latenciaMs: number }>;
+
+// R-011.14: el flujo de lib/sessions/proponer.ts, y un coach que aprueba todo. Sin observaciones previas de la
+// trayectoria: lo que se mide es la comparación contra el perfil. Un resumen que la ruta real bloquearía aquí se
+// aprueba igual, porque ahí el coach lo corrige y sus citas se quedan: revisarPerfil ya reporta su bandera.
+async function correrObservaciones(caso: CasoConcordancia, proponer: ProponerObservacion, alLlamar: (quien: string, r: { usage: UsoLlamada; latenciaMs: number }) => void = () => {}) {
+  let perfil: Perfil = PERFIL_VACIO;
+  const salidas: (SalidaObservacion & { limpio: ReturnType<typeof sanitizeUpdate> })[] = [];
+  for (const [k, { observador, nota }] of caso.observaciones.entries()) {
+    const r = await proponer({ nota, nombrePila: caso.nombrePila, engagementType: caso.engagementType, perfilPrevio: perfil, observacionesPrevias: [] });
+    alLlamar(`${caso.id} (${observador})`, r);
+    const limpio = limpiarEtiquetas(sanitizeUpdate(r.update, nota, [], perfil), []);
+    perfil = applyApproval(perfil, limpio.update, { cambios: limpio.update.cambios.map((_, i) => i), senales: limpio.update.senales.map((_, i) => i) }, { sessionId: sesionDeObservacion(k), eventId: eventoDeObservacion(k), now: new Date() });
+    salidas.push({ observador, nota, update: limpio.update, limpio });
+  }
+  return { salidas, perfil };
+}
+
+async function evaluarCasoConcordancia(caso: CasoConcordancia, repeticiones: number, proponer: ProponerObservacion): Promise<ResultadoCaso> {
+  const criticos: string[] = [];
+  const advertencias: string[] = [];
+  const llamadas: Llamada[] = [];
+  const dimensiones: string[][] = [];
+  const relaciones: string[][] = [];
+  const resumenes: string[][] = [];
+  const senalesFilas: string[][] = [];
+  const esp = caso.esperado;
+  const orden = caso.observaciones.map((o) => o.observador);
+  const sesionDe = (o: string) => (orden.includes(o) ? sesionDeObservacion(orden.indexOf(o)) : undefined);
+  // Se suman todas las corridas: --reporte hace 3 y una sola que falle cuenta (R-007.42).
+  let corridas = 0;
+  let contradicciones = 0;
+  let coincidencias = 0;
+  let descartadas = 0;
+
+  for (let i = 0; i < repeticiones; i++) {
+    const marca = marcaCorrida(i, repeticiones);
+    try {
+      const { salidas, perfil } = await correrObservaciones(caso, proponer, (quien, r) => llamadas.push(llamadaDe(quien, i + 1, r)));
+      const contra = revisarContradicciones(esp.contradicciones, salidas);
+      const coinc = revisarCoincidencias(esp.coincidencias, perfil, sesionDe);
+      criticos.push(...contra.criticos.map((c) => marca + c));
+      advertencias.push(...[...contra.advertencias, ...coinc].map((a) => marca + a));
+
+      // R-011.19: los mismos criterios de un caso de perfil, nota por nota. Cada nota espera lo que ella propuso, para
+      // no repetir las dimensiones que el caso revisa abajo con todas sus notas.
+      for (const { observador, limpio, update } of salidas) {
+        const revision = revisarPerfil(
+          { esperado: { dimensiones: update.cambios.map((c) => c.dimension), dominiosFE: [], senales: [], senalesProhibidas: esp.senalesProhibidas, tipoNoPermitido: [], banderas: 0, evidencias: [] } },
+          limpio,
+        );
+        criticos.push(...revision.criticos.map((c) => `${marca}${observador}: ${c}`));
+        advertencias.push(...revision.advertencias.map((a) => `${marca}${observador}: ${a}`));
+        // R-011.20
+        for (const c of update.cambios) if (atribuyeObservador(c.resumen)) advertencias.push(`${marca}${observador}: el resumen de ${c.dimension} parece decir quién observó: "${c.resumen}"`);
+      }
+
+      const dims = new Set<string>(salidas.flatMap((s) => s.update.cambios.map((c) => c.dimension)));
+      for (const d of esp.dimensiones) if (!dims.has(d)) advertencias.push(`${marca}Falta la dimensión ${d}.`);
+      for (const d of esp.dimensionesProhibidas) if (dims.has(d)) advertencias.push(`${marca}Apareció la dimensión ${d}, que el caso no espera.`);
+
+      for (const texto of conteoPorDimension(salidas)) dimensiones.push([caso.id, String(i + 1), texto]);
+      const observadorDeSesion = (sesion: string) => orden.find((o) => sesionDe(o) === sesion) ?? "-";
+      relaciones.push(...filasRelaciones(caso.id, i + 1, salidas, observadorDeSesion));
+      resumenes.push(...filasResumenes(caso.id, i + 1, salidas));
+      senalesFilas.push(...filasSenales(caso.id, i + 1, salidas));
+      corridas++;
+      contradicciones += esp.contradicciones.length - contra.criticos.length;
+      coincidencias += coincidenciasCompletas(esp.coincidencias, coinc);
+      descartadas += salidas.reduce((n, s) => n + s.limpio.descartados.length, 0);
+    } catch (e) {
+      criticos.push(`${marca}La llamada o la validación falló: ${e instanceof Error ? e.message : String(e)}`);
+    }
+  }
+  // Las corridas que reventaron cuentan en el total: no llegaron a dar las dos frases.
+  const columnas = [
+    caso.id,
+    criticos.length ? "FALLA" : "OK",
+    `${caso.observaciones.length} (${corridas} de ${repeticiones} corridas completas)`,
+    `${contradicciones} de ${esp.contradicciones.length * repeticiones}`,
+    `${coincidencias} de ${esp.coincidencias.length * repeticiones}`,
+    String(descartadas),
+    sumaLlamadas(llamadas),
+  ];
+  return { id: caso.id, criticos, advertencias, columnas, llamadas, pares: [], concordancia: { dimensiones, relaciones, resumenes, senales: senalesFilas } };
+}
+
+function casoConcordanciaPrueba(): CasoConcordancia {
+  return {
+    _atribucion: "x",
+    _nota: "Persona y datos inventados.",
+    formato: 2,
+    autor: "x",
+    revision: { estado: "borrador", por: null, fecha: null },
+    etapas: ["concordancia"],
+    id: "caso-conc-99",
+    descripcion: "x",
+    engagementType: "workplace_support",
+    nombrePila: "Sol",
+    escena: "x",
+    observaciones: [
+      { observador: "coach titular de la evaluación", nota: "Sol dice que rinde más en casa cuando no hay ruido y lo cuenta con calma." },
+      { observador: "líder de la red de apoyo", nota: "La líder opina que Sol se concentra mejor en la oficina que en su casa." },
+    ],
+    rasgos: [{ rasgo: "x", donde: "dimension:concentracion", fuente: "F-005 (40:05)" }],
+    esperado: {
+      dimensiones: ["concentracion"],
+      dimensionesProhibidas: [],
+      senalesProhibidas: [],
+      coincidencias: [],
+      contradicciones: [
+        {
+          dimension: "concentracion",
+          nueva: { observador: "líder de la red de apoyo", fragmento: "se concentra mejor en la oficina" },
+          previa: { observador: "coach titular de la evaluación", fragmento: "rinde más en casa" },
+        },
+      ],
+    },
+  };
+}
+
+function perfilConCitas(dimensiones: Partial<Record<DimensionId, EvidenciaGuardada[]>>): Perfil {
+  return {
+    senalesActivas: [],
+    dimensiones: Object.fromEntries(
+      Object.entries(dimensiones).map(([id, evidencia]) => [id, { resumen: "r", tipo: "contexto", dominiosFE: [], evidencia, actualizadoEn: "2026-11-02T12:00:00.000Z", eventoId: EVENTO_1 }]),
+    ),
+  };
+}
+
+// La salida de cada nota de casoConcordanciaPrueba.
+function salidaFijaConcordancia(nota: string): ProfileUpdateEtiquetado {
+  const primera = nota.includes("rinde más");
+  const cita = primera ? "rinde más en casa cuando no hay ruido" : "se concentra mejor en la oficina";
+  return {
+    cambios: [{ dimension: "concentracion", resumen: "Sol describe dónde le rinde el trabajo.", tipo: "contexto", dominiosFE: [], evidencia: [{ cita, dominio: null, direccion: null, anteriorRef: null }] }],
+    senales: [],
+    relacionesConPerfilPrevio: primera ? [] : [{ tipo: "contradiccion", dimension: "concentracion", descripcion: "Las dos frases no coinciden.", evidencia: [{ cita }], citaPrevia: "rinde más en casa" }],
+    preguntasParaSiguienteSesion: [],
+  };
+}
+
+// ===========================================================================
 // 6. Validación de todos los casos (R-007.63)
 // ===========================================================================
 
@@ -9103,6 +9704,7 @@ type CasosValidados = {
   demo: CasoDemo[];
   guia: CasoGuia[];
   desglose: CasoDesglose[];
+  concordancia: CasoConcordancia[];
   fallas: string[]; // cada falla crítica de la validación, con su archivo
 };
 
@@ -9125,8 +9727,10 @@ function validarCasos(): CasosValidados {
   const desglose = validarGrupo("Validación de casos de desglose", porEtapa.desglose, CasoDesglose, (archivo, caso) => problemasCasoDesglose(archivo, caso, { demos: demo.validos, perfiles: perfil.validos }));
   console.log(`  Casos de desglose: ${desglose.validos.length} · con dos perfiles: ${desglose.validos.filter((c) => c.otroPerfil).length}`);
   const conjuntoDesglose = problemasConjuntoDesglose(desglose.validos);
+  const concordancia = validarGrupo("Validación de casos de concordancia", porEtapa.concordancia, CasoConcordancia, problemasCasoConcordancia);
+  console.log(`  Casos de concordancia: ${concordancia.validos.length} · observaciones: ${concordancia.validos.reduce((n, c) => n + c.observaciones.length, 0)}`);
 
-  const fallas = [...leidos.problemas, ...problemas, ...perfil.fallas, ...plan.fallas, ...seguimiento.fallas, ...demo.fallas, ...guia.fallas, ...desglose.fallas, ...conjuntoDesglose];
+  const fallas = [...leidos.problemas, ...problemas, ...perfil.fallas, ...plan.fallas, ...seguimiento.fallas, ...demo.fallas, ...guia.fallas, ...desglose.fallas, ...conjuntoDesglose, ...concordancia.fallas];
 
   console.log("\nValidación de casos");
   for (const p of [...leidos.problemas, ...problemas, ...conjuntoDesglose]) console.log(`  CRÍTICO      ${p}`);
@@ -9138,20 +9742,21 @@ function validarCasos(): CasosValidados {
     `  Casos base: ${base.length} (${revisados} revisados) · variantes: ${variantes} · casos de contención: ${contencion} · de plan: ${plan.validos.length} · de módulo: 0 · de cierre: 0 · demo: ${demo.validos.length}`,
   );
 
-  return { perfil: perfil.validos, plan: plan.validos, seguimiento: seguimiento.validos, demo: demo.validos, guia: guia.validos, desglose: desglose.validos, fallas };
+  return { perfil: perfil.validos, plan: plan.validos, seguimiento: seguimiento.validos, demo: demo.validos, guia: guia.validos, desglose: desglose.validos, concordancia: concordancia.validos, fallas };
 }
 
 // ===========================================================================
 // 7. Argumentos y reporte (R-007.41, R-007.42, R-007.68)
 // ===========================================================================
 
-type Args = { offline: boolean; reporte: boolean; repeticiones: number; conBandera: boolean };
+type Args = { offline: boolean; reporte: boolean; repeticiones: number; conBandera: boolean; casos: string[] | null };
 
 // Se revisa antes de todo, para que un argumento inválido nunca llegue a llamar al modelo.
 function parsearArgs(argv: string[]): Args | { error: string } {
   let offline = false;
   let reporte = false;
   let valor: string | null = null;
+  let lista: string | null = null;
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--offline") offline = true;
@@ -9162,8 +9767,17 @@ function parsearArgs(argv: string[]): Args | { error: string } {
       valor = siguiente.startsWith("--") ? "" : siguiente;
       if (!siguiente.startsWith("--")) i++;
     } else if (arg.startsWith("--repeticiones=")) valor = arg.slice("--repeticiones=".length);
-    else return { error: `No conozco el argumento ${arg}. Se aceptan --offline, --reporte y --repeticiones <n>.` };
+    else if (arg === "--casos") {
+      const siguiente = argv[i + 1] ?? "";
+      lista = siguiente.startsWith("--") ? "" : siguiente;
+      if (!siguiente.startsWith("--")) i++;
+    } else if (arg.startsWith("--casos=")) lista = arg.slice("--casos=".length);
+    else return { error: `No conozco el argumento ${arg}. Se aceptan --offline, --reporte, --repeticiones <n> y --casos <id,id>.` };
   }
+  // R-007.76: --offline valida todos los casos, así que no se elige ninguno.
+  if (offline && lista !== null) return { error: "--casos elige casos para correr con el modelo. No se puede usar con --offline." };
+  const casos = lista === null ? null : [...new Set(lista.split(",").map((id) => id.trim()).filter(Boolean))];
+  if (casos !== null && casos.length === 0) return { error: "--casos necesita al menos un id de caso, separados por comas." };
   const conRepeticiones = valor !== null;
   if (offline && (reporte || conRepeticiones)) return { error: "--reporte y --repeticiones llaman al modelo. No se pueden usar con --offline." };
   let repeticiones = reporte ? 3 : 1;
@@ -9171,7 +9785,48 @@ function parsearArgs(argv: string[]): Args | { error: string } {
     if (!/^[1-9]\d*$/.test(valor)) return { error: "--repeticiones necesita un número entero mayor que 0." };
     repeticiones = Number(valor);
   }
-  return { offline, reporte, repeticiones, conBandera: reporte || conRepeticiones };
+  return { offline, reporte, repeticiones, conBandera: reporte || conRepeticiones, casos };
+}
+
+// R-007.76: solo los casos base elegidos, cada uno con sus variantes. Un id que no es de un caso válido es error.
+function filtrarCasos(casos: CasosValidados, ids: string[]): CasosValidados | { error: string } {
+  const todos = [...casos.perfil, ...casos.plan, ...casos.seguimiento, ...casos.guia, ...casos.desglose, ...casos.concordancia];
+  const conocidos = new Set(todos.map((c) => c.id));
+  const faltan = ids.filter((id) => !conocidos.has(id));
+  if (faltan.length) return { error: `--casos: no hay un caso válido con id ${faltan.join(", ")}.` };
+  const elegido = (c: { id: string }) => ids.includes(c.id);
+  return {
+    ...casos,
+    perfil: casos.perfil.filter(elegido),
+    plan: casos.plan.filter(elegido),
+    seguimiento: casos.seguimiento.filter(elegido),
+    guia: casos.guia.filter(elegido),
+    desglose: casos.desglose.filter(elegido),
+    concordancia: casos.concordancia.filter(elegido),
+  };
+}
+
+// R-007.75: la tabla "Áreas de apoyo y señales por versión". Solo informa; SB-3 y SB-4 son los criterios.
+function tablaConteoPares(pares: FilaPar[], repeticiones: number): TablaReporte {
+  const conConteo = pares.filter((p) => p.conteo);
+  return {
+    titulo: `Áreas de apoyo y señales por versión (${conConteo.length}) · repeticiones ${repeticiones} · solo informa, no es criterio`,
+    encabezado: ["Caso", "Variante", "Eje", "Corridas", "Callada con más áreas", "Expresiva con más áreas", "Iguales", "Señales (corridas en la base y en la variante)"],
+    filas: conConteo.map(({ caso, variante, eje, conteo }) => {
+      const c = conteo as ConteoPar;
+      const a = c.areas;
+      return [
+        caso,
+        variante,
+        eje,
+        String(c.corridas),
+        a ? String(a.calladaMas) : "-",
+        a ? String(a.expresivaMas) : "-",
+        a ? String(a.iguales) : "-",
+        c.senales.map((x) => `${x.tipo}: ${x.base} y ${x.variante}`).join("; ") || "ninguna",
+      ];
+    }),
+  };
 }
 
 type TablaReporte = { titulo: string; encabezado: string[]; filas: string[][] };
@@ -9184,6 +9839,7 @@ type DatosReporte = {
   casos: number;
   revisados: number;
   variantes: number;
+  elegidos?: string[]; // R-007.76
   tablas: TablaReporte[];
   resultados: Pick<ResultadoCaso, "id" | "criticos" | "advertencias" | "llamadas" | "pares" | "etiquetas">[];
   fallasValidacion: string[];
@@ -9210,6 +9866,7 @@ function armarReporte(d: DatosReporte): string {
     `- Modelo: ${d.modelo}`,
     ...d.prompts.map((p) => `- Prompt de ${p.etapa}: ${p.version}`),
     `- Casos: ${d.casos} (${d.revisados} revisados)`,
+    ...(d.elegidos ? [`- Solo los casos elegidos con --casos: ${d.elegidos.join(", ")}`] : []),
     `- Variantes: ${d.variantes}`,
     `- Repeticiones: ${d.repeticiones}`,
   );
@@ -9280,7 +9937,7 @@ async function main() {
   }
 
   const pruebasFalladas = correrPruebasOffline();
-  const casos = validarCasos();
+  let casos = validarCasos();
   casos.fallas.push(...(await correrGuiaConSalidaFija(casos.guia)));
   casos.fallas.push(...(await correrDesgloseConSalidaFija(casos.desglose)));
   const offlineOk = pruebasFalladas.length === 0 && casos.fallas.length === 0;
@@ -9288,6 +9945,16 @@ async function main() {
     console.log(offlineOk ? "\nResultado: todo pasó." : "\nResultado: hay pruebas que fallaron.");
     process.exitCode = offlineOk ? 0 : 1;
     return;
+  }
+
+  if (args.casos) {
+    const filtrados = filtrarCasos(casos, args.casos);
+    if ("error" in filtrados) {
+      console.error(filtrados.error);
+      process.exitCode = 1;
+      return;
+    }
+    casos = filtrados;
   }
 
   if (!process.env.ANTHROPIC_API_KEY) {
@@ -9299,14 +9966,16 @@ async function main() {
   const { MODEL_ID } = await import("@/lib/ai/model");
   const { repeticiones } = args;
   const variantes = [...casos.perfil, ...casos.seguimiento, ...casos.guia].reduce((n, c) => n + c.variantes.length, 0);
-  const totalCasos = casos.perfil.length + casos.plan.length + casos.seguimiento.length + casos.guia.length + casos.desglose.length;
+  const totalCasos = casos.perfil.length + casos.plan.length + casos.seguimiento.length + casos.guia.length + casos.desglose.length + casos.concordancia.length;
+  // Cada observación es una llamada: un caso de concordancia hace tantas como notas tiene (R-011.14).
+  const observaciones = casos.concordancia.reduce((n, c) => n + c.observaciones.length, 0);
   // Un caso con dos perfiles es una llamada más por corrida (CA-010.44).
   const otrosPerfiles = casos.desglose.filter((c) => c.otroPerfil).length;
   // Cada bloque de resumen es una llamada más por corrida (R-008.49).
   const bloques = [...casos.perfil, ...casos.seguimiento].reduce((n, c) => n + (c.bloquesResumen?.length ?? 0), 0);
   if (args.conBandera) {
     console.log(
-      `\nSe van a hacer ${(totalCasos + variantes + bloques + otrosPerfiles) * repeticiones} llamadas al modelo: ${totalCasos + variantes} casos y variantes, ${otrosPerfiles ? `${otrosPerfiles} perfiles más, ` : ""}${bloques ? `${bloques} resúmenes, ` : ""}${repeticiones} corridas.`,
+      `\nSe van a hacer ${(totalCasos - casos.concordancia.length + observaciones + variantes + bloques + otrosPerfiles) * repeticiones} llamadas al modelo: ${totalCasos - casos.concordancia.length + variantes} casos y variantes, ${observaciones ? `${observaciones} observaciones de concordancia, ` : ""}${otrosPerfiles ? `${otrosPerfiles} perfiles más, ` : ""}${bloques ? `${bloques} resúmenes, ` : ""}${repeticiones} corridas.`,
     );
   }
 
@@ -9329,6 +9998,13 @@ async function main() {
     ["Caso", "Resultado", "Dimensiones", "Señales", "Prohibidas", "Descartadas", "Banderas", "Tokens ent/sal/cache  Latencia"],
     casos.perfil,
     evaluarCasoPerfil,
+  );
+  const { proposeProfileUpdate } = await import("@/lib/ai/propose-profile-update");
+  await correrGrupo(
+    `Casos de concordancia con el modelo (${casos.concordancia.length}) · modelo ${MODEL_ID} · prompt ${PROMPT_VERSION}`,
+    ["Caso", "Resultado", "Observaciones", "Contradicciones con las dos frases", "Coincidencias con todas sus citas", "Descartadas", "Tokens ent/sal/cache  Latencia"],
+    casos.concordancia,
+    (caso, n) => evaluarCasoConcordancia(caso, n, proposeProfileUpdate),
   );
   await correrGrupo(
     `Casos de plan con el modelo (${casos.plan.length}) · modelo ${MODEL_ID} · prompt ${PROMPT_VERSION_PLAN}`,
@@ -9369,6 +10045,10 @@ async function main() {
   const pares = resultados.flatMap((r) => r.pares);
   console.log(`\nPares de sesgo (${pares.length}) · repeticiones ${repeticiones}`);
   imprimirTabla(["Caso", "Variante", "Eje", "Resultado"], pares.map((p) => [p.caso, p.variante, p.eje, p.ok ? "OK" : "FALLA"]));
+  const tablaConteo = tablaConteoPares(pares, repeticiones);
+  console.log(`\n${tablaConteo.titulo}`);
+  imprimirTabla(tablaConteo.encabezado, tablaConteo.filas);
+  tablas.push(tablaConteo);
 
   // R-008.47: lo esperado y lo obtenido por evidencia. La tabla también llega al reporte.
   const evidencias = resultados.flatMap((r) => r.evidencias ?? []);
@@ -9414,6 +10094,33 @@ async function main() {
   imprimirTabla(tablaDosPerfiles.encabezado, tablaDosPerfiles.filas);
   tablas.push(tablaDosPerfiles);
 
+  // R-011.17: "x de n" por dimensión, y cada relación con sus dos frases. Si eligió una versión lo juzga quien lee.
+  const tablaConcordancia: TablaReporte = {
+    titulo: `Concordancia por dimensión · repeticiones ${repeticiones} · notas escritas por un solo modelo`,
+    encabezado: ["Caso", "Corrida", "Dimensión"],
+    filas: resultados.flatMap((r) => r.concordancia?.dimensiones ?? []),
+  };
+  const tablaRelaciones: TablaReporte = {
+    titulo: `Relaciones entre observadores · repeticiones ${repeticiones} · si elige una versión lo juzga quien lee`,
+    encabezado: ["Caso", "Corrida", "Observó esta nota", "Observó la anterior", "Tipo", "Dimensión", "Esta nota", "Nota anterior", "Descripción"],
+    filas: resultados.flatMap((r) => r.concordancia?.relaciones ?? []),
+  };
+  const tablaResumenes: TablaReporte = {
+    titulo: `Resúmenes en dimensiones con contradicción · repeticiones ${repeticiones} · los lee la persona; si eligen una versión o dicen quién observó lo juzga quien lee`,
+    encabezado: ["Caso", "Corrida", "Observó", "Dimensión", "Resumen"],
+    filas: resultados.flatMap((r) => r.concordancia?.resumenes ?? []),
+  };
+  const tablaSenalesConcordancia: TablaReporte = {
+    titulo: `Señales en los casos de concordancia · repeticiones ${repeticiones}`,
+    encabezado: ["Caso", "Corrida", "Observó", "Señal", "Descripción", "Citas"],
+    filas: resultados.flatMap((r) => r.concordancia?.senales ?? []),
+  };
+  for (const tabla of [tablaConcordancia, tablaRelaciones, tablaResumenes, tablaSenalesConcordancia]) {
+    console.log(`\n${tabla.titulo}`);
+    imprimirTabla(tabla.encabezado, tabla.filas);
+    tablas.push(tabla);
+  }
+
   for (const r of resultados) {
     if (!r.criticos.length && !r.advertencias.length) continue;
     console.log(`\n${r.id}`);
@@ -9435,8 +10142,9 @@ async function main() {
       ],
       repeticiones,
       casos: totalCasos,
-      revisados: [...casos.perfil, ...casos.plan, ...casos.seguimiento, ...casos.guia, ...casos.desglose].filter((c) => c.revision.estado !== "borrador").length,
+      revisados: [...casos.perfil, ...casos.plan, ...casos.seguimiento, ...casos.guia, ...casos.desglose, ...casos.concordancia].filter((c) => c.revision.estado !== "borrador").length,
       variantes,
+      elegidos: args.casos ?? undefined,
       tablas,
       resultados,
       fallasValidacion: fallasSinModelo(pruebasFalladas, casos.fallas),

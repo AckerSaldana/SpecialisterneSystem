@@ -5,6 +5,8 @@
 // por defecto), puede cambiar el tipo y el texto de un cambio (R-004.43, R-004.44), confirma en un
 // Dialog y se envía la decisión a POST /api/profile-events/[eventId]/decision. La IA propone; el
 // coach decide.
+// Spec 012 (R-012.29): en pantallas anchas, "Lo que vas a aprobar" y "Tu decisión" van a la derecha, fijos a la vista; el
+// estado de cada tarjeta va como etiqueta. Los textos de 001 y 004 y la lógica no cambian.
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -28,11 +30,14 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { atribuyeObservador } from "@/lib/profile/terminos";
 import { Citas } from "./citas";
 import { textoEtiquetaCita } from "./etiqueta-cita";
-import { ETIQUETA_TIPO } from "./labels";
+import { ETIQUETA_TIPO, formatFecha } from "./labels";
 
 type Props = { vista: VistaPropuesta; nombre: string };
+
+const textoObservador = (observador: string | null | undefined) => `Observó: ${observador ?? "sin registrar"}`;
 
 type Decision =
   | { tipo: "aprobada"; cambios: number; senales: number; version: number | null; conSnapshot: boolean }
@@ -50,8 +55,17 @@ const sinPunto = (texto: string) => texto.trim().replace(/[.\s]+$/, "");
 const claseCheckbox =
   "mt-0.5 size-5 shrink-0 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
-const claseSelect =
-  "h-9 w-fit rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+const claseSelect = "min-h-10 w-fit rounded-md border-(length:--border-w) border-input bg-card px-3 text-base";
+
+// Título de cada sección de la propuesta, en serif como los títulos de DISENO.md.
+const claseLegend = "mb-3 font-serif text-2xl";
+// La tarjeta dice si está incluida: fondo normal si sí, borde punteado y fondo apagado si no. El texto lo dice igual.
+const claseTarjeta = (incluido: boolean) => (incluido ? "" : "border-dashed bg-muted");
+const claseEstado = (incluido: boolean) =>
+  `w-fit rounded-full px-3 py-0.5 text-sm ${incluido ? "bg-accent text-foreground" : "border-(length:--border-w) border-dashed border-input text-muted-foreground"}`;
+
+// R-012.29: "{sección}: {k} de {n}".
+const lineaResumen = (titulo: string, sel: boolean[]) => `${titulo}: ${sel.filter(Boolean).length} de ${sel.length}`;
 
 const DESCARTES: Partial<Record<VistaPropuesta["descartados"][number]["motivo"], string>> = {
   item_no_existe: "La IA citó un punto que no está en el plan.",
@@ -207,12 +221,22 @@ export function ProposalReview({ vista, nombre }: Props) {
   const marcar = (setter: typeof setSelCambios, i: number, valor: boolean) =>
     setter((prev) => prev.map((v, j) => (j === i ? valor : v)));
 
+  const resumen = [
+    update.cambios.length > 0 ? lineaResumen("Cambios al perfil", selCambios) : null,
+    update.senales.length > 0 ? lineaResumen("Señales", selSenales) : null,
+    vista.seguimiento && update.avance.length > 0 ? lineaResumen("Avance del plan", selAvance) : null,
+    update.preguntasParaSiguienteSesion.length > 0 ? lineaResumen("Preguntas", selPreguntas) : null,
+    vista.seguimiento && update.contexto.length > 0 ? lineaResumen("Contexto", selContexto) : null,
+    vista.seguimiento && update.siguientePaso ? `Siguiente paso: ${selPaso ? 1 : 0} de 1` : null,
+  ].filter((l): l is string => l !== null);
+
   return (
-    <div className="flex flex-col gap-6">
-      <h2 ref={tituloRef} tabIndex={-1} className="foco-destino text-xl font-semibold">
+    <div className="grid items-start gap-10 xl:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+      <div className="flex min-w-0 flex-col gap-8">
+      <h2 ref={tituloRef} tabIndex={-1} className="foco-destino text-3xl">
         Revisa la propuesta
       </h2>
-      <p className="prose-measure text-sm text-muted-foreground">
+      <p className="prose-measure text-muted-foreground">
         La propuesta quedó guardada como pendiente. Nada cambia hasta que la apruebes. Modelo: {vista.modelo ?? "Sin dato"}. Versión
         de instrucciones: {vista.promptVersion ?? "Sin dato"}.
       </p>
@@ -282,7 +306,7 @@ export function ProposalReview({ vista, nombre }: Props) {
       ) : null}
 
       <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-        <legend className="mb-3 text-lg font-semibold">Cambios al perfil ({update.cambios.length})</legend>
+        <legend className={claseLegend}>Cambios al perfil ({update.cambios.length})</legend>
         {update.cambios.length === 0 ? (
           <p className="text-sm text-muted-foreground">La IA no propuso cambios al perfil con esta nota.</p>
         ) : (
@@ -294,7 +318,7 @@ export function ProposalReview({ vista, nombre }: Props) {
               const bloqueosCambio = bloqueos.filter((b) => b.indice === i);
               return (
                 <li key={i}>
-                  <Card>
+                  <Card className={claseTarjeta(selCambios[i])}>
                     <CardHeader>
                       <div className="flex items-start gap-3">
                         <input
@@ -306,10 +330,10 @@ export function ProposalReview({ vista, nombre }: Props) {
                           className={claseCheckbox}
                         />
                         <div className="flex flex-col gap-1">
-                          <h3 className="font-medium">
+                          <h3 className="text-lg font-semibold">
                             <label htmlFor={`cambio-${i}`}>{etiquetaDimension(c.dimension)}</label>
                           </h3>
-                          <p id={`cambio-${i}-estado`} className="text-xs">
+                          <p id={`cambio-${i}-estado`} className={claseEstado(selCambios[i])}>
                             {selCambios[i] ? "Incluido. Se va a aplicar." : "No incluido. No se va a aplicar."}
                           </p>
                         </div>
@@ -317,7 +341,7 @@ export function ProposalReview({ vista, nombre }: Props) {
                     </CardHeader>
                     <CardContent className="flex flex-col gap-3">
                       <div className="flex flex-col gap-1">
-                        <Label htmlFor={`cambio-${i}-tipo`}>Tipo</Label>
+                        <Label htmlFor={`cambio-${i}-tipo`} className="font-semibold">Tipo</Label>
                         <select
                           id={`cambio-${i}-tipo`}
                           value={tipo}
@@ -364,6 +388,10 @@ export function ProposalReview({ vista, nombre }: Props) {
                         </>
                       )}
 
+                      {atribuyeObservador(resumen) ? (
+                        <p className="prose-measure font-medium">Este texto parece decir quién observó. La persona lo lee: revísalo.</p>
+                      ) : null}
+
                       {c.dominiosFE.length > 0 ? (
                         <p className="text-sm">
                           <span className="font-medium">Funciones ejecutivas relacionadas: </span>
@@ -388,7 +416,7 @@ export function ProposalReview({ vista, nombre }: Props) {
       </fieldset>
 
       <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-        <legend className="mb-3 text-lg font-semibold">Señales ({update.senales.length})</legend>
+        <legend className={claseLegend}>Señales ({update.senales.length})</legend>
         <p className="prose-measure text-sm text-muted-foreground">Las señales solo las ves tú. La persona no las ve.</p>
         {update.senales.length === 0 ? (
           <p className="text-sm text-muted-foreground">La IA no propuso señales con esta nota.</p>
@@ -398,7 +426,7 @@ export function ProposalReview({ vista, nombre }: Props) {
               const terminos = terminosEn(`senales[${i}]`);
               return (
                 <li key={i}>
-                  <Card>
+                  <Card className={claseTarjeta(selSenales[i])}>
                     <CardHeader>
                       <div className="flex items-start gap-3">
                         <input
@@ -413,7 +441,7 @@ export function ProposalReview({ vista, nombre }: Props) {
                           <h3 className="font-medium">
                             <label htmlFor={`senal-${i}`}>{etiquetaSenal(s.tipo)}</label>
                           </h3>
-                          <p id={`senal-${i}-estado`} className="text-xs">
+                          <p id={`senal-${i}-estado`} className={claseEstado(selSenales[i])}>
                             {selSenales[i] ? "Incluida. Se va a registrar." : "No incluida. No se va a registrar."}
                           </p>
                         </div>
@@ -442,7 +470,7 @@ export function ProposalReview({ vista, nombre }: Props) {
 
       {vista.seguimiento ? (
         <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-          <legend className="mb-3 text-lg font-semibold">Avance del plan ({update.avance.length})</legend>
+          <legend className={claseLegend}>Avance del plan ({update.avance.length})</legend>
           {update.avance.length === 0 ? (
             <p className="text-sm text-muted-foreground">La IA no propuso avance del plan con esta nota.</p>
           ) : (
@@ -498,7 +526,7 @@ export function ProposalReview({ vista, nombre }: Props) {
 
       {update.preguntasParaSiguienteSesion.length > 0 ? (
         <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-          <legend className="mb-3 text-lg font-semibold">
+          <legend className={claseLegend}>
             Preguntas para la siguiente sesión ({update.preguntasParaSiguienteSesion.length})
           </legend>
           <p className="prose-measure text-sm text-muted-foreground">Solo tú ves esto.</p>
@@ -529,7 +557,7 @@ export function ProposalReview({ vista, nombre }: Props) {
 
       {vista.seguimiento && update.contexto.length > 0 ? (
         <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-          <legend className="mb-3 text-lg font-semibold">Contexto para la siguiente sesión ({update.contexto.length})</legend>
+          <legend className={claseLegend}>Contexto para la siguiente sesión ({update.contexto.length})</legend>
           <p className="prose-measure text-sm text-muted-foreground">Solo tú ves esto.</p>
           <ul className="flex flex-col gap-3">
             {update.contexto.map((c, i) => {
@@ -559,7 +587,7 @@ export function ProposalReview({ vista, nombre }: Props) {
 
       {vista.seguimiento && update.siguientePaso ? (
         <fieldset disabled={bloqueado} className="flex flex-col gap-3">
-          <legend className="mb-3 text-lg font-semibold">Siguiente paso</legend>
+          <legend className={claseLegend}>Siguiente paso</legend>
           <div className="flex items-start gap-3 text-sm">
             <input
               type="checkbox"
@@ -598,18 +626,66 @@ export function ProposalReview({ vista, nombre }: Props) {
             {update.relacionesConPerfilPrevio.map((r, i) => (
               <li key={i} className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
                 <h3 className="font-medium">
-                  {r.tipo === "coincidencia" ? "Coincide con el perfil" : "No coincide con el perfil"}: {etiquetaDimension(r.dimension)}
+                  {r.tipo === "coincidencia" ? "Coincide con el perfil" : "Contradicción con el perfil"}: {etiquetaDimension(r.dimension)}
                 </h3>
                 <p className="prose-measure">{r.descripcion}</p>
-                <Citas citas={r.evidencia} />
+                {/* Sin la llave citaPrevia: seguimiento o un evento anterior a 011 (R-011.12). Solo hay una frase. */}
+                {r.citaPrevia === undefined ? (
+                  <Citas citas={r.evidencia} />
+                ) : (
+                  <>
+                    {r.tipo === "contradiccion" ? <p className="font-medium">El sistema no elige. Aclara esto con la persona.</p> : null}
+                    <h4 className="font-medium">Esta nota</h4>
+                    <Citas
+                      citas={r.evidencia.map((e) => ({
+                        cita: e.cita,
+                        fecha: vista.sesion ? formatFecha(vista.sesion.fecha) : undefined,
+                        detalle: textoObservador(vista.sesion?.observador),
+                      }))}
+                    />
+                    {r.citaPrevia !== null ? (
+                      <>
+                        <h4 className="font-medium">Nota anterior</h4>
+                        <Citas
+                          citas={[
+                            {
+                              cita: r.citaPrevia,
+                              fecha: r.sesionPrevia && vista.origenes[r.sesionPrevia] ? formatFecha(vista.origenes[r.sesionPrevia].fecha) : undefined,
+                              detalle: textoObservador(r.sesionPrevia ? vista.origenes[r.sesionPrevia]?.observador : null),
+                            },
+                          ]}
+                        />
+                      </>
+                    ) : r.tipo === "contradiccion" ? (
+                      <p>No se pudo confirmar la frase anterior en el perfil.</p>
+                    ) : null}
+                  </>
+                )}
               </li>
             ))}
           </ul>
         </section>
       ) : null}
 
+      </div>
+
+      {/* R-012.29: resumen y decisión, después de la revisión en el orden de lectura. */}
+      <aside aria-label="Resumen y decisión" className="flex flex-col gap-4 xl:sticky xl:top-6">
+      {resumen.length > 0 && !decision ? (
+        <section aria-labelledby="resumen-seleccion" className="flex flex-col gap-2 rounded-lg border-(length:--border-w) border-border bg-muted px-5 py-4">
+          <h2 id="resumen-seleccion" className="text-xl">
+            Lo que vas a aprobar
+          </h2>
+          <ul className="flex flex-col gap-1">
+            {resumen.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+
       {decision ? (
-        <div ref={resultadoRef} tabIndex={-1} role="status" className="rounded-lg border p-4 outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+        <div ref={resultadoRef} tabIndex={-1} role="status" className="foco-destino rounded-lg border-(length:--border-w) border-border bg-card p-5">
           {decision.tipo === "rechazada" ? (
             <p>Rechazaste la propuesta. El perfil no cambió.</p>
           ) : decision.conSnapshot ? (
@@ -627,8 +703,8 @@ export function ProposalReview({ vista, nombre }: Props) {
           </p>
         </div>
       ) : (
-        <section aria-labelledby="decision" className="flex flex-col gap-3">
-          <h2 id="decision" className="text-lg font-semibold">
+        <section aria-labelledby="decision" className="flex flex-col gap-3 rounded-lg border-(length:--border-w) border-border bg-card px-5 py-5">
+          <h2 id="decision" className="text-2xl">
             Tu decisión
           </h2>
           {error ? (
@@ -658,7 +734,7 @@ export function ProposalReview({ vista, nombre }: Props) {
               </>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 xl:flex-col xl:items-stretch">
             <Button size="lg" disabled={noSePuedeAprobar} onClick={() => setDialogo("aprobar")}>
               Aprobar lo seleccionado
             </Button>
@@ -668,6 +744,8 @@ export function ProposalReview({ vista, nombre }: Props) {
           </div>
         </section>
       )}
+
+      </aside>
 
       {/* Confirmación antes de guardar. */}
       <Dialog open={dialogo === "aprobar"} onOpenChange={cambiarDialogo}>

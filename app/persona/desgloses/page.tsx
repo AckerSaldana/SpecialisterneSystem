@@ -6,6 +6,7 @@
 // listo. Sin citas, señales ni nombres de dominios (C-09). Sin avisos ni nada con tiempo (C-14, R-010.54).
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRightIcon } from "lucide-react";
 import { withRls } from "@/lib/db/rls";
 import { hayPerfilParaDesglose, leerTareasPersona } from "@/lib/desglose/lectura";
 import { puertaPersona } from "@/lib/persona/puerta";
@@ -42,7 +43,7 @@ export default async function MisTareasPage({ searchParams }: Props) {
   if (!acompanamiento) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-2xl font-semibold">{TITULO}</h1>
+        <h1 className="text-5xl leading-tight">{TITULO}</h1>
         <p className="prose-measure">{SIN_ACOMPANAMIENTO}</p>
       </div>
     );
@@ -56,7 +57,7 @@ export default async function MisTareasPage({ searchParams }: Props) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <TituloEnfocable id={ID_TITULO_TAREAS} nivel={1} className="text-2xl font-semibold">
+        <TituloEnfocable id={ID_TITULO_TAREAS} nivel={1} className="text-5xl leading-tight">
           {TITULO}
         </TituloEnfocable>
         {quitada ? (
@@ -64,11 +65,12 @@ export default async function MisTareasPage({ searchParams }: Props) {
             {TAREA_QUITADA}
           </p>
         ) : null}
-        <p className="prose-measure">{INTRO}</p>
+        <p className="prose-measure text-muted-foreground">{INTRO}</p>
       </header>
 
-      <section aria-labelledby="pedir-pasos" className="flex flex-col gap-3">
-        <h2 id="pedir-pasos" className="text-xl font-semibold">
+      {/* Spec 012 (R-012.34): el formulario en una tarjeta y cada tarea como fila que se abre completa. */}
+      <section aria-labelledby="pedir-pasos" className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-6 md:px-8">
+        <h2 id="pedir-pasos" className="text-3xl">
           {TITULO_PEDIR}
         </h2>
         {hayPerfil ? (
@@ -79,7 +81,7 @@ export default async function MisTareasPage({ searchParams }: Props) {
       </section>
 
       <section aria-labelledby="tus-tareas" className="flex flex-col gap-3">
-        <h2 id="tus-tareas" className="text-xl font-semibold">
+        <h2 id="tus-tareas" className="text-3xl">
           {TITULO_LISTA}
         </h2>
         {tareas.length === 0 ? (
@@ -87,12 +89,18 @@ export default async function MisTareasPage({ searchParams }: Props) {
         ) : (
           <ul className="flex flex-col gap-3">
             {tareas.map((t) => (
-              <li key={t.id} className="flex flex-col gap-1 rounded-lg border border-border p-3">
-                <Link href={rutaDesglose(t.id)} className="prose-measure font-medium underline underline-offset-4">
-                  {textoPorDesglose(t.tarea, formatFecha(t.creadaEn))}
+              <li key={t.id}>
+                <Link
+                  href={rutaDesglose(t.id)}
+                  className="group flex min-h-16 items-center gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-5 py-4 text-foreground no-underline transition-colors hover:border-input"
+                >
+                  <span className="flex min-w-0 flex-1 flex-col gap-1">
+                    <span className="prose-measure font-semibold underline-offset-4 group-hover:underline">{textoPorDesglose(t.tarea, formatFecha(t.creadaEn))}</span>
+                    {t.laPreparoSuCoach ? <span className="prose-measure text-muted-foreground">{LO_PREPARO_TU_COACH}</span> : null}
+                    {t.terminada ? <span className="prose-measure text-muted-foreground">{TERMINASTE}</span> : null}
+                  </span>
+                  <ChevronRightIcon aria-hidden="true" className="size-6 shrink-0 text-muted-foreground" />
                 </Link>
-                {t.laPreparoSuCoach ? <p className="prose-measure text-sm">{LO_PREPARO_TU_COACH}</p> : null}
-                {t.terminada ? <p className="prose-measure text-sm">{TERMINASTE}</p> : null}
               </li>
             ))}
           </ul>

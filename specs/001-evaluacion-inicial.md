@@ -1,8 +1,8 @@
-<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
+<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado -->
 
 # 001 · Evaluación inicial (as-built)
 
-- Estado: Borrador · Versión 4 · 2026-10-30
+- Estado: Borrador · Versión 5 · 2026-11-02
 - Fuentes: F-005, F-017, F-030 (handoff del 29 oct), D-015, D-016, D-017, D-021, D-058, D-031, D-032, D-033, D-034, D-035, REGLAS §2.5, §3, §5, §6, §7, CONTEXTO §4, §5, §6, §11; constitución C-01, C-02, C-03, C-04, C-05, C-07, C-08, C-09, C-10, C-11, C-13, C-14, C-15, C-16, C-17, C-18
 - Depende de: 000 y 002. El consentimiento vigente, la verificación y la lista de lo que escribe la persona los define 002; hoy el consentimiento y la verificación los pone `scripts/seed.sql`. Los cambios de etapa los define 003. Qué cuenta como señal activa una vez que se pueden cerrar señales lo define 004.
 
@@ -165,7 +165,7 @@ Coach, revisión de la propuesta
 - "Cambios al perfil ({n})"; sin cambios: "La IA no propuso cambios al perfil con esta nota."
 - Por cambio: "Incluido. Se va a aplicar." / "No incluido. No se va a aplicar." y "Funciones ejecutivas relacionadas: …"
 - "Señales ({n})" / "Las señales solo las ves tú. La persona no las ve."; por señal: "Incluida. Se va a registrar." / "No incluida. No se va a registrar."; sin señales: "La IA no propuso señales con esta nota."
-- "Relación con el perfil anterior": "Coincide con el perfil: {dimensión}" o "No coincide con el perfil: {dimensión}"
+- "Relación con el perfil anterior": "Coincide con el perfil: {dimensión}" o "Contradicción con el perfil: {dimensión}" (011)
 - "Preguntas para la siguiente sesión"
 - "Tu decisión"; sin selección: "Selecciona al menos un cambio o una señal para aprobar."
 - Botones: "Aprobar lo seleccionado", "Rechazar propuesta"
@@ -284,6 +284,10 @@ Todos pasan a 004 salvo que se indique otra cosa.
 - Cuando una persona dice que algo no la representa, ¿cómo lo resuelven hoy: cambian el texto en ese momento, lo dejan para la siguiente sesión o anotan el desacuerdo?
 
 ## Cambios
+
+Versión 5 · 2026-11-02 · spec 011
+
+- Solo cambia el título de una contradicción en la revisión. El resto de esa sección lo define 011.
 
 Versión 4 · 2026-10-30 · numeración de decisiones
 

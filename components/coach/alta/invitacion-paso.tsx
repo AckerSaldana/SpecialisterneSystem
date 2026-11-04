@@ -82,11 +82,12 @@ export function InvitacionPaso({ engagementId, nombre, estado }: Props) {
         <div
           ref={avisoRef}
           tabIndex={-1}
-          className="foco-destino prose-measure rounded-lg border-2 border-primary bg-accent p-4"
+          // Spec 012 (R-012.39): aviso con barra de acento, como el de la verificación.
+          className="foco-destino prose-measure rounded-md border-l-4 border-primary bg-accent px-4 py-3"
         >
           <p>
             Código de invitación de {r.nombre}:{" "}
-            <strong className="font-mono text-lg tracking-wider">{r.codigo}</strong>. Dáselo en persona o por
+            <strong className="font-mono text-2xl tracking-wider">{r.codigo}</strong>. Dáselo en persona o por
             teléfono, no por un chat de grupo ni por un canal que vean otras personas. Este código solo se muestra
             esta vez. Vence el {r.vence}. {r.nombre} entra en {r.urlInvitacion}.
           </p>

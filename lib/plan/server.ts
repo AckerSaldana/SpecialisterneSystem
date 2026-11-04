@@ -242,14 +242,15 @@ export type FilaItem = {
 
 // La ruta de las banderas de un ítem guardado es su id: la propuesta limpia usa "items[i]",
 // pero un ítem del borrador cambia de posición y el id no.
-export function banderasDeFila(fila: FilaItem, citas: string[]) {
+// "notas": las de las sesiones del acompañamiento (R-003.62). Sin ellas, solo cuentan las citas.
+export function banderasDeFila(fila: FilaItem, citas: string[], notas: string[] = []) {
   return banderasDeItem(
     { tipo: fila.tipo, descripcion: fila.descripcion, textoPersona: fila.textoPersona },
-    { citas, ruta: fila.id },
+    { citas, ruta: fila.id, notas },
   );
 }
 
-export function vistaItem(fila: FilaItem, citas: string[]): ItemPlanVista {
+export function vistaItem(fila: FilaItem, citas: string[], notas: string[] = []): ItemPlanVista {
   return {
     id: fila.id,
     tipo: fila.tipo,
@@ -261,6 +262,6 @@ export function vistaItem(fila: FilaItem, citas: string[]): ItemPlanVista {
     orden: fila.orden,
     origen: fila.origen,
     origenItemId: fila.origenItemId,
-    banderas: banderasDeFila(fila, citas),
+    banderas: banderasDeFila(fila, citas, notas),
   };
 }

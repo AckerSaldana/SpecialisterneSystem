@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Borrado de datos después de retirar el consentimiento (spec 002, R-002.49, CA-002.42).
 // Borrador sin revisión legal (decisión abierta d). Script manual; un trabajo programado queda

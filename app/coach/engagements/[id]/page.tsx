@@ -11,28 +11,36 @@
 // Spec 008: enlace a la pantalla "Función ejecutiva" dentro de "Perfil actual" (R-008.21).
 // Spec 009: enlace a "Cómo trabajar conmigo", después del plan.
 // Spec 010: enlace a "Tareas de {nombre}", junto a ese (R-010.2).
+// Spec 012: encabezado con Tipo y Etapa, línea de tiempo de sesiones y panel "Perfil de {nombre}" (R-012.17 a R-012.20).
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
+import { ChevronRightIcon } from "lucide-react";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
 import { estadoConsentimiento } from "@/lib/consent";
 import { withRls } from "@/lib/db/rls";
 import { engagements, invitations, profileEvents, profileSnapshots, sessions, users } from "@/lib/db/schema";
-import { ENGAGEMENT_CONFIG, etiquetaEtapa } from "@/lib/engagements/config";
+import { ENGAGEMENT_CONFIG } from "@/lib/engagements/config";
 import { leerSeguimiento, type DatosSeguimiento } from "@/lib/followup/lectura";
 import { TITULO_GUIA } from "@/lib/guia/schema-cliente";
 import { leerDatosCierre, type DatosCierre } from "@/lib/persona/cierre-comentario";
 import type { Perfil } from "@/lib/profile/schema";
+import { DoodlePlanta } from "@/components/Doodle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ProfileView, SenalesView } from "@/components/coach/profile-view";
 import { EventTimeline, type EventoVista } from "@/components/coach/event-timeline";
+import { LineaTiempo, type SesionLinea } from "@/components/coach/linea-tiempo";
+import { MetaAcompanamiento } from "@/components/coach/meta-acompanamiento";
+import { PerfilPanel } from "@/components/coach/perfil-panel";
+import { EnEstaPagina, PorAtender } from "@/components/coach/por-atender";
 import { formatFecha } from "@/components/coach/labels";
 import { textoConsentimiento, textoDatosOcultos, textoSinNotas } from "@/components/coach/alta/consentimiento";
 import { InvitacionPaso, type EstadoInvitacion } from "@/components/coach/alta/invitacion-paso";
+import { PasoDelAlta } from "@/components/coach/alta/paso-del-alta";
 import { VerificacionForm } from "@/components/coach/alta/verificacion-form";
 import { tituloTareas } from "@/components/coach/desglose/textos";
 import { leerPlan, type DatosPlan } from "@/components/coach/plan/datos";
@@ -123,9 +131,18 @@ export default async function EngagementPage({ params, searchParams }: Props) {
       .limit(1);
 
     const listaSesiones = await tx
-      .select({ id: sessions.id, realizadaEn: sessions.realizadaEn })
+      .select({ id: sessions.id, tipo: sessions.tipo, realizadaEn: sessions.realizadaEn, observador: sessions.observador, nota: sessions.notaOriginal })
       .from(sessions)
-      .where(eq(sessions.engagementId, id));
+      .where(eq(sessions.engagementId, id))
+      .orderBy(desc(sessions.realizadaEn), desc(sessions.createdAt));
+
+    // R-012.18: "Ver detalle" abre la propuesta de la IA de esa sesión (hay a lo más una, profile_events_una_propuesta).
+    const propuestas = await tx
+      .select({ id: profileEvents.id, sessionId: profileEvents.sessionId })
+      .from(profileEvents)
+      .where(and(eq(profileEvents.engagementId, id), eq(profileEvents.tipo, "propuesta_ia")));
+    const propuestaDe = new Map(propuestas.flatMap((p) => (p.sessionId ? [[p.sessionId, p.id] as const] : [])));
+    const lineaSesiones: SesionLinea[] = listaSesiones.map((s) => ({ ...s, propuestaId: propuestaDe.get(s.id) ?? null }));
 
     const eventos = await tx
       .select({
@@ -156,114 +173,111 @@ export default async function EngagementPage({ params, searchParams }: Props) {
 
     const cierre = await leerDatosCierre(tx, id);
 
-    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, eventos, plan, seguimiento, cierre } };
+    return { engagement, consentimiento, invitacion, historial: { snapshot, listaSesiones, lineaSesiones, eventos, plan, seguimiento, cierre } };
   });
 
   if (!datos) notFound();
   const { engagement, consentimiento, invitacion, historial } = datos;
   const nombre = engagement.nombrePila ?? "Persona sin nombre visible";
   const urlPagina = `/coach/engagements/${engagement.id}`;
+  // R-012.39: qué pasos del alta ya terminaron y cuál sigue: el primero sin terminar. Si el tipo no pide diagnóstico,
+  // la verificación no detiene la invitación, así que no es el que sigue aunque no esté hecha.
+  const pasosAlta = {
+    verificacion: engagement.diagnosticoVerificado,
+    invitacion: invitacion?.tipo === "usada",
+    consentimiento: consentimiento.estado === "vigente",
+    sigue: 0,
+  };
+  const verificacionNoDetiene = pasosAlta.verificacion || !ENGAGEMENT_CONFIG[engagement.type].requiereDiagnostico;
+  pasosAlta.sigue = [verificacionNoDetiene, pasosAlta.invitacion, pasosAlta.consentimiento].indexOf(false) + 1;
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-4">
-        <p className="text-sm">
+      <header className="relative flex flex-col gap-4">
+        <p>
           <Link href="/coach" className="underline underline-offset-4">
             Volver a tus acompañamientos
           </Link>
         </p>
-        <h1 className="text-2xl font-semibold">{nombre}</h1>
-        <dl className="flex flex-col gap-1 text-sm">
+        {/* R-012.17: doodle quieto arriba a la derecha; en pantallas angostas no se muestra para no tapar el título. */}
+        <DoodlePlanta className="pointer-events-none absolute top-0 right-0 hidden w-36 lg:block" />
+        {/* "Acompañamiento" no cabe en 48px a 375px de ancho: en pantallas angostas baja a 30px. */}
+        <h1 className="text-3xl leading-tight sm:text-5xl lg:pr-40">Acompañamiento de {nombre}</h1>
+        <MetaAcompanamiento tipo={engagement.type} etapa={engagement.stage} />
+        {/* R-012.27: consentimiento y verificación en una sola línea apagada. */}
+        <dl className="flex flex-wrap gap-x-8 gap-y-1 text-muted-foreground">
           <div className="flex flex-wrap gap-x-2">
-            <dt className="font-medium">Tipo:</dt>
-            <dd>{ENGAGEMENT_CONFIG[engagement.type].etiqueta}</dd>
-          </div>
-          <div className="flex flex-wrap gap-x-2">
-            <dt className="font-medium">Etapa:</dt>
-            <dd>{etiquetaEtapa(engagement.stage)}</dd>
-          </div>
-          <div className="flex flex-wrap gap-x-2">
-            <dt className="font-medium">Consentimiento:</dt>
+            <dt>Consentimiento:</dt>
             <dd>{textoConsentimiento(nombre, consentimiento)}</dd>
           </div>
           <div className="flex flex-wrap gap-x-2">
-            <dt className="font-medium">Diagnóstico verificado:</dt>
+            <dt>Diagnóstico verificado:</dt>
             <dd>{engagement.diagnosticoVerificado ? "Sí" : "No"}</dd>
           </div>
         </dl>
-        <div>
-          {consentimiento.estado === "vigente" ? (
-            <Button asChild size="lg">
-              <Link href={`${urlPagina}/sessions/new`}>Nueva sesión</Link>
-            </Button>
-          ) : (
-            <p className="prose-measure font-medium">{textoSinNotas(nombre)}</p>
-          )}
-        </div>
+        {/* Con consentimiento vigente, "+ Nueva sesión" va debajo de la línea de tiempo (R-012.18). */}
+        {consentimiento.estado === "vigente" ? null : <p className="prose-measure font-medium">{textoSinNotas(nombre)}</p>}
       </header>
+
+      {/* R-012.26: solo con consentimiento vigente, que es cuando existen esas secciones. */}
+      {historial ? <EnEstaPagina /> : null}
 
       {engagement.stage === "alta" && invitacion ? (
         <>
           <Separator />
+          {/* Spec 012 (R-012.39): los tres pasos en tarjetas; el terminado dice "Hecho" y el que sigue lleva la barra de acento. */}
           <section aria-labelledby="alta" className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <h2 id="alta" className="text-xl font-semibold">
+              <h2 id="alta" className="text-3xl">
                 Alta
               </h2>
-              <p className="prose-measure">Para empezar hay tres pasos. Los haces en este orden.</p>
+              <p className="prose-measure text-muted-foreground">Para empezar hay tres pasos. Los haces en este orden.</p>
             </div>
 
-            <section aria-labelledby="verificacion" className="flex flex-col gap-4">
-              <h3 id="verificacion" className="text-lg font-semibold">
-                1. Verificación del diagnóstico
-              </h3>
-              {engagement.diagnosticoVerificado && !corrigiendo ? (
-                <>
-                  <p className="prose-measure">
-                    Diagnóstico verificado por {engagement.verificadoPor ?? "un coach"} el{" "}
-                    {engagement.diagnosticoVerificadoEn ? formatFecha(engagement.diagnosticoVerificadoEn) : "día registrado"}.
-                    Cédula: {engagement.cedulaProfesional}.
-                  </p>
-                  <p className="prose-measure text-sm text-muted-foreground">
-                    Solo tú ves este dato. La persona no lo ve en su pantalla y la empresa nunca lo recibe.
-                  </p>
-                  <p className="text-sm">
-                    <Link href={`${urlPagina}?corregir=verificacion#verificacion`} className="underline underline-offset-4">
-                      Corregir la verificación
-                    </Link>
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div role="note" className="prose-measure rounded-lg border-2 border-primary bg-accent p-4 font-medium">
-                    No subas ni copies el documento. Revísalo fuera del sistema. Aquí solo registras que lo revisaste y la
-                    cédula del profesional.
-                  </div>
-                  <VerificacionForm
-                    engagementId={engagement.id}
-                    cedulaGuardada={engagement.cedulaProfesional}
-                    urlCancelar={engagement.diagnosticoVerificado ? `${urlPagina}#verificacion` : null}
-                  />
-                  <p className="prose-measure text-sm text-muted-foreground">
-                    Solo tú ves este dato. La persona no lo ve en su pantalla y la empresa nunca lo recibe.
-                  </p>
-                </>
-              )}
-            </section>
+            <ol className="flex flex-col gap-4">
+              <PasoDelAlta numero={1} id="verificacion" titulo="Verificación del diagnóstico" hecho={pasosAlta.verificacion} sigue={pasosAlta.sigue === 1}>
+                {engagement.diagnosticoVerificado && !corrigiendo ? (
+                  <>
+                    <p className="prose-measure">
+                      Diagnóstico verificado por {engagement.verificadoPor ?? "un coach"} el{" "}
+                      {engagement.diagnosticoVerificadoEn ? formatFecha(engagement.diagnosticoVerificadoEn) : "día registrado"}.
+                      Cédula: {engagement.cedulaProfesional}.
+                    </p>
+                    <p className="prose-measure text-sm text-muted-foreground">
+                      Solo tú ves este dato. La persona no lo ve en su pantalla y la empresa nunca lo recibe.
+                    </p>
+                    <p>
+                      <Link href={`${urlPagina}?corregir=verificacion#verificacion`} className="underline underline-offset-4">
+                        Corregir la verificación
+                      </Link>
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div role="note" className="prose-measure rounded-md border-l-4 border-primary bg-accent px-4 py-3 font-medium">
+                      No subas ni copies el documento. Revísalo fuera del sistema. Aquí solo registras que lo revisaste y la
+                      cédula del profesional.
+                    </div>
+                    <VerificacionForm
+                      engagementId={engagement.id}
+                      cedulaGuardada={engagement.cedulaProfesional}
+                      urlCancelar={engagement.diagnosticoVerificado ? `${urlPagina}#verificacion` : null}
+                    />
+                    <p className="prose-measure text-sm text-muted-foreground">
+                      Solo tú ves este dato. La persona no lo ve en su pantalla y la empresa nunca lo recibe.
+                    </p>
+                  </>
+                )}
+              </PasoDelAlta>
 
-            <section aria-labelledby="invitacion" className="flex flex-col gap-4">
-              <h3 id="invitacion" className="text-lg font-semibold">
-                2. Invitación
-              </h3>
-              <InvitacionPaso engagementId={engagement.id} nombre={nombre} estado={invitacion} />
-            </section>
+              <PasoDelAlta numero={2} id="invitacion" titulo="Invitación" hecho={pasosAlta.invitacion} sigue={pasosAlta.sigue === 2}>
+                <InvitacionPaso engagementId={engagement.id} nombre={nombre} estado={invitacion} />
+              </PasoDelAlta>
 
-            <section aria-labelledby="consentimiento" className="flex flex-col gap-4">
-              <h3 id="consentimiento" className="text-lg font-semibold">
-                3. Consentimiento de la persona
-              </h3>
-              <p className="prose-measure">{textoConsentimiento(nombre, consentimiento)}</p>
-            </section>
+              <PasoDelAlta numero={3} id="consentimiento" titulo="Consentimiento de la persona" hecho={pasosAlta.consentimiento} sigue={pasosAlta.sigue === 3}>
+                <p className="prose-measure">{textoConsentimiento(nombre, consentimiento)}</p>
+              </PasoDelAlta>
+            </ol>
           </section>
         </>
       ) : null}
@@ -295,7 +309,8 @@ export default async function EngagementPage({ params, searchParams }: Props) {
 
 type HistorialProps = {
   snapshot: { id: string; version: number; perfil: Perfil; createdAt: Date } | undefined;
-  listaSesiones: { id: string; realizadaEn: Date }[];
+  listaSesiones: { id: string; realizadaEn: Date; observador: string | null }[];
+  lineaSesiones: SesionLinea[];
   eventos: EventoVista[];
   plan: DatosPlan;
   seguimiento: DatosSeguimiento;
@@ -305,16 +320,43 @@ type HistorialProps = {
 };
 
 // Perfil, plan, señales e historial: solo con consentimiento vigente.
-function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento, cierre, engagementId, nombre }: HistorialProps) {
+function HistorialVisible({ snapshot, listaSesiones, lineaSesiones, eventos, plan, seguimiento, cierre, engagementId, nombre }: HistorialProps) {
   // sessionId -> fecha formateada, para la evidencia de cada dimensión.
   const fechasSesion: Record<string, string> = {};
   for (const s of listaSesiones) fechasSesion[s.id] = formatFecha(s.realizadaEn);
+  // Spec 011 (R-011.11): quién observó, cuando se conoce.
+  const observadores = Object.fromEntries(listaSesiones.flatMap((s) => (s.observador ? [[s.id, s.observador]] : [])));
 
   // Una señal con alerta sin atender no ofrece marcar otra (strong_alerts_una_vigente).
   const conAlerta = new Set(seguimiento.alertas.filter((a) => a.estado !== "atendida").map((a) => a.tipoSenal));
 
+  // R-012.25: los mismos filtros que usan PropuestasPendientes, ComentariosSinRevisar y AlertasFuertes.
+  const pendientes = {
+    propuestas: seguimiento.pendientes.length,
+    sinPropuesta: seguimiento.sinPropuesta.length,
+    comentarios: eventos.filter((e) => e.status === "proposed" && e.payload.tipo === "no_me_representa").length,
+    alertas: seguimiento.alertas.filter((a) => a.estado !== "atendida").length,
+  };
+
   return (
     <>
+      <PorAtender pendientes={pendientes} nombre={nombre} />
+
+      {/* R-012.18 y R-012.19: línea de tiempo con "+ Nueva sesión" y, al lado, el panel del perfil. */}
+      <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,26rem)]">
+        <div className="flex flex-col gap-6">
+          <LineaTiempo sesiones={lineaSesiones} engagementId={engagementId} nombre={nombre} />
+          <div>
+            <Button asChild size="lg">
+              <Link href={`/coach/engagements/${engagementId}/sessions/new`}>+ Nueva sesión</Link>
+            </Button>
+          </div>
+        </div>
+        <PerfilPanel perfil={snapshot?.perfil ?? null} nombre={nombre} fechasSesion={fechasSesion} />
+      </div>
+
+      <Separator />
+
       <PropuestasPendientes datos={seguimiento} engagementId={engagementId} />
 
       <ComentariosSinRevisar eventos={eventos} cierre={cierre} nombre={nombre} idFoco="historial-eventos" />
@@ -322,7 +364,7 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
       <Separator />
 
       <section aria-labelledby="perfil-actual" className="flex flex-col gap-4">
-        <h2 id="perfil-actual" className="text-xl font-semibold">
+        <h2 id="perfil-actual" className="scroll-mt-6 text-3xl">
           Perfil actual
         </h2>
         {/* Spec 008 (R-008.21): solo con consentimiento vigente, como todo HistorialVisible. */}
@@ -336,7 +378,7 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
             <p className="text-sm text-muted-foreground">
               Versión {snapshot.version}, del {formatFecha(snapshot.createdAt)}.
             </p>
-            <ProfileView perfil={snapshot.perfil} fechasSesion={fechasSesion} />
+            <ProfileView perfil={snapshot.perfil} fechasSesion={fechasSesion} observadores={observadores} />
           </>
         ) : (
           <p className="prose-measure">
@@ -354,24 +396,39 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
         datos={{ plan, snapshotActualVersion: snapshot?.version ?? null, fechasSesion }}
       />
 
-      {/* Spec 009: solo con consentimiento vigente, como todo HistorialVisible (R-009.51). */}
-      <p className="text-sm">
-        <Link href={`/coach/engagements/${engagementId}/como-trabajar-conmigo`} className="underline underline-offset-4">
-          {TITULO_GUIA}
-        </Link>
-      </p>
-
-      {/* Spec 010: también solo con consentimiento vigente (R-010.45). */}
-      <p className="text-sm">
-        <Link href={`/coach/engagements/${engagementId}/desgloses`} className="underline underline-offset-4">
-          {tituloTareas(nombre)}
-        </Link>
-      </p>
+      {/* R-012.27: los dos enlaces de siempre, en el mismo lugar, como filas que se abren completas. */}
+      <section aria-labelledby="mas-de" className="flex flex-col gap-3">
+        <h2 id="mas-de" className="text-2xl">
+          Más de {nombre}
+        </h2>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {/* Spec 009: solo con consentimiento vigente, como todo HistorialVisible (R-009.51). */}
+          <li>
+            <Link
+              href={`/coach/engagements/${engagementId}/como-trabajar-conmigo`}
+              className="flex items-center justify-between gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-5 py-4 text-foreground no-underline transition-colors hover:border-input"
+            >
+              <span className="text-lg">{TITULO_GUIA}</span>
+              <ChevronRightIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+          {/* Spec 010: también solo con consentimiento vigente (R-010.45). */}
+          <li>
+            <Link
+              href={`/coach/engagements/${engagementId}/desgloses`}
+              className="flex items-center justify-between gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-5 py-4 text-foreground no-underline transition-colors hover:border-input"
+            >
+              <span className="text-lg">{tituloTareas(nombre)}</span>
+              <ChevronRightIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
+            </Link>
+          </li>
+        </ul>
+      </section>
 
       <Separator />
 
       <section aria-labelledby="senales-activas" className="flex flex-col gap-4">
-        <h2 id="senales-activas" tabIndex={-1} className="foco-destino text-xl font-semibold">
+        <h2 id="senales-activas" tabIndex={-1} className="foco-destino scroll-mt-6 text-3xl">
           Señales activas
         </h2>
         <p className="prose-measure text-sm text-muted-foreground">Solo tú ves esta sección. La persona no la ve.</p>
@@ -391,7 +448,7 @@ function HistorialVisible({ snapshot, listaSesiones, eventos, plan, seguimiento,
       <Separator />
 
       <section aria-labelledby="historial" className="flex flex-col gap-6">
-        <h2 id="historial" className="text-xl font-semibold">
+        <h2 id="historial" className="scroll-mt-6 text-3xl">
           Historial
         </h2>
         <Historiales datos={seguimiento} nombre={nombre} />

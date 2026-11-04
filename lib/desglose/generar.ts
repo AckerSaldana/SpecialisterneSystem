@@ -40,7 +40,10 @@ import { leerPerfilParaDesglose, leerPlanParaDesglose, type PerfilParaDesglose }
 import { AjustesProposal, DesgloseProposal, LIMITE_DIARIO_DESGLOSE, type ContextoDesglose, type DescartadoDesglose, type PasoDesglose } from "@/lib/desglose/schema";
 import { limpiarPasos, mensajeBloqueoCoach, revisarTextoDesglose, validarPasos, type OpcionesValidacion, type ProblemaDePaso } from "@/lib/desglose/validate";
 import { miAcompanamiento } from "@/lib/engagements/persona";
+import { leerUltimoSnapshot } from "@/lib/followup/lectura";
 import { logError, resumirError } from "@/lib/log";
+import { citasDelPerfil } from "@/lib/plan/server";
+import { copiasEn, notasDelAcompanamiento, type FuentesDeCopia } from "@/lib/sessions/copiado";
 import { mensajeUsuarioAjustes, mensajeUsuarioDesglose, PROMPT_VERSION_DESGLOSE, PROMPT_VERSION_DESGLOSE_AJUSTES, type EntradaAjustesModelo, type EntradaDesgloseModelo } from "@/lib/prompts";
 
 // R-010.47.
@@ -143,13 +146,23 @@ export async function chequeosDelPedido(tx: Tx, user: UsuarioDesglose, engagemen
   return { solicitud, perfil };
 }
 
+// R-010.55: las citas del último snapshot y las notas de las sesiones. Solo en el camino del coach, que sí las lee (RLS).
+export async function fuentesDelCoach(tx: Tx, engagementId: string): Promise<FuentesDeCopia> {
+  const [notas, snapshot] = await Promise.all([notasDelAcompanamiento(tx, engagementId), leerUltimoSnapshot(tx, engagementId)]);
+  return { citas: snapshot ? citasDelPerfil(snapshot.perfil) : [], notas };
+}
+
 // Después de R-010.3: R-010.1 para lo que escribió el coach, y la lista de apoyos.
 export async function revisarLoEscrito(tx: Tx, engagementId: string, { solicitud, perfil }: ChequeosDelPedido, tarea: string, contexto: ContextoDesglose | null): Promise<RespuestaRuta | ListoParaGenerar> {
   // Lo que escribe el coach le llega a la persona sin otra revisión (R-010.1, R-010.11). Lo que ella escribe para sí
-  // misma no se bloquea aquí.
+  // misma no se bloquea aquí, y nunca se compara con notas ni citas (decisión abierta 2).
   if (solicitud.esCoach) {
-    const [termino] = textosDelPedido(tarea, contexto).flatMap(revisarTextoDesglose);
+    const textos = textosDelPedido(tarea, contexto);
+    const [termino] = textos.flatMap(revisarTextoDesglose);
     if (termino) return conError(400, mensajeBloqueoCoach(solicitud.nombrePila, termino));
+    // R-010.55: tampoco copia sus notas ni las citas del perfil.
+    const [copia] = copiasEn(textos, await fuentesDelCoach(tx, engagementId));
+    if (copia) return conError(400, mensajeBloqueoCoach(solicitud.nombrePila, copia));
   }
 
   const plan = await leerPlanParaDesglose(tx, engagementId);

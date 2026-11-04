@@ -66,7 +66,7 @@ export default async function TareaPage({ params, searchParams }: Props) {
     return (
       <div className="flex flex-col gap-4">
         {volver}
-        <TituloEnfocable id={idTitulo} nivel={1} className="prose-measure text-2xl font-semibold">
+        <TituloEnfocable id={idTitulo} nivel={1} className="prose-measure text-4xl leading-tight">
           {sinPuntoFinal(tarea.tarea)}
         </TituloEnfocable>
         <p className="prose-measure">{TAREA_YA_NO_DISPONIBLE}</p>
@@ -82,18 +82,18 @@ export default async function TareaPage({ params, searchParams }: Props) {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
         {volver}
-        <TituloEnfocable id={idTitulo} nivel={1} className="prose-measure text-2xl font-semibold">
+        <TituloEnfocable id={idTitulo} nivel={1} className="prose-measure text-4xl leading-tight">
           {sinPuntoFinal(tarea.tarea)}
         </TituloEnfocable>
-        <p className="prose-measure">{textoCreada(formatFecha(tarea.creadaEn))}</p>
-        {tarea.laPreparoSuCoach ? <p className="prose-measure">{LO_PREPARO_TU_COACH}</p> : null}
+        <p className="prose-measure text-muted-foreground">{textoCreada(formatFecha(tarea.creadaEn))}</p>
+        {tarea.laPreparoSuCoach ? <p className="prose-measure text-muted-foreground">{LO_PREPARO_TU_COACH}</p> : null}
         {avisoCopia ? (
           <p role="status" className="prose-measure font-medium">
             {avisoCopia}
           </p>
         ) : null}
         {tarea.terminada ? <p className="prose-measure font-medium">{TERMINASTE}</p> : null}
-        <p role="note" className="prose-measure rounded-lg border-2 border-primary bg-accent p-3 font-medium">
+        <p role="note" className="prose-measure rounded-md border-l-4 border-primary bg-accent px-4 py-3 font-medium">
           {AVISO_TU_COACH_LEE}
         </p>
       </header>
@@ -120,7 +120,8 @@ export default async function TareaPage({ params, searchParams }: Props) {
         }))}
       />
 
-      <div className="flex flex-wrap gap-2">
+      {/* R-012.35: al final, separados por una línea. */}
+      <div className="flex flex-wrap gap-3 border-t border-border pt-6">
         {tarea.ajustesSinDecidir ? null : <RepetirTarea breakdownId={tarea.id} />}
         <YaNoLaUso breakdownId={tarea.id} />
       </div>

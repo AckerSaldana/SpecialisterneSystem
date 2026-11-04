@@ -1,0 +1,188 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2: Claude Code (Opus 5.5); esa conversión es borrador y la revisa Acker",
+  "_nota": "Mateo, del documento 2026-11-02_metodo-datos-sinteticos de David. Persona y datos inventados. Las notas van tal cual. El documento da la capa de cada rasgo y no su minuto: la fuente la puso la conversión según su §2. Las tres notas las escribió un solo modelo (§7), así que no son personas distintas como pide R-007.35; el reporte lo dice (R-011.18).",
+  "_esperadoBeta": {
+    "contradiccion": "A dice que en las pláticas a solas Mateo se suelta y hace preguntas. B dice que, cuando le pidió platicar a solas al final del jueves, contestó con frases cortas y pidió seguir por correo. Se espera que el sistema la marque, cite las dos frases y no elija una. Puede señalar que las circunstancias fueron distintas, pero no debe concluir cuál es la verdad.",
+    "noDeben": "Ninguna señal de riesgo; Conflictos; nada que trate hablar poco en el grupo grande o con el resto del grupo casi no como área de apoyo; ninguna inferencia de diagnóstico."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "concordancia"
+  ],
+  "id": "caso-conc-01",
+  "descripcion": "Mateo (inclusión). Semana dos de la capacitación, con tres observadores y una contradicción a propósito en el trato uno a uno.",
+  "engagementType": "inclusion",
+  "nombrePila": "Mateo",
+  "escena": "Semana dos de la capacitación de tres semanas, antes del decision matching. Puesto: revisión de expedientes en el área administrativa de una aseguradora. Tres observadores: el coach del módulo técnico, la coach de las dinámicas socio-laborales y la coach que vio la sesión práctica de selección y el cierre de semana.",
+  "observaciones": [
+    {
+      "observador": "coach del módulo técnico",
+      "nota": "Observaciones de la capacitación, semana dos, módulo técnico. Mateo estudió parte de la carrera de administración y trabajó un año en el archivo de una notaría, así que el tema de revisar expedientes no le es nuevo. En los ejercicios de revisión encontró antes que el resto del grupo los expedientes con fechas que no coincidían, y se le nota contento cuando lo explica. Antes de empezar cada ejercicio escribe en una hoja la lista de pasos y los va tachando. Aprende mejor cuando primero ve un ejemplo resuelto y luego tiene la lista de revisión a la mano. Cuando le doy tres o cuatro indicaciones seguidas solo de palabra, se le pasa alguna; si se las dejo escritas en el pizarrón, no. El martes cambié una instrucción a mitad del ejercicio: dejó de escribir, me pidió que se la repitiera y tardó unos minutos en retomar. En las pláticas a solas conmigo se suelta, hace preguntas y cuenta cómo organizaba el archivo de la notaría. Sus mensajes en el chat del grupo son claros y bastante largos."
+    },
+    {
+      "observador": "coach de las dinámicas socio-laborales",
+      "nota": "Notas de las dinámicas socio-laborales, semana dos. Mateo prefiere las actividades individuales; en la dinámica por equipos se ofreció a llevar el registro de lo que decidían y lo entregó completo. En el grupo grande habla poco, y cuando alguien le pregunta directamente contesta con precisión. En los descansos platica bastante con dos compañeros en particular; con el resto del grupo casi no. Disfruta encontrar errores: en el juego de detectar diferencias en documentos fue el que más encontró. La sala del segundo piso tiene una lámpara que parpadea y él pidió cambiarse de lugar; los días que no pudo, usó una gorra. Al final del jueves le pedí platicar a solas cinco minutos sobre cómo se sentía en el grupo y contestó con frases cortas; me pidió seguir la plática por correo y al día siguiente me escribió un correo largo y claro. Sobre la retroalimentación, nos pidió que se la demos por escrito, con un ejemplo de su propio trabajo."
+    },
+    {
+      "observador": "coach de la sesión práctica y el cierre de semana",
+      "nota": "Notas de la sesión práctica de selección y del cierre de la semana dos. En la sesión práctica, Mateo siguió las instrucciones escritas paso por paso y pidió ayuda una vez, cuando una instrucción tenía dos interpretaciones. Trabajó casi tres horas sin levantarse; cuando le avisamos que ya era la hora de la comida, no se había dado cuenta. Le gusta revisar documentos y lo dice sin rodeos: es lo que quiere hacer. Antes de arrancar se tomó unos minutos para escribir cómo iba a dividir la tarea. Cuando uno de los facilitadores cambió el orden de las tareas de palabra, se detuvo y pidió que se lo pusieran por escrito antes de seguir. Aprende rápido con un ejemplo resuelto; en el cierre de la semana pidió los ejemplos de todos los ejercicios para repasarlos en casa."
+    }
+  ],
+  "rasgos": [
+    {
+      "rasgo": "antecedentes",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "encuentra_inconsistencias",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "escribe_los_pasos",
+      "donde": "dominioFE:planeacion_organizacion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "ejemplo_resuelto",
+      "donde": "dimension:forma_aprender",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "indicaciones_seguidas",
+      "donde": "dominioFE:memoria_de_trabajo",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "cambio_de_instruccion",
+      "donde": "dimension:disparadores_estres, dimension:indicadores_estres, dominioFE:flexibilidad",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "escribe_claro_y_largo",
+      "donde": "dimension:comunicacion_escrita",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "platica_a_solas",
+      "donde": "dimension:trato_uno_a_uno",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "habla_poco_en_grupo",
+      "donde": "dimension:estilo_comunicacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "dos_companeros",
+      "donde": "dimension:interaccion_companeros",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "lleva_el_registro",
+      "donde": "dimension:trabajo_en_equipo",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "lampara_que_parpadea",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "retro_por_escrito",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "tres_horas_seguidas",
+      "donde": "dimension:concentracion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "sigue_instrucciones_y_pide_ayuda",
+      "donde": "contexto:Lo que observa el partner en la sesión práctica",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "capacitacion_semana_dos",
+      "donde": "contexto:Transición: selección y capacitación",
+      "fuente": "F-005 (00:00)"
+    }
+  ],
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "forma_aprender",
+      "disparadores_estres",
+      "comunicacion_escrita",
+      "trato_uno_a_uno",
+      "estilo_comunicacion",
+      "interaccion_companeros",
+      "trabajo_en_equipo",
+      "aspectos_sensoriales",
+      "retroalimentacion",
+      "concentracion"
+    ],
+    "dimensionesProhibidas": [
+      "conflictos"
+    ],
+    "senalesProhibidas": [
+      "estres_desregulacion",
+      "intencion_de_renunciar",
+      "cambio_de_vida",
+      "desajuste_con_rol"
+    ],
+    "coincidencias": [
+      {
+        "dimension": "motivacion_intereses",
+        "observadores": [
+          "coach del módulo técnico",
+          "coach de las dinámicas socio-laborales",
+          "coach de la sesión práctica y el cierre de semana"
+        ]
+      },
+      {
+        "dimension": "forma_aprender",
+        "observadores": [
+          "coach del módulo técnico",
+          "coach de la sesión práctica y el cierre de semana"
+        ]
+      },
+      {
+        "dimension": "comunicacion_escrita",
+        "observadores": [
+          "coach del módulo técnico",
+          "coach de las dinámicas socio-laborales"
+        ]
+      },
+      {
+        "dimension": "disparadores_estres",
+        "observadores": [
+          "coach del módulo técnico",
+          "coach de la sesión práctica y el cierre de semana"
+        ]
+      }
+    ],
+    "contradicciones": [
+      {
+        "dimension": "trato_uno_a_uno",
+        "nueva": {
+          "observador": "coach de las dinámicas socio-laborales",
+          "fragmento": "contestó con frases cortas"
+        },
+        "previa": {
+          "observador": "coach del módulo técnico",
+          "fragmento": "se suelta, hace preguntas"
+        }
+      }
+    ]
+  }
+}

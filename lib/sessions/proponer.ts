@@ -268,7 +268,7 @@ async function proponerYGuardar(
         indiceObservaciones: indice,
       });
     } else {
-      const limpio = sanitizeUpdate(ProfileUpdateEtiquetado.parse(resultado.update), sesion.nota, citasPrevias);
+      const limpio = sanitizeUpdate(ProfileUpdateEtiquetado.parse(resultado.update), sesion.nota, citasPrevias, entrada.perfilPrevio);
       payload = PayloadPropuestaIA.parse({ tipo: "propuesta_ia", ...limpiarEtiquetas(limpio, indice), indiceObservaciones: indice });
     }
   } catch (e) {
@@ -331,7 +331,7 @@ export async function crearSesion(
 ): Promise<RespuestaRuta> {
   const parsed = ProposeRequest.safeParse(body);
   if (!parsed.success) return conError(400, parsed.error.issues[0]?.message ?? "La nota no es válida.");
-  const { nota, tipo, fecha } = parsed.data;
+  const { nota, tipo, fecha, observador } = parsed.data;
 
   let contexto;
   try {
@@ -356,6 +356,7 @@ export async function crearSesion(
           coachId: user.id,
           notaOriginal: nota,
           tipo: tipoSesion,
+          observador: seguimiento ? null : observador || null, // R-011.2
           ...(fechaSesion ? { realizadaEn: aRealizadaEn(fechaSesion) } : {}),
         })
         .returning({ id: sessions.id });

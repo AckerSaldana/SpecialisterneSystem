@@ -52,4 +52,4 @@ Las decisiones D-030 a D-035 y D-058 están registradas en CONTEXTO §9 desde la
 
 El 1 nov se actualizó la columna "Cómo se cumple hoy" de C-04, C-05, C-06, C-09, C-11, C-12 y C-18, que describía un estado viejo. Ninguna regla cambia, así que la versión sigue en 2.
 
-Los números D-069 a D-073 están por registrar en CONTEXTO §9: el bloque está en [decisiones-por-registrar.md](decisiones-por-registrar.md). D-059 a D-068 quedan reservados para las decisiones de 004, que tampoco se han registrado.
+Los números D-069 a D-073 y D-084 a D-090 están por registrar en CONTEXTO §9: el bloque está en [decisiones-por-registrar.md](decisiones-por-registrar.md). D-074 a D-083 quedan reservados para las decisiones de 004, que tampoco se han registrado. Antes eran D-059 a D-068; cambiaron el 2 nov porque CONTEXTO v6 ya usa D-059 a D-062.

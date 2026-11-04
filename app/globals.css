@@ -1,19 +1,24 @@
 /* AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente */
 
 /*
-  Design tokens de Caja MEX.
+  Design tokens de Shorenote (spec 012, docs/DISENO.md).
 
-  Hay tres modos, elegidos en /preferencias y guardados en una cookie.
+  Hay tres modos, elegidos en /preferencias y guardados en una cookie (R-005.29).
   El layout raíz pone en <html>:
     data-mode="calma" | "estandar" | "alto-contraste"
-    data-font="atkinson" | "inter" | "lexend" | "opendyslexic"
-    style="--text-size; --letter-spacing; --line-height; --measure"
+    data-font="sans" | "lexend" | "opendyslexic"
+    style="--tamano-base; --tracking; --leading; --measure"
 
-  Los componentes de shadcn (components/ui) leen --background, --primary, etc.
-  Aquí solo cambiamos el valor de esos tokens según el modo; los componentes no cambian.
+  --tamano-base es el --text-base de DISENO.md con otro nombre: Tailwind usa --text-base para la clase text-base,
+  y si :root lo cambiara, todo texto con esa clase crecería otra vez sobre el tamaño elegido.
 
-  Colores en hex para poder revisarlos a mano y medir contraste.
-  Ratios medidos (texto/fondo) en el README, sección Accessibility.
+  Los tokens de DISENO.md (--bg, --fg, --accent...) son la fuente de verdad. Los nombres de shadcn
+  (--background, --primary...) se derivan de ellos más abajo, así components/ui y las pantallas que usan
+  clases como bg-primary siguen igual. Ojo: en DISENO.md --accent es el terracota de la acción primaria;
+  la clase bg-accent de shadcn apunta a --accent-soft.
+
+  Colores en hex para poder revisarlos a mano y medir contraste. Ratios medidos en el README, sección
+  Accessibility. Tres valores difieren de DISENO.md para cumplir AA (R-012.2).
 */
 
 @import "tailwindcss";
@@ -33,7 +38,8 @@
   /* --app-font cambia con [data-font]. No usamos --font-sans: var(--font-sans) porque sería circular. */
   --font-sans: var(--app-font);
   --font-mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
-  --font-heading: var(--app-font);
+  --font-heading: var(--font-titulos);
+  --font-serif: var(--font-titulos);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -52,7 +58,7 @@
   --color-border: var(--border);
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
+  --color-accent: var(--accent-suave);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -64,13 +70,15 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  /* rounded-sm, -md y -lg leen --radius-sm/md/lg de :root (DISENO.md). Los mayores no existen en el diseño. */
+  --radius-xl: var(--radius-lg);
+  --radius-2xl: var(--radius-lg);
+  --radius-3xl: var(--radius-lg);
+  --radius-4xl: var(--radius-lg);
+
+  /* transition-* de Tailwind toma la duración y la curva de los tokens (R-012.8). */
+  --default-transition-duration: var(--motion-duration);
+  --default-transition-timing-function: var(--motion-ease);
 
   /*
     Las clases text-xs ... text-xl de Tailwind traen su propio interlineado.
@@ -86,152 +94,181 @@
 }
 
 /* ------------------------------------------------------------------------ */
-/* Tipografía y movimiento (iguales en los tres modos)                       */
+/* Tokens de DISENO.md (modo Estándar)                                        */
 /* ------------------------------------------------------------------------ */
 
+/*
+  También con [data-mode="estandar"] para que la vista previa de /preferencias pueda mostrar
+  este modo dentro de otro.
+*/
+:root,
+[data-mode="estandar"] {
+  --bg: #f6f2ec; /* papel */
+  --bg-elevated: #fbf9f5; /* tarjetas */
+  --bg-muted: #efeae2; /* opciones no seleccionadas */
+  --fg: #1f1d1a; /* texto */
+  --fg-muted: #6b6560; /* texto secundario, metadatos */
+  --border: #cfc8be; /* bordes 1px de tarjetas y separadores: decorativos */
+  /* Borde de campos de formulario: es lo que permite verlos, por eso al menos 3:1 (R-012.2). */
+  --border-input: #8f8a83;
+  /* Terracota. DISENO.md dice #B85C45: con texto claro encima da 4.29:1; este da 4.77:1 (R-012.2). */
+  --accent: #ad5641;
+  --accent-fg: #fbf9f5;
+  --accent-soft: #e8d5cd;
+  --ink: #2a2724; /* doodles */
+  --destructive: #b42318; /* no está en DISENO.md: el de antes, 5.9:1 sobre papel */
+  --border-w: 1px;
+}
+
 :root {
-  /* Defaults; el layout los sobreescribe con las preferencias guardadas. */
-  --text-size: 1.125rem; /* 18 px con el tamaño base del navegador */
-  --letter-spacing: 0em;
-  --line-height: 1.5;
-  --measure: 70ch;
+  /* Tipografía. --tamano-base, --tracking, --leading y --measure los sobreescribe el layout con la cookie. */
+  --font-serif: var(--font-source-serif), "Georgia", serif;
+  --font-titulos: var(--font-serif);
+  --tamano-base: 1.125rem; /* --text-base de DISENO.md: 18 px; en rem respeta el tamaño que la persona puso en su navegador */
+  --leading: 1.6;
+  --tracking: 0em;
+  --measure: 62ch;
 
-  /* Fuente por defecto: Atkinson Hyperlegible (variable que define next/font en layout.tsx). */
-  --app-font: var(--font-atkinson), system-ui, sans-serif;
+  /* Fuente de cuerpo: Atkinson Hyperlegible (variable que define next/font en layout.tsx). */
+  --app-font: var(--font-atkinson), "Inter", system-ui, sans-serif;
+  --font-body: var(--app-font);
 
-  /* Movimiento. Componentes propios deben usar estos tokens en vez de valores fijos. */
-  --motion-duration: 150ms;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow: none;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Movimiento. Componentes propios usan estos tokens, nunca valores fijos. */
+  --motion-duration: 180ms;
   --motion-distance: 4px;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
-  --radius: 0.5rem;
+  /* Foco: anillo de 3px del acento con 2px de separación, siempre visible. */
   --focus-width: 3px;
   --focus-offset: 2px;
+
+  /*
+    Nombres que ya usan globals.css (impresión incluida) y los componentes. Se derivan de los de
+    DISENO.md, así el bloque @media print puede seguir fijándolos con !important.
+  */
+  --text-size: var(--tamano-base);
+  --letter-spacing: var(--tracking);
+  --line-height: var(--leading);
 }
 
-[data-font="atkinson"] {
-  --app-font: var(--font-atkinson), system-ui, sans-serif;
-}
-[data-font="inter"] {
-  --app-font: var(--font-inter), system-ui, sans-serif;
+/*
+  Con Lexend u OpenDyslexic, los títulos también las usan: quien eligió una fuente para leer mejor
+  no recibe títulos en otra (R-012.4).
+*/
+[data-font="sans"] {
+  --app-font: var(--font-atkinson), "Inter", system-ui, sans-serif;
 }
 [data-font="lexend"] {
   --app-font: var(--font-lexend), system-ui, sans-serif;
+  --font-titulos: var(--app-font);
 }
 [data-font="opendyslexic"] {
   /* Viene de @fontsource/opendyslexic, importado en layout.tsx. */
   --app-font: "OpenDyslexic", system-ui, sans-serif;
+  --font-titulos: var(--app-font);
 }
 
 /* ------------------------------------------------------------------------ */
-/* Colores por modo                                                          */
+/* Otros modos                                                               */
 /* ------------------------------------------------------------------------ */
 
 /*
-  Estándar: WCAG 2.2 AA. Texto normal al menos 4.5:1.
-  También se aplica con [data-mode="estandar"] para que la vista previa de
-  /preferencias pueda mostrar este modo dentro de otro.
-*/
-:root,
-[data-mode="estandar"] {
-  --background: #ffffff;
-  --foreground: #1c1c1e;
-  --card: #ffffff;
-  --card-foreground: #1c1c1e;
-  --popover: #ffffff;
-  --popover-foreground: #1c1c1e;
-  --primary: #1d4ed8;
-  /* Fondo del botón principal con el puntero encima. Más oscuro que --primary, no transparente. */
-  --primary-hover: #1e40af;
-  --primary-foreground: #ffffff;
-  --secondary: #eef2f6;
-  --secondary-foreground: #1c1c1e;
-  --muted: #f3f4f6;
-  --muted-foreground: #52525b;
-  --accent: #e8effc;
-  --accent-foreground: #1e3a8a;
-  --destructive: #b42318;
-  /* Separadores decorativos: no necesitan 3:1. */
-  --border: #d4d4d8;
-  /* Borde de campos de formulario: es lo que permite verlos, por eso al menos 3:1. */
-  --input: #71717a;
-  --ring: #1d4ed8;
-  --link: #1d4ed8;
-  --focus: #1d4ed8;
-}
-
-/*
-  Calma: contraste más bajo que Estándar pero todavía AA (al menos 4.5:1).
-  Fondo cálido, colores apagados, sin sombras, sin animación (ver más abajo).
+  Calma: contraste más bajo que Estándar pero todavía AA. Sin sombras, sin animación (ver más abajo).
+  --leading de 1.8 no se pone aquí: el interlineado que eligió la persona va en el style de <html>
+  y se respeta en todos los modos (R-012.7).
 */
 [data-mode="calma"] {
-  --background: #f5f2ec;
-  --foreground: #3b3833;
-  --card: #f5f2ec;
-  --card-foreground: #3b3833;
-  --popover: #f5f2ec;
-  --popover-foreground: #3b3833;
-  --primary: #3f625c;
-  --primary-hover: #2f4a45;
-  --primary-foreground: #f5f2ec;
-  --secondary: #ebe6dc;
-  --secondary-foreground: #3b3833;
-  --muted: #ece8e0;
-  --muted-foreground: #5c574f;
-  --accent: #e4e6dc;
-  --accent-foreground: #34504b;
+  --bg: #f3f0ea;
+  --bg-elevated: #f6f3ee;
+  --bg-muted: #ece8e1;
+  --fg: #3a3733;
+  /* DISENO.md dice #7A746E: da 3.78:1 sobre las opciones; este da 4.57:1 o más (R-012.2). */
+  --fg-muted: #6d6762;
+  --border: #d9d3ca;
+  --border-input: #8d8983;
+  /* DISENO.md dice #8F6B5E: como texto da 4.17:1; este da 4.51:1 (R-012.2). */
+  --accent: #886659;
+  --accent-fg: #fbf9f5;
+  --accent-soft: #e6dcd6;
+  --ink: #3a3733;
   --destructive: #8f3b2e;
-  --border: #d9d2c5;
-  --input: #8a8276;
-  --ring: #3f625c;
-  --link: #34504b;
-  --focus: #34504b;
+  --border-w: 1px;
 }
 
-/*
-  Alto contraste: al menos 7:1 (AAA) en todo el texto.
-  Negro sobre blanco, bordes de 2 px y foco más grueso.
-*/
+/* Alto contraste: al menos 7:1 en todo el texto, bordes de 2 px y foco más grueso. */
 [data-mode="alto-contraste"] {
-  --background: #ffffff;
-  --foreground: #000000;
-  --card: #ffffff;
-  --card-foreground: #000000;
-  --popover: #ffffff;
-  --popover-foreground: #000000;
-  --primary: #000000;
-  --primary-hover: #333333;
-  --primary-foreground: #ffffff;
-  --secondary: #ffffff;
-  --secondary-foreground: #000000;
-  --muted: #f0f0f0;
-  --muted-foreground: #1a1a1a;
-  --accent: #fff3a3;
-  --accent-foreground: #000000;
-  --destructive: #8b0000;
+  --bg: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f2f2f2;
+  --fg: #000000;
+  --fg-muted: #333333;
   --border: #000000;
-  --input: #000000;
-  --ring: #000000;
-  --link: #0000cc;
-  --focus: #000000;
+  --border-input: #000000;
+  --accent: #8a2e1a;
+  --accent-fg: #ffffff;
+  --accent-soft: #f5e3dd;
+  --ink: #000000;
+  --destructive: #8b0000;
+  --border-w: 2px;
   --focus-width: 4px;
   --focus-offset: 3px;
 }
 
-/* Sidebar y gráficas siguen los colores del modo activo. */
-:root {
-  --sidebar: var(--muted);
-  --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
-  --sidebar-accent-foreground: var(--accent-foreground);
+/*
+  Nombres de shadcn, derivados de los tokens. En un solo bloque que se aplica en cualquier elemento con
+  data-mode, para que la vista previa de /preferencias los recalcule con los tokens de su modo.
+*/
+:root,
+[data-mode] {
+  --background: var(--bg);
+  --foreground: var(--fg);
+  --card: var(--bg-elevated);
+  --card-foreground: var(--fg);
+  --popover: var(--bg-elevated);
+  --popover-foreground: var(--fg);
+  --primary: var(--accent);
+  /* Hover del botón primario: 6 % más oscuro (DISENO.md). */
+  --primary-hover: color-mix(in srgb, var(--accent) 94%, #000000);
+  --primary-foreground: var(--accent-fg);
+  --secondary: transparent;
+  --secondary-foreground: var(--fg);
+  --muted: var(--bg-muted);
+  --muted-foreground: var(--fg-muted);
+  --accent-suave: var(--accent-soft);
+  --accent-foreground: var(--fg);
+  --input: var(--border-input);
+  --ring: var(--accent);
+  /* Enlaces en el color del texto, subrayados: el acento como texto solo identifica el tipo de acompañamiento. */
+  --link: var(--fg);
+  --focus: var(--accent);
+
+  --sidebar: var(--bg);
+  --sidebar-foreground: var(--fg);
+  --sidebar-primary: var(--accent);
+  --sidebar-primary-foreground: var(--accent-fg);
+  --sidebar-accent: var(--accent-soft);
+  --sidebar-accent-foreground: var(--fg);
   --sidebar-border: var(--border);
-  --sidebar-ring: var(--ring);
-  --chart-1: var(--primary);
-  --chart-2: var(--accent-foreground);
-  --chart-3: var(--muted-foreground);
+  --sidebar-ring: var(--accent);
+  --chart-1: var(--accent);
+  --chart-2: var(--fg);
+  --chart-3: var(--fg-muted);
   --chart-4: var(--destructive);
-  --chart-5: var(--foreground);
+  --chart-5: var(--ink);
 }
 
 /* ------------------------------------------------------------------------ */
@@ -239,8 +276,9 @@
 /* ------------------------------------------------------------------------ */
 
 @layer base {
+  /* El contorno usa el acento completo: con /50, el anillo de foco empezaba a medias mientras dura transition-colors. */
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border outline-ring;
   }
 
   /*
@@ -272,6 +310,50 @@
     text-decoration: underline;
     text-underline-offset: 0.2em;
   }
+}
+
+/*
+  Doodles (components/Doodle.tsx, R-012.9). Con "animate" cada trazo se dibuja una vez. La duración sale de
+  --motion-duration, que vale 0 en Calma y con prefers-reduced-motion: entonces se ve completo desde el inicio.
+*/
+.doodle-animado > * {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: doodle-trazo calc(var(--motion-duration) * 4) var(--motion-ease) 1 both;
+}
+
+@keyframes doodle-trazo {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/*
+  Títulos de página y de sección en serif, peso 500, sin mayúsculas forzadas (DISENO.md). Fuera de @layer para ganar
+  sobre font-bold y font-semibold de las pantallas (con :root la especificidad es mayor que la de una clase): Source Serif 4 solo se carga en 500, y otro peso sería sintético.
+*/
+:root :is(h1, h2) {
+  font-family: var(--font-titulos);
+  font-weight: 500;
+}
+
+/*
+  Pantallas de la persona: el texto mide al menos 18px aunque haya elegido 16px (R-012.13; DISENO.md, Tipografía).
+  Las clases de tamaño de Tailwind miden en rem, así que también se suben aquí. El coach se queda en 16px como mínimo.
+*/
+[data-pantalla="persona"] {
+  font-size: max(1rem, 18px);
+}
+[data-pantalla="persona"] :is(.text-xs, .text-sm, .text-base) {
+  font-size: max(1rem, 18px);
+}
+
+/* Pantallas del coach: 16px como mínimo (R-012.21; DISENO.md, Tipografía). text-xs y text-sm bajarían de ahí. */
+[data-pantalla="coach"] :is(.text-xs, .text-sm) {
+  font-size: max(0.875rem, 16px);
 }
 
 /* Ancho de lectura para párrafos y bloques de texto. */
@@ -312,7 +394,7 @@
   background: var(--background);
   color: var(--foreground);
   border: 2px solid var(--foreground);
-  border-radius: var(--radius);
+  border-radius: var(--radius-md);
   font-weight: 700;
 }
 .skip-link:focus {
@@ -336,7 +418,7 @@
     textarea,
     select
   ) {
-  border-width: 2px;
+  border-width: var(--border-w);
   border-style: solid;
   border-color: var(--foreground);
 }
@@ -429,8 +511,10 @@
     --card-foreground: #000000 !important;
     --muted: #ffffff !important;
     --muted-foreground: #000000 !important;
-    --accent: #ffffff !important;
+    --accent: #000000 !important;
+    --accent-suave: #ffffff !important;
     --accent-foreground: #000000 !important;
+    --primary: #000000 !important;
     --border: #000000 !important;
     --link: #000000 !important;
     --text-size: 10.5pt !important;

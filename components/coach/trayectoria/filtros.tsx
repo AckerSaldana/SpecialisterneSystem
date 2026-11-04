@@ -23,8 +23,9 @@ type Props = {
 export function FiltrosTrayectoria({ url, desde, hasta, tipo, errorFechas }: Props) {
   const action = `${url}#${ID_FILTROS}`;
   return (
-    <section aria-labelledby={ID_FILTROS} className="flex flex-col gap-4">
-      <h2 id={ID_FILTROS} tabIndex={-1} className="foco-destino text-xl font-semibold">
+    // Spec 012 (R-012.31): una franja con fondo apagado, para que no se confunda con los dominios.
+    <section aria-labelledby={ID_FILTROS} className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-muted px-6 py-5">
+      <h2 id={ID_FILTROS} tabIndex={-1} className="foco-destino text-2xl">
         Filtros
       </h2>
       {errorFechas ? (

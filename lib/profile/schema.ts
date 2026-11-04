@@ -156,13 +156,27 @@ export const Senal = z.strictObject({
 });
 export type Senal = z.infer<typeof Senal>;
 
-export const RelacionConPerfil = z.strictObject({
+// Lo que pide el seguimiento, sin la frase del perfil previo (R-011.4).
+export const RelacionSinCitaPrevia = z.strictObject({
   tipo: z.enum(["coincidencia", "contradiccion"]),
   dimension: DimensionId,
   descripcion: z.string().min(1).max(600),
   evidencia: ListaEvidencia,
 });
+
+// Lo que se lee de un payload. Los eventos anteriores a 011 no traen estas dos llaves (R-011.12).
+// Las pone sanitizeUpdate, con la cita tal como está en el perfil y su sesión (R-011.5).
+export const RelacionConPerfil = RelacionSinCitaPrevia.extend({
+  citaPrevia: Cita.nullable().optional(),
+  sesionPrevia: z.uuid().nullable().optional(),
+});
 export type RelacionConPerfil = z.infer<typeof RelacionConPerfil>;
+
+// Lo que recibe el modelo de perfil. citaPrevia no lleva mínimo: una mala la descarta sanitizeUpdate,
+// no tumba la respuesta (R-011.5).
+export const RelacionEtiquetada = RelacionSinCitaPrevia.extend({
+  citaPrevia: z.string().max(600).nullable().describe("Una de las citas del perfil previo, copiada tal cual, o null."),
+});
 
 export const ProfileUpdate = z.strictObject({
   cambios: z.array(CambioDimension).max(15),
@@ -176,6 +190,7 @@ export type ProfileUpdate = z.infer<typeof ProfileUpdate>;
 // es el esquema de lectura y también aceptaría una cita sin etiquetas (R-008.4).
 export const ProfileUpdateEtiquetado = ProfileUpdate.extend({
   cambios: z.array(CambioDimension.extend({ evidencia: ListaEvidenciaEtiquetada })).max(15),
+  relacionesConPerfilPrevio: z.array(RelacionEtiquetada).max(10),
 });
 export type ProfileUpdateEtiquetado = z.infer<typeof ProfileUpdateEtiquetado>;
 
@@ -250,7 +265,9 @@ export const Descartado = z.strictObject({
   // "ficha_no_valida" y "siguiente_paso_sin_destino".
   // Spec 008 (R-008.7, R-008.8), con la cita: "etiqueta_sin_anterior" y "etiqueta_participacion". Su
   // ruta es sobre la propuesta LIMPIA, porque es la que usa evidenciaId; la cita no se quita.
+  // Spec 011 (R-011.5), "cita_previa_no_encontrada": ruta de la relación y la cita. La relación no se quita.
   motivo: z.enum([
+    "cita_previa_no_encontrada",
     "cita_no_encontrada",
     "dimension_duplicada",
     "item_no_existe",

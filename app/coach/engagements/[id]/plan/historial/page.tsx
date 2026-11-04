@@ -110,13 +110,14 @@ export default async function HistorialPlanPage({ params }: PageProps<"/coach/en
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-4">
-        <p className="text-sm">
+      <header className="flex flex-col gap-3">
+        <p>
           <Link href={`/coach/engagements/${engagement.id}`} className="underline underline-offset-4">
             Volver al acompañamiento de {nombre}
           </Link>
         </p>
-        <h1 className="text-2xl font-semibold">Historial del plan de {nombre}</h1>
+        {/* Spec 012 (R-012.40): título en serif; en pantallas angostas baja a 30px para que quepa. */}
+        <h1 className="text-3xl leading-tight sm:text-4xl">Historial del plan de {nombre}</h1>
       </header>
 
       {!planes ? (
@@ -146,17 +147,26 @@ export default async function HistorialPlanPage({ params }: PageProps<"/coach/en
                     modelo: p.model ?? "sin IA",
                   })
                 : filaDescartado(formatFecha(p.approvedAt ?? p.createdAt));
+            // R-012.40: el texto de la fila no cambia; a la vista, "Versión {v}" arriba y el resto debajo. El
+            // separador oculto hace que el lector de pantalla lea la fila igual que antes.
+            const [cabeza, ...detalle] = fila.split(" · ");
             return (
               // Un h2 por versión (debajo del h1 de la página) y los grupos del rastro en h3. El
               // <summary> repite el mismo texto en cada versión; aria-describedby le suma la fila.
-              <li key={p.id} className="flex flex-col gap-3 rounded-lg border p-4">
-                <h2 id={`version-${p.id}`} className="font-semibold">
-                  {fila}
+              <li key={p.id} className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-5">
+                <h2 id={`version-${p.id}`} className="flex flex-col gap-1">
+                  <span className="text-2xl leading-tight">{cabeza}</span>
+                  {detalle.length > 0 ? (
+                    <span className="font-sans text-base font-normal text-muted-foreground">
+                      <span className="sr-only"> · </span>
+                      {detalle.join(" · ")}
+                    </span>
+                  ) : null}
                 </h2>
                 <details>
                   <summary
                     aria-describedby={`version-${p.id}`}
-                    className="cursor-pointer font-medium underline-offset-4 hover:underline"
+                    className="w-fit cursor-pointer font-medium underline-offset-4 hover:underline"
                   >
                     {VER_RASTRO}
                   </summary>

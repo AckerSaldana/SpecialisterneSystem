@@ -31,6 +31,7 @@ import {
   planVigente,
   violaUnico,
 } from "@/lib/plan/server";
+import { notasDelAcompanamiento } from "@/lib/sessions/copiado";
 import { banderasQueBloquean } from "@/lib/plan/validate";
 
 // "ruta": id del punto que bloquea la aprobación, para que la UI lleve al coach a él (R-003.30).
@@ -90,9 +91,10 @@ export async function decidirPlan(user: UsuarioRuta, planId: string, body: unkno
         if (ligados.some((i) => tipoAnterior.get(i.origenItemId!) !== i.tipo)) return falla(400, MENSAJES.origenInvalido);
       }
 
-      // R-003.30: banderas que bloquean, recalculadas sobre el texto actual de cada punto.
+      // R-003.30: banderas que bloquean, recalculadas sobre el texto actual de cada punto, también contra las notas (R-003.62).
       const citas = citasDelPerfil(plan.perfil);
-      const bloqueantes = banderasQueBloquean(items.flatMap((i) => banderasDeFila(i, citas)));
+      const notas = await notasDelAcompanamiento(tx, plan.engagementId);
+      const bloqueantes = banderasQueBloquean(items.flatMap((i) => banderasDeFila(i, citas, notas)));
       if (bloqueantes.length > 0) {
         const primera = bloqueantes[0];
         // La ruta de la bandera es el id del punto (lib/plan/server.ts): de ahí sale el grupo.
