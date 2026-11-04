@@ -21,11 +21,15 @@ Las fuentes viven en `00 Admin / Lectura` del Drive. Los IDs `F-0xx` son fuentes
 | [008](008-trayectoria-fe.md) | Trayectoria de función ejecutiva | Detallada con tareas | Implementada (revisión de Acker pendiente) |
 | [009](009-como-trabajar-conmigo.md) | Cómo trabajar conmigo | Detallada con tareas | Implementada (revisión de Acker pendiente) |
 | [010](010-desglose-de-tareas.md) | Desglose de tareas | Detallada con tareas | Implementada (revisión de Acker pendiente) |
+| [011](011-concordancia-observadores.md) | Concordancia entre observadores | Detallada con tareas | Implementada, con la migración sin aplicar y sin correr con el modelo (revisión de Acker pendiente) |
+| [012](012-sistema-visual.md) | Sistema visual | Detallada, por etapas | Implementada en tres etapas (revisión de Acker pendiente) |
 | [Preguntas](preguntas-partner.md) | Lo que solo Specialisterne puede responder | Lista | Borrador |
 
-Orden de construcción (fechas de CONTEXTO §11; meta interna 5 nov, 8 pm): 002 → 003 → 004 → 005 → 007 → 008 → 009 → 010 → 006.
+Orden de construcción (fechas de CONTEXTO §11; meta interna 5 nov, 8 pm): 002 → 003 → 004 → 005 → 007 → 008 → 009 → 010 → 011 → 006.
 
 Fase del 31 oct (D-073): de 005 y 007 solo se construye su parte "Entra a la fase del 31 oct", y 006 queda fuera. Acker autorizó construir eso y 008, 009 y 010 en el plan del 31 oct, y su revisión de esas specs sigue pendiente. Esta autorización es la excepción a la regla "No se programa una etapa sin que su spec esté al menos en 'revisada por Acker'".
+
+Acker pidió construir 011 el 2 nov (D-084), con la misma excepción a esa regla mientras su revisión sigue pendiente.
 
 ## Estados
 

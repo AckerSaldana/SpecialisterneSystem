@@ -15,6 +15,7 @@ import { enfocarDespues } from "@/components/coach/plan/foco";
 import { TituloEnfocable } from "@/components/coach/plan/titulo-enfocable";
 import { avisar } from "@/components/persona/guia/aviso";
 import { llamarDesglose } from "@/components/desglose/api";
+import { cn } from "@/lib/utils";
 import { MeAtore } from "./me-atore";
 import {
   BOTONES_PASO,
@@ -102,7 +103,8 @@ export function PasosTarea({ breakdownId, pasos, tiempoAlAbrir, sePuedeMarcar, i
   return (
     <div className="flex flex-col gap-4">
       {hayTiempos ? (
-        <label className="flex w-fit cursor-pointer items-center gap-2">
+        // Spec 012 (R-012.35): la casilla del tiempo como una opción de al menos 48px.
+        <label className="flex min-h-12 w-fit cursor-pointer items-center gap-3 rounded-md border-(length:--border-w) border-border bg-card px-4 py-2 has-checked:border-primary has-checked:bg-accent">
           <input type="checkbox" checked={verTiempo} onChange={(e) => setVerTiempo(e.target.checked)} className="size-5 shrink-0 accent-primary" />
           {CASILLA_TIEMPO}
         </label>
@@ -112,13 +114,21 @@ export function PasosTarea({ breakdownId, pasos, tiempoAlAbrir, sePuedeMarcar, i
         {pasos.map(({ paso, estado, hechoEl, atorados }, i) => {
           const numero = i + 1;
           return (
-            <li key={paso.id} className="flex flex-col gap-3 rounded-lg border border-border p-4">
-              <TituloEnfocable id={idPaso(paso.id)} nivel={2} className="prose-measure text-lg font-semibold">
+            // R-012.35: hecho, fondo apagado; con "Me atoré aquí", barra de acento. El texto lo dice igual.
+            <li
+              key={paso.id}
+              className={cn(
+                "flex flex-col gap-3 rounded-lg border-(length:--border-w) border-border px-6 py-5",
+                estado === "hecho" ? "bg-muted" : "bg-card",
+                atorados.length > 0 && estado !== "hecho" ? "border-l-4 border-l-primary" : "",
+              )}
+            >
+              <TituloEnfocable id={idPaso(paso.id)} nivel={2} className="prose-measure text-2xl leading-snug">
                 {textoPaso(numero, paso.accion)}
               </TituloEnfocable>
               <p className="prose-measure">{textoCriterio(paso.criterioTerminado)}</p>
               {paso.notaApoyo ? <p className="prose-measure">{textoNota(paso.notaApoyo)}</p> : null}
-              {verTiempo && paso.minutos !== null ? <p className="prose-measure text-sm">{textoTiempo(paso.minutos)}</p> : null}
+              {verTiempo && paso.minutos !== null ? <p className="prose-measure text-muted-foreground">{textoTiempo(paso.minutos)}</p> : null}
               {paso.porQue ? (
                 <details>
                   <summary className="w-fit cursor-pointer font-medium underline-offset-4 hover:underline">{POR_QUE.titulo}</summary>
@@ -129,11 +139,11 @@ export function PasosTarea({ breakdownId, pasos, tiempoAlAbrir, sePuedeMarcar, i
                 </details>
               ) : null}
 
-              {hechoEl ? <p className="prose-measure font-medium">{textoHecho(hechoEl)}</p> : null}
+              {hechoEl ? <p className="w-fit rounded-full bg-accent px-3 py-0.5 font-medium">{textoHecho(hechoEl)}</p> : null}
               {atorados.map((a) => (
-                <div key={a.id} className="prose-measure flex flex-col gap-1">
+                <div key={a.id} className="prose-measure flex flex-col gap-1 border-l-4 border-primary pl-4">
                   <p className="whitespace-pre-wrap">{a.texto ? textoAtoradoConTexto(a.fecha, a.texto) : textoAtorado(a.fecha)}</p>
-                  {a.revisadoEl ? <p className="text-sm">{textoRevisado(a.revisadoEl)}</p> : null}
+                  {a.revisadoEl ? <p className="text-muted-foreground">{textoRevisado(a.revisadoEl)}</p> : null}
                 </div>
               ))}
 

@@ -41,6 +41,9 @@ import { HojaLider } from "@/components/guia/hoja-lider";
 
 export const metadata: Metadata = { title: TITULO };
 
+// Spec 012 (R-012.41): título en serif; en pantallas angostas baja a 30px para que quepa.
+const CLASE_TITULO = "text-3xl leading-tight sm:text-4xl";
+
 type Props = { params: Promise<{ id: string }> };
 
 export default async function ComoTrabajarConmigoCoachPage({ params }: Props) {
@@ -71,7 +74,7 @@ export default async function ComoTrabajarConmigoCoachPage({ params }: Props) {
   const nombre = engagement.nombrePila ?? "Persona sin nombre visible";
 
   const encabezado = (
-    <p className="text-sm">
+    <p>
       <Link href={`/coach/engagements/${engagement.id}`} className="underline underline-offset-4">
         {textoVolver(nombre)}
       </Link>
@@ -82,7 +85,7 @@ export default async function ComoTrabajarConmigoCoachPage({ params }: Props) {
     return (
       <div className="flex flex-col gap-4">
         {encabezado}
-        <h1 className="text-2xl font-semibold">{TITULO}</h1>
+        <h1 className={CLASE_TITULO}>{TITULO}</h1>
         <ParrafoEnfocable id={ID_SIN_CONSENTIMIENTO} className="prose-measure font-medium">
           {consentimiento.estado === "retirado" ? textoDatosOcultos(nombre, consentimiento.fecha) : textoSinNotas(nombre)}
         </ParrafoEnfocable>
@@ -92,10 +95,10 @@ export default async function ComoTrabajarConmigoCoachPage({ params }: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-4">
+      <header className="flex flex-col gap-3">
         {encabezado}
-        <h1 className="text-2xl font-semibold">{TITULO}</h1>
-        <p className="prose-measure">{textoIntro(nombre)}</p>
+        <h1 className={CLASE_TITULO}>{TITULO}</h1>
+        <p className="prose-measure text-muted-foreground">{textoIntro(nombre)}</p>
       </header>
 
       {hayVersiones ? (
@@ -107,7 +110,8 @@ export default async function ComoTrabajarConmigoCoachPage({ params }: Props) {
       )}
 
       {versiones.length === 0 ? (
-        <p className="prose-measure">{SIN_VERSIONES}</p>
+        // R-012.41: el lugar donde irá la tarjeta de la versión, con borde punteado.
+        <p className="rounded-lg border-(length:--border-w) border-dashed border-border px-6 py-5 text-muted-foreground">{SIN_VERSIONES}</p>
       ) : (
         versiones.map((v, i) => <VersionDelCoach key={v.id} version={v} vigente={i === 0} nombre={nombre} />)
       )}
@@ -119,15 +123,18 @@ function VersionDelCoach({ version, vigente, nombre }: { version: VersionCoach; 
   const { documento, cambios, listaEn } = version;
   const fecha = formatFecha(listaEn);
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-border p-4">
-      <h2 className="text-xl font-semibold">
+    // R-012.41: la versión en tarjeta, la hoja en un panel de papel y los cambios de la persona debajo.
+    <section className="flex flex-col gap-5 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-5">
+      <h2 className="flex flex-wrap items-center gap-x-3 gap-y-2 text-2xl leading-tight">
         {textoLista(fecha)}
-        {vigente ? ` ${VIGENTE}` : ""}
+        {vigente ? <span className="rounded-full bg-accent px-3 py-0.5 font-sans text-base font-medium">{` ${VIGENTE}`}</span> : null}
       </h2>
-      <HojaLider documento={documento} nivel="dentro" />
-      <section className="flex flex-col gap-2">
+      <div className="rounded-md border-(length:--border-w) border-border bg-background px-6 py-5">
+        <HojaLider documento={documento} nivel="dentro" />
+      </div>
+      <section className="flex flex-col gap-3">
         <h3 className="text-lg font-semibold">{textoTituloHistorial(nombre)}</h3>
-        <ul className="prose-measure flex flex-col gap-1">
+        <ul className="prose-measure flex flex-col gap-2 border-l-4 border-border pl-4">
           {cambios.quitadas.map((texto, i) => (
             <li key={`q${i}`}>{textoQuito(texto)}</li>
           ))}

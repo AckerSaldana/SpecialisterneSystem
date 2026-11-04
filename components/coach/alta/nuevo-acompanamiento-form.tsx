@@ -6,6 +6,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { crearAcompanamiento, type NuevoAcompanamientoState } from "@/app/coach/engagements/nuevo/actions";
 import { conFalloDeRed, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -51,19 +52,21 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
   const { errores, valores } = state;
 
   return (
-    <form action={formAction} className="flex max-w-xl flex-col gap-6" noValidate>
+    // Spec 012 (R-012.36): el tipo como dos opciones lado a lado, los datos en dos columnas y "Cancelar" junto al botón.
+    <form action={formAction} className="flex flex-col gap-6" noValidate>
       <fieldset
         className="flex flex-col gap-2"
         aria-describedby={errores.type ? "error-type" : undefined}
       >
-        <legend className="mb-2 text-lg font-semibold">Tipo de acompañamiento</legend>
+        <legend className="mb-2 font-semibold">Tipo de acompañamiento</legend>
+        <div className="grid gap-3 md:grid-cols-2">
         {tipos.map((t) => {
           const id = `type-${t.id}`;
           return (
             <label
               key={t.id}
               htmlFor={id}
-              className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-checked:border-2 has-checked:border-primary has-checked:bg-accent"
+              className="flex h-full cursor-pointer items-start gap-3 rounded-md border-(length:--border-w) border-border bg-card px-4 py-4 transition-colors has-checked:border-primary has-checked:bg-accent"
             >
               <input
                 id={id}
@@ -80,6 +83,7 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
             </label>
           );
         })}
+        </div>
         {errores.type ? (
           <p
             id="error-type"
@@ -94,9 +98,10 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
         ) : null}
       </fieldset>
 
+      <div className="grid gap-6 md:grid-cols-2">
       <div className="flex flex-col gap-2">
-        <Label htmlFor="nombrePila">Nombre de pila de la persona</Label>
-        <p id="ayuda-nombrePila" className="text-sm text-muted-foreground">
+        <Label htmlFor="nombrePila" className="font-semibold">Nombre de pila de la persona</Label>
+        <p id="ayuda-nombrePila" className="text-muted-foreground">
           Solo el nombre con el que le gusta que le llamen. Sin apellidos.
         </p>
         <Input
@@ -125,8 +130,8 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="email">Correo de la persona</Label>
-        <p id="ayuda-email" className="text-sm text-muted-foreground">
+        <Label htmlFor="email" className="font-semibold">Correo de la persona</Label>
+        <p id="ayuda-email" className="text-muted-foreground">
           En este prototipo usa un correo de prueba que termine en .test.
         </p>
         <Input
@@ -152,6 +157,7 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
           </p>
         ) : null}
       </div>
+      </div>
 
       {errores.general ? (
         <Alert
@@ -166,10 +172,13 @@ export function NuevoAcompanamientoForm({ tipos }: { tipos: Tipo[] }) {
         </Alert>
       ) : null}
 
-      <div>
+      <div className="flex flex-wrap items-center gap-3 border-t border-border pt-6">
         <Button type="submit" size="lg" disabled={pending}>
           {/* El estado se dice en texto, no solo con una animación. */}
           {pending ? "Creando…" : "Crear acompañamiento"}
+        </Button>
+        <Button asChild variant="outline" size="lg">
+          <Link href="/coach">Cancelar</Link>
         </Button>
       </div>
     </form>

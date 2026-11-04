@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Datos sintéticos para el prototipo. Ninguna fila corresponde a una persona real.
 -- Idempotente: UUIDs fijos y "on conflict do nothing"; se puede correr varias veces.

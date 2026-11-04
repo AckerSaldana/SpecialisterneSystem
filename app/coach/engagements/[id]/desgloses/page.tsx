@@ -9,6 +9,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, eq } from "drizzle-orm";
+import { ChevronRightIcon } from "lucide-react";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
 import { estadoConsentimiento } from "@/lib/consent";
@@ -37,6 +38,7 @@ import {
   vacioTareas,
 } from "@/components/coach/desglose/textos";
 import { formatFecha } from "@/components/coach/labels";
+import { Card } from "@/components/ui/card";
 import { FormularioTarea } from "@/components/desglose/formulario-tarea";
 
 export const metadata: Metadata = { title: TITULO_PAGINA };
@@ -81,7 +83,7 @@ export default async function TareasCoachPage({ params }: Props) {
     return (
       <div className="flex flex-col gap-4">
         {volver}
-        <h1 className="text-2xl font-semibold">{titulo}</h1>
+        <h1 className="text-4xl leading-tight">{titulo}</h1>
         <p className="prose-measure font-medium">{consentimiento.estado === "retirado" ? textoDatosOcultos(nombre, consentimiento.fecha) : textoSinNotas(nombre)}</p>
       </div>
     );
@@ -91,11 +93,14 @@ export default async function TareasCoachPage({ params }: Props) {
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-4">
         {volver}
-        <h1 className="text-2xl font-semibold">{titulo}</h1>
+        <h1 className="text-4xl leading-tight">{titulo}</h1>
       </header>
 
-      <section aria-labelledby="preparar-pasos" className="flex flex-col gap-3">
-        <h2 id="preparar-pasos" className="text-xl font-semibold">
+      {/* Spec 012 (R-012.32): preparar a la izquierda; aplicar y la lista a la derecha, en ese orden de lectura. */}
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <Card className="px-(--card-spacing)">
+      <section aria-labelledby="preparar-pasos" className="flex flex-col gap-4">
+        <h2 id="preparar-pasos" className="text-2xl">
           {TITULO_PEDIR}
         </h2>
         {hayPerfil ? (
@@ -104,9 +109,11 @@ export default async function TareasCoachPage({ params }: Props) {
           <p className="prose-measure">{perfilNoListo(nombre)}</p>
         )}
       </section>
+      </Card>
 
-      <section aria-labelledby="aplicar-una-plantilla" className="flex flex-col gap-3">
-        <h2 id="aplicar-una-plantilla" className="text-xl font-semibold">
+      <div className="flex flex-col gap-8">
+      <section aria-labelledby="aplicar-una-plantilla" className="flex flex-col gap-3 rounded-lg border-(length:--border-w) border-border bg-muted px-6 py-5">
+        <h2 id="aplicar-una-plantilla" className="text-2xl">
           {TITULO_APLICAR}
         </h2>
         {!hayPerfil ? (
@@ -119,7 +126,7 @@ export default async function TareasCoachPage({ params }: Props) {
       </section>
 
       <section aria-labelledby="tareas-guardadas" className="flex flex-col gap-3">
-        <h2 id="tareas-guardadas" className="text-xl font-semibold">
+        <h2 id="tareas-guardadas" className="text-2xl">
           {TITULO_LISTA}
         </h2>
         {tareas.length === 0 ? (
@@ -127,17 +134,30 @@ export default async function TareasCoachPage({ params }: Props) {
         ) : (
           <ul className="flex flex-col gap-3">
             {tareas.map((t) => (
-              <li key={t.id} className="flex flex-col gap-1 rounded-lg border border-border p-3">
-                <Link href={rutaTarea(engagement.id, t.id)} className="prose-measure font-medium underline underline-offset-4">
-                  {textoPorDesglose(t.tarea, formatFecha(t.creadaEn))}
+              <li key={t.id}>
+                {/* Toda la fila se abre, como la lista de acompañamientos (R-012.22). */}
+                <Link
+                  href={rutaTarea(engagement.id, t.id)}
+                  className="group flex items-center gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-5 py-4 text-foreground no-underline transition-colors hover:border-input"
+                >
+                  <div className="flex min-w-0 flex-1 flex-col gap-1">
+                    <p className="prose-measure font-semibold underline-offset-4 group-hover:underline">{textoPorDesglose(t.tarea, formatFecha(t.creadaEn))}</p>
+                    <p className="prose-measure text-muted-foreground">{textoQuienLaPidio(t.laPidioLaPersona, nombre)}</p>
+                    {t.archivadaEn ? (
+                      <p className="w-fit rounded-full border-(length:--border-w) border-dashed border-input px-3 py-0.5 text-muted-foreground">
+                        {textoArchivada(nombre, formatFecha(t.archivadaEn))}
+                      </p>
+                    ) : null}
+                  </div>
+                  <ChevronRightIcon aria-hidden="true" className="size-5 shrink-0 text-muted-foreground" />
                 </Link>
-                <p className="prose-measure text-sm">{textoQuienLaPidio(t.laPidioLaPersona, nombre)}</p>
-                {t.archivadaEn ? <p className="prose-measure text-sm">{textoArchivada(nombre, formatFecha(t.archivadaEn))}</p> : null}
               </li>
             ))}
           </ul>
         )}
       </section>
+      </div>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,133 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Evaluación inicial de Joaquín, del documento 2026-11-02_caso-ws-03-joaquin de David. Persona y datos inventados. La nota y las fuentes van tal cual; lo único que cambia es la forma. Cubre Inhibición y Control emocional. Las prohibiciones de Concentración, Memoria de trabajo y las palabras de carácter quedan en _esperadoBeta porque el formato de este caso no las expresa.",
+  "_esperadoBeta": {
+    "deben": "Antecedentes y experiencia; Motivación, habilidades e intereses (Fortaleza); Conflictos; Trato uno a uno; Disparadores de estrés y qué le ayuda; Indicadores observables de estrés; Aspectos sensoriales; Forma de aprender; Cómo prefiere recibir retroalimentación. Dominios, como áreas de apoyo: Inhibición (manda sin releer; contesta antes de que terminen) y Control emocional (se le sube la voz ante un error señalado en público; tarda una hora en volver).",
+    "pueden": "Ajustes razonables (pausa antes de mandar, mensaje antes de llamar, retroalimentación a solas, tapones o cambio de lugar); Estilo de comunicación.",
+    "noDeben": "Concentración ni Memoria de trabajo (la nota dice que se queda dando vueltas a lo ocurrido, no que se distraiga ni que olvide cosas). Ninguna señal de riesgo en la evaluación inicial. La discusión no se presenta como un problema de carácter ni se escribe \"agresivo\", \"explosivo\" o algo parecido."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "perfil"
+  ],
+  "id": "caso-ws-03",
+  "descripcion": "Joaquín (Workplace Support). Coordinador de rutas en una distribuidora de materiales para construcción; lleva dos años. Su líder y Recursos Humanos pidieron el acompañamiento por dos correos con fechas equivocadas y una discusión en la junta semanal (desempeño, F-005, 00:00).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Joaquín",
+  "nota": "Sesión de evaluación inicial con Joaquín. Trabaja hace dos años como coordinador de rutas en una distribuidora de materiales para construcción; antes estuvo cuatro años en la bodega de la misma empresa. Su líder y Recursos Humanos pidieron el acompañamiento después de que dos clientes recibieron fechas de entrega equivocadas en correos que mandó Joaquín y de una discusión en la junta semanal con un compañero de ventas. Dos veces me contestó una pregunta antes de que yo la terminara de formular; las dos veces se dio cuenta, se rio y me pidió que la repitiera.\n\nJoaquín conoce las calles y las colonias de la ciudad mejor que el mapa del sistema. Cuando un camión se descompone o un cliente cambia la dirección, reacomoda las rutas del día en pocos minutos y casi siempre sin retrasar a los demás choferes. Dice que esa parte, la de resolver sobre la marcha, es la que más le gusta de su trabajo.\n\nLos correos y los mensajes a clientes los contesta en cuanto llegan. Escribe y manda sin releer; en las dos fechas equivocadas, el dato correcto estaba en el sistema y él lo tecleó de memoria. Dice que sabe que debería revisar antes de mandar, pero que cuando se da cuenta ya lo mandó. En las juntas le pasa algo parecido: contesta antes de que la otra persona termine y a veces se traslapa con quien está hablando.\n\nCuando alguien le señala un error frente a otras personas, se le sube la voz y se le pone la cara roja. En la junta de la discusión le dijo a su compañero que así no se trabaja, y unos minutos después se disculpó con él. Me contó que se queda dando vueltas a lo que pasó y que le toma como una hora volver a lo que estaba haciendo.\n\nLo que más lo estresa es cuando varios camiones se descomponen o se retrasan al mismo tiempo y los choferes le llaman todos a la vez. En esos momentos habla más rápido, mueve la pierna y se levanta a caminar al pasillo. Le ayuda que los choferes le manden primero un mensaje con lo que pasó, en vez de llamar.\n\nSu escritorio está junto al andén y el ruido de los montacargas lo cansa por la tarde; usa tapones cuando necesita escribir con calma.\n\nA solas conmigo explica todo con calma y con ejemplos de rutas reales. Aprende haciendo: prefiere que le enseñen un proceso nuevo directo en el sistema, con un caso real, y no con un manual.\n\nPrefiere que la retroalimentación sea a solas, directa y el mismo día, no una semana después.\n\nPara la siguiente sesión acordamos probar una pausa corta antes de mandar cualquier correo a un cliente, con una relectura en voz baja del día y la dirección, y llevarle a su líder la petición de que los errores se los comente a solas.",
+  "rasgos": [
+    {
+      "rasgo": "antecedentes: Dos años como coordinador de rutas; cuatro antes en la bodega",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "activacion_por_desempeno: Líder y RH piden el acompañamiento por correos con fechas equivocadas y una discusión",
+      "donde": "contexto:Disparador de Workplace Support",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "resuelve_sobre_la_marcha: Reacomoda rutas en pocos minutos; es la parte que más le gusta",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "manda_sin_releer: Escribe y manda de inmediato; tecleó de memoria un dato que estaba en el sistema",
+      "donde": "dominioFE:inhibicion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "contesta_antes_de_que_terminen: Contesta preguntas y se traslapa en juntas antes de que la otra persona termine",
+      "donde": "dominioFE:inhibicion",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "voz_sube_ante_un_error: Se le sube la voz y se le pone la cara roja cuando le señalan un error en público; se disculpa después",
+      "donde": "dominioFE:control_emocional",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "tarda_en_volver: Se queda dando vueltas a lo ocurrido; una hora para volver a lo que hacía",
+      "donde": "dominioFE:control_emocional",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "discusion_en_junta: Le dijo a un compañero que así no se trabaja y luego se disculpó",
+      "donde": "dimension:conflictos",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "varios_camiones_a_la_vez: Se estresa cuando varios camiones fallan y los choferes llaman todos juntos; le ayuda recibir un mensaje primero",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "habla_rapido_y_camina: Habla más rápido, mueve la pierna, camina al pasillo",
+      "donde": "dimension:indicadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "ruido_de_montacargas: El ruido de los montacargas lo cansa por la tarde; usa tapones",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "explica_a_solas: A solas explica con calma y con ejemplos de rutas reales",
+      "donde": "dimension:trato_uno_a_uno",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "aprende_haciendo: Prefiere aprender directo en el sistema con un caso real",
+      "donde": "dimension:forma_aprender",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "retro_a_solas_mismo_dia: Retroalimentación a solas, directa y el mismo día",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    }
+  ],
+  "variantes": [],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "conflictos",
+      "trato_uno_a_uno",
+      "disparadores_estres",
+      "indicadores_estres",
+      "aspectos_sensoriales",
+      "forma_aprender",
+      "retroalimentacion"
+    ],
+    "dominiosFE": [
+      "inhibicion",
+      "control_emocional"
+    ],
+    "senales": [],
+    "senalesProhibidas": [
+      "estres_desregulacion",
+      "intencion_de_renunciar",
+      "cambio_de_vida",
+      "desajuste_con_rol"
+    ],
+    "tipoNoPermitido": [],
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "Escribe y manda sin releer", "dominio": "inhibicion", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "contesta antes de que la otra persona termine", "dominio": "inhibicion", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "se le sube la voz y se le pone la cara roja", "dominio": "control_emocional", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null},
+      {"fragmento": "se queda dando vueltas a lo que pasó", "dominio": "control_emocional", "direccion": "apoyo", "anteriorFragmento": null, "direccionProhibida": null}
+    ]
+  }
+}

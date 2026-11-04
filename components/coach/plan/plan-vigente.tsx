@@ -4,6 +4,7 @@
 // (R-003.32). Si hay un snapshot más nuevo que el del plan, muestra el aviso de perfil nuevo con
 // "Pedir propuesta nueva" (R-003.36). Nada se regenera solo. Sin hooks: es un Server Component
 // que monta dos Client Components (el título enfocable y el botón de propuesta).
+// Spec 012 (R-012.30): aviso con barra de acento, grupos con su número y puntos en tarjetas con la evidencia plegada.
 import { ItemDetalle } from "./item-detalle";
 import { PedirPropuesta } from "./pedir-propuesta";
 import { TituloEnfocable } from "./titulo-enfocable";
@@ -47,12 +48,12 @@ export function PlanVigente({
   const grupos = agruparPorTipo(plan.items).filter((g) => g.items.length > 0);
   return (
     <section aria-labelledby={ID_VIGENTE} className="flex flex-col gap-6">
-      <TituloEnfocable id={ID_VIGENTE} nivel={3} className="text-lg font-semibold">
+      <TituloEnfocable id={ID_VIGENTE} nivel={3} className="font-serif text-2xl">
         {encabezadoVigente(plan.version, plan.aprobadoEn, plan.aprobadoPor)}
       </TituloEnfocable>
 
       {perfilCambio(plan, snapshotActualVersion) ? (
-        <div role="note" className="prose-measure flex flex-col gap-3 rounded-lg border-2 border-primary bg-accent p-4">
+        <div role="note" className="prose-measure flex flex-col gap-3 rounded-md border-l-4 border-primary bg-accent px-5 py-4">
           <p className="font-medium">{avisoPerfilNuevo(plan.snapshotVersion, snapshotActualVersion)}</p>
           {hayBorrador ? (
             <p>{YA_HAY_BORRADOR}</p>
@@ -70,15 +71,15 @@ export function PlanVigente({
         const nota = notaGrupo(grupo.id, nombre);
         return (
           <section key={grupo.id} aria-labelledby={`vigente-${grupo.id}`} className="flex flex-col gap-3">
-            <h4 id={`vigente-${grupo.id}`} className="font-semibold">
-              {grupo.grupo}
+            <h4 id={`vigente-${grupo.id}`} className="text-xl font-semibold">
+              {grupo.grupo} <span className="font-normal text-muted-foreground">({grupo.items.length})</span>
             </h4>
-            {nota ? <p className="prose-measure text-sm text-muted-foreground">{nota}</p> : null}
+            {nota ? <p className="prose-measure text-muted-foreground">{nota}</p> : null}
             <ul className="flex flex-col gap-3">
               {grupo.items.map((item) => (
-                <li key={item.id} className="flex flex-col gap-3 rounded-lg border p-4">
-                  <p className="prose-measure">{item.descripcion}</p>
-                  <ItemDetalle item={item} nombre={nombre} fichas={fichas} fechasSesion={fechasSesion} />
+                <li key={item.id} className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-5">
+                  <p className="prose-measure text-lg leading-snug">{item.descripcion}</p>
+                  <ItemDetalle item={item} nombre={nombre} fichas={fichas} fechasSesion={fechasSesion} evidenciaPlegada />
                 </li>
               ))}
             </ul>

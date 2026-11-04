@@ -93,7 +93,7 @@ export default async function TareaCoachPage({ params }: Props) {
     return (
       <div className="flex flex-col gap-4">
         {volver}
-        <h1 className="text-2xl font-semibold">{TITULO_PAGINA}</h1>
+        <h1 className="text-4xl leading-tight">{TITULO_PAGINA}</h1>
         <p className="prose-measure font-medium">{consentimiento.estado === "retirado" ? textoDatosOcultos(nombre, consentimiento.fecha) : textoSinNotas(nombre)}</p>
       </div>
     );
@@ -103,11 +103,11 @@ export default async function TareaCoachPage({ params }: Props) {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-3">
         {volver}
-        <TituloEnfocable id={ID_TITULO_TAREA} nivel={1} className="prose-measure text-2xl font-semibold">
+        <TituloEnfocable id={ID_TITULO_TAREA} nivel={1} className="prose-measure text-4xl leading-tight">
           {sinPuntoFinal(tarea.tarea)}
         </TituloEnfocable>
-        <p className="prose-measure">{textoCreada(formatFecha(tarea.creadaEn))}</p>
-        <p className="prose-measure">{textoQuienLaPidio(tarea.laPidioLaPersona, nombre)}</p>
+        <p className="prose-measure text-muted-foreground">{textoCreada(formatFecha(tarea.creadaEn))}</p>
+        <p className="prose-measure text-muted-foreground">{textoQuienLaPidio(tarea.laPidioLaPersona, nombre)}</p>
         {tarea.descartados.some((d) => MOTIVOS_DE_NOTA.includes(d.motivo)) ? <p className="prose-measure">{DESCARTES}</p> : null}
         {tarea.archivadaEn ? (
           <ParrafoEnfocable id={ID_ARCHIVADA} className="prose-measure font-medium">
@@ -120,7 +120,7 @@ export default async function TareaCoachPage({ params }: Props) {
 
       {tarea.ajustes.length > 0 ? (
         <section aria-labelledby="ajustes-propuestos" className="flex flex-col gap-3">
-          <h2 id="ajustes-propuestos" className="text-xl font-semibold">
+          <h2 id="ajustes-propuestos" className="text-2xl">
             {TITULO_AJUSTES}
           </h2>
           <ul className="flex flex-col gap-3">
@@ -156,8 +156,9 @@ export default async function TareaCoachPage({ params }: Props) {
 function PasoDelCoach({ numero, datos, nombre }: { numero: number; datos: DetalleDelCoach["pasos"][number]; nombre: string }) {
   const { paso, marcas } = datos;
   return (
-    <li className="flex flex-col gap-3 rounded-lg border border-border p-4">
-      <h2 className="prose-measure text-lg font-semibold">{textoPaso(numero, paso.accion)}</h2>
+    // Spec 012 (R-012.32): cada paso en una tarjeta. El título lleva serif por ser h2.
+    <li className="flex flex-col gap-3 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-5">
+      <h2 className="prose-measure text-xl">{textoPaso(numero, paso.accion)}</h2>
       <p className="prose-measure">{textoCriterio(paso.criterioTerminado)}</p>
       {paso.notaApoyo ? <p className="prose-measure">{textoNota(paso.notaApoyo)}</p> : null}
       {paso.porQue ? (

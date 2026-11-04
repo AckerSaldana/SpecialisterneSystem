@@ -36,12 +36,12 @@ export function RastroVersion({ rastro, nombre, anteriores, nivel }: Props) {
     <div className="flex flex-col gap-6">
       {grupos.map((grupo) => (
         <div key={grupo.id} className="flex flex-col gap-3">
-          <Titulo className="font-semibold">{grupo.grupo}</Titulo>
+          <Titulo className="text-lg font-semibold">{grupo.grupo}</Titulo>
           <ul className="flex flex-col gap-3">
             {grupo.items.map((item) => {
               const anterior = item.origenItemId ? anteriores.get(item.origenItemId) : undefined;
               return (
-                <li key={item.id} className="flex flex-col gap-2 rounded-lg border p-4 text-sm">
+                <li key={item.id} className="flex flex-col gap-2 rounded-md border-(length:--border-w) border-border bg-background px-4 py-3 text-sm">
                   <p className="prose-measure text-base">{item.descripcion}</p>
                   {esVisiblePersona(item.tipo) && item.textoPersona ? (
                     <p className="prose-measure">
@@ -51,11 +51,11 @@ export function RastroVersion({ rastro, nombre, anteriores, nivel }: Props) {
                   ) : null}
                   {item.estado === "editado" ? (
                     <details>
-                      <summary className="cursor-pointer font-medium underline-offset-4 hover:underline">
+                      <summary className="w-fit cursor-pointer font-medium underline-offset-4 hover:underline">
                         {RASTRO_EDITADO}
                       </summary>
                       {item.original ? (
-                        <div className="mt-2 flex flex-col gap-2 rounded-lg bg-muted p-3">
+                        <div className="mt-2 flex flex-col gap-2 rounded-md bg-muted px-4 py-3">
                           <p className="prose-measure">{item.original.descripcion}</p>
                           {esVisiblePersona(item.tipo) && item.original.textoPersona ? (
                             <p className="prose-measure">
@@ -79,10 +79,10 @@ export function RastroVersion({ rastro, nombre, anteriores, nivel }: Props) {
 
       {rastro.quitados.length > 0 ? (
         <div className="flex flex-col gap-2">
-          <Titulo className="font-semibold">{RASTRO_QUITADOS}</Titulo>
+          <Titulo className="text-lg font-semibold">{RASTRO_QUITADOS}</Titulo>
           <ul className="flex flex-col gap-2 text-sm">
             {rastro.quitados.map((q) => (
-              <li key={q.ref} className="prose-measure rounded-lg border border-dashed p-3">
+              <li key={q.ref} className="prose-measure rounded-md border-(length:--border-w) border-dashed border-border px-4 py-3">
                 <span className="font-medium">{etiquetaTipoPlan(q.tipo)}: </span>
                 {q.descripcion}
               </li>

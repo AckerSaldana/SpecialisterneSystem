@@ -15,7 +15,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { llamarDesglose } from "@/components/desglose/api";
 import { Confirmar } from "@/components/persona/guia/confirmar";
-import { avisoPalabrasConMayuscula, ayudaGuardarPlantilla, CAMPOS_PLANTILLA, dialogoGuardarPlantilla, ERROR_PLANTILLA_INCOMPLETA, ERROR_RED, ID_RESULTADO_PLANTILLA, palabrasConMayuscula, rutaPlantillasTras, textoPasoPlantilla } from "./textos";
+import { Button } from "@/components/ui/button";
+import { avisoPalabrasConMayuscula, ayudaGuardarPlantilla, CAMPOS_PLANTILLA, dialogoGuardarPlantilla, ERROR_PLANTILLA_INCOMPLETA, ERROR_RED, GUARDAR_DE_TODOS_MODOS, ID_RESULTADO_PLANTILLA, palabrasConMayuscula, rutaPlantillasTras, STATUS_AVISO_COPIA, textoPasoPlantilla } from "./textos";
 
 export type PasoParaPlantilla = { accion: string; criterioTerminado: string };
 
@@ -26,6 +27,8 @@ export function GuardarPlantilla({ breakdownId, tarea: tareaInicial, pasos: paso
   const [tarea, setTarea] = useState(tareaInicial);
   const [pasos, setPasos] = useState(pasosIniciales);
   const [error, setError] = useState<string | null>(null);
+  // R-010.56: el error es un aviso de texto copiado; se puede guardar de todos modos.
+  const [esAviso, setEsAviso] = useState(false);
   const dialogo = dialogoGuardarPlantilla(nombre);
   // No bloquea: el código no sabe si es un nombre o una herramienta (R-010.40).
   const conMayuscula = palabrasConMayuscula({ puesto, titulo, tarea });
@@ -37,12 +40,16 @@ export function GuardarPlantilla({ breakdownId, tarea: tareaInicial, pasos: paso
     return texto;
   };
 
-  async function guardar(): Promise<string | null> {
+  async function guardar(aceptoAviso?: true): Promise<string | null> {
     setError(null);
-    const cuerpo = GuardarPlantillaRequest.safeParse({ breakdownId, puesto, titulo, tarea, pasos });
+    setEsAviso(false);
+    const cuerpo = GuardarPlantillaRequest.safeParse({ breakdownId, puesto, titulo, tarea, pasos, aceptoAviso });
     if (!cuerpo.success) return fallo(ERROR_PLANTILLA_INCOMPLETA);
     const r = await llamarDesglose("/api/task-templates", "POST", cuerpo.data, ERROR_RED);
-    if (!r.ok) return fallo(r.error);
+    if (!r.ok) {
+      setEsAviso(r.status === STATUS_AVISO_COPIA);
+      return fallo(r.error);
+    }
     router.push(rutaPlantillasTras("guardada"));
     return null;
   }
@@ -81,6 +88,13 @@ export function GuardarPlantilla({ breakdownId, tarea: tareaInicial, pasos: paso
         ))}
 
         {error ? <p className="prose-measure font-medium text-destructive">{error}</p> : null}
+        {error && esAviso ? (
+          <div>
+            <Button type="button" variant="outline" onClick={() => void guardar(true)}>
+              {GUARDAR_DE_TODOS_MODOS}
+            </Button>
+          </div>
+        ) : null}
         <div>
           <Confirmar
             boton={dialogo.boton}
@@ -89,7 +103,7 @@ export function GuardarPlantilla({ breakdownId, tarea: tareaInicial, pasos: paso
             texto={conMayuscula.length > 0 ? [dialogo.texto, avisoPalabrasConMayuscula(conMayuscula)] : [dialogo.texto]}
             cancelar={dialogo.cancelar}
             confirmar={dialogo.confirmar}
-            alConfirmar={guardar}
+            alConfirmar={() => guardar()}
             idFoco={ID_RESULTADO_PLANTILLA}
           />
         </div>

@@ -29,9 +29,10 @@ export function FormularioConsentimiento() {
 
   return (
     <form action={formAction} onSubmit={enviarSinReiniciar(formAction)} className="flex flex-col gap-4" noValidate>
+      {/* Opción de respuesta de DISENO.md (spec 012, R-012.14): bloque de 64px o más; marcada, en el acento. */}
       <label
         htmlFor="acepto"
-        className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-checked:border-2 has-checked:border-primary"
+        className="flex min-h-16 cursor-pointer items-start gap-3 rounded-md border-(length:--border-w) border-border bg-muted p-4 text-foreground transition-colors has-checked:border-primary has-checked:bg-primary has-checked:text-primary-foreground"
       >
         <input
           id="acepto"
@@ -42,7 +43,7 @@ export function FormularioConsentimiento() {
           defaultChecked={false}
           aria-invalid={errorCasilla ? true : undefined}
           aria-describedby={errorCasilla ? "consentimiento-error" : undefined}
-          className="mt-1 size-5 shrink-0 accent-primary"
+          className="mt-1 size-5 shrink-0 accent-primary checked:accent-primary-foreground"
         />
         <span className="prose-measure">
           Leí el aviso y doy mi consentimiento para que mi coach guarde mis datos en este sistema y use la inteligencia

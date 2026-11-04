@@ -1,4 +1,4 @@
-<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
+<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado -->
 
 # 004 · Sesiones de seguimiento y señales
 

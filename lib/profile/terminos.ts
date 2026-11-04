@@ -350,3 +350,14 @@ export function buscarInternosCercanos(texto: string): string[] {
   const normales = formasDeComparacion(texto).todas.map(normalizar);
   return PATRONES_INTERNOS_CERCANOS.filter((t) => normales.some((n) => t.patron.test(n))).map((t) => t.termino);
 }
+
+// R-011.20: el resumen lo lee la persona y no debe decir quién observó. El código no distingue "su líder le avisa" de
+// una opinión en todos los casos, así que esto solo avisa al coach; no bloquea.
+const CARGO = "(?:lider|mentora?|jefe|jefa|supervisora?|coach)";
+const ATRIBUCION = new RegExp(
+  `\\b${CARGO}\\b[^.;]{0,30}\\b(?:opina|dice|dijo|cree|conto|considera|piensa|comenta|comento|noto|observo|senala|senalo)\\b|\\bsegun\\b[^.;]{0,30}\\b${CARGO}\\b`,
+);
+
+export function atribuyeObservador(texto: string): boolean {
+  return ATRIBUCION.test(normalizar(texto));
+}

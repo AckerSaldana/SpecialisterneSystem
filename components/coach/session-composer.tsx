@@ -5,6 +5,7 @@
 // En etapa de seguimiento pide además el tipo de sesión y la fecha (R-004.1).
 // Si el modelo falla, la nota ya quedó guardada: el formulario queda solo de consulta y ofrece
 // pedir la propuesta otra vez, sin escribirla de nuevo (R-004.29).
+// Spec 012 (R-012.28): en una tarjeta, con el tipo de sesión como dos opciones grandes y el largo de la nota a la vista.
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -18,7 +19,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+
+const MAX_NOTA = 20000;
+const formatoNumero = new Intl.NumberFormat("es-MX");
+// La opción elegida: borde de acento y fondo suave (DISENO.md, opción de respuesta en versión del coach).
+const OPCION = "flex min-h-12 cursor-pointer items-center gap-3 text-base leading-snug rounded-md border-(length:--border-w) border-border bg-card px-4 py-3 transition-colors has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-accent";
 
 type Props = {
   engagementId: string;
@@ -33,6 +40,7 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
   const [nota, setNota] = useState("");
   const [tipo, setTipo] = useState<TipoSesion>("persona");
   const [fecha, setFecha] = useState(hoy);
+  const [observador, setObservador] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // A qué campo corresponde el error. Los errores del modelo o de la red no marcan ningún campo.
@@ -110,7 +118,7 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
     if (sesionGuardada || sinRespuesta) return;
 
     // Misma validación que el servidor, para avisar antes de enviar.
-    const body = ProposeRequest.safeParse(seguimiento ? { nota, tipo, fecha } : { nota });
+    const body = ProposeRequest.safeParse(seguimiento ? { nota, tipo, fecha } : { nota, observador });
     if (!body.success) {
       const issue = body.error.issues[0];
       mostrarError(issue?.message ?? "Revisa la nota.", issue?.path[0] === "fecha" ? "fecha" : "nota");
@@ -126,7 +134,8 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
   const soloConsulta = enviando || sesionGuardada !== null || sinRespuesta;
 
   return (
-    <form onSubmit={pedirPropuesta} className="flex flex-col gap-4" noValidate>
+    <Card className="px-(--card-spacing)">
+    <form onSubmit={pedirPropuesta} className="flex flex-col gap-6" noValidate>
       {seguimiento && sinPlan ? (
         <Alert>
           <AlertTitle>Sin plan aprobado</AlertTitle>
@@ -139,21 +148,21 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
       {seguimiento ? (
         <>
           <fieldset disabled={soloConsulta} className="flex flex-col gap-2">
-            <legend className="mb-2 text-sm font-medium">Tipo de sesión</legend>
-            <RadioGroup value={tipo} onValueChange={(v) => setTipo(v as TipoSesion)} className="flex flex-col gap-2">
-              <div className="flex items-center gap-2">
+            <legend className="mb-2 font-semibold">Tipo de sesión</legend>
+            <RadioGroup value={tipo} onValueChange={(v) => setTipo(v as TipoSesion)} className="grid gap-3 md:grid-cols-2">
+              <Label htmlFor="tipo-persona" className={OPCION}>
                 <RadioGroupItem value="persona" id="tipo-persona" />
-                <Label htmlFor="tipo-persona">Sesión con {nombre}</Label>
-              </div>
-              <div className="flex items-center gap-2">
+                Sesión con {nombre}
+              </Label>
+              <Label htmlFor="tipo-red" className={OPCION}>
                 <RadioGroupItem value="red_de_apoyo" id="tipo-red" />
-                <Label htmlFor="tipo-red">Sesión con la red de apoyo (líder y mentor)</Label>
-              </div>
+                Sesión con la red de apoyo (líder y mentor)
+              </Label>
             </RadioGroup>
           </fieldset>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="fecha">Fecha de la sesión</Label>
+            <Label htmlFor="fecha" className="font-semibold">Fecha de la sesión</Label>
             <Input
               id="fecha"
               name="fecha"
@@ -168,11 +177,28 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
             />
           </div>
         </>
-      ) : null}
+      ) : (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="observador" className="font-semibold">Quién observó (opcional)</Label>
+          <p id="observador-ayuda" className="prose-measure text-muted-foreground">
+            Escribe el rol, no el nombre: por ejemplo, coach del módulo técnico o líder. La IA no recibe este dato y la persona no lo ve.
+          </p>
+          <Input
+            id="observador"
+            name="observador"
+            value={observador}
+            onChange={(e) => setObservador(e.target.value)}
+            readOnly={soloConsulta}
+            aria-describedby="observador-ayuda"
+            maxLength={80}
+            className="prose-measure"
+          />
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
-        <Label htmlFor="nota">Nota de la sesión</Label>
-        <p id="nota-ayuda" className="prose-measure text-sm text-muted-foreground">
+        <Label htmlFor="nota" className="font-semibold">Nota de la sesión</Label>
+        <p id="nota-ayuda" className="prose-measure text-muted-foreground">
           {seguimiento && tipo === "red_de_apoyo"
             ? `Escribe lo que se habló con el líder y el mentor. No escribas sus nombres: usa "el líder" y "el mentor". ${nombre} no ve esta nota.`
             : "Escribe con tus palabras lo que pasó en la sesión. La IA propone cambios al perfil y cita partes de esta nota. Tú decides qué se aplica. La persona no ve esta nota."}
@@ -186,9 +212,13 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
           aria-describedby={campoConError === "nota" ? "nota-ayuda nota-error" : "nota-ayuda"}
           aria-invalid={campoConError === "nota" ? true : undefined}
           rows={12}
-          maxLength={20000}
-          className="prose-measure min-h-64"
+          maxLength={MAX_NOTA}
+          className="min-h-72"
         />
+        {/* Solo informa el largo; el límite lo pone maxLength y lo revisa el servidor. */}
+        <p className="text-muted-foreground">
+          {formatoNumero.format(nota.length)} de {formatoNumero.format(MAX_NOTA)} caracteres
+        </p>
       </div>
 
       {error ? (
@@ -237,10 +267,11 @@ export function SessionComposer({ engagementId, nombre, seguimiento, sinPlan, ho
           )}
         </div>
         {/* Estado en texto, sin spinner. aria-live lo anuncia a lectores de pantalla. */}
-        <p role="status" aria-live="polite" className="text-sm">
+        <p role="status" aria-live="polite">
           {enviando ? "Generando la propuesta. Puede tardar unos segundos." : ""}
         </p>
       </div>
     </form>
+    </Card>
   );
 }

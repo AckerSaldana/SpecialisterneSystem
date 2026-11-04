@@ -3,7 +3,7 @@
 // Lecturas de seguimiento que comparten rutas y páginas (spec 004). Todo recibe la transacción de
 // withRls: con el consentimiento retirado, RLS no devuelve filas (R-004.48).
 import "server-only";
-import { and, asc, desc, eq, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import type { Tx } from "@/lib/db/rls";
 import {
@@ -276,7 +276,9 @@ export type VistaPropuesta = {
   descartados: Descartado[];
   banderas: Bandera[];
   indicePlan: EntradaIndicePlan[];
-  sesion: { tipo: TipoSesion; fecha: Date } | null;
+  sesion: { tipo: TipoSesion; fecha: Date; observador: string | null } | null;
+  // Spec 011 (R-011.8): de qué sesión sale la frase anterior de cada relación.
+  origenes: Record<string, { observador: string | null; fecha: Date }>;
   nota: string | null;
   avisoPerfil: { base: number; actual: number } | null;
   avisoPlan: { base: number; actual: number } | null;
@@ -302,6 +304,7 @@ export async function leerVistaPropuesta(tx: Tx, engagementId: string, eventId: 
       planBaseId: profileEvents.planBaseId,
       sesionTipo: sessions.tipo,
       sesionFecha: sessions.realizadaEn,
+      sesionObservador: sessions.observador,
       nota: sessions.notaOriginal,
     })
     .from(profileEvents)
@@ -348,6 +351,16 @@ export async function leerVistaPropuesta(tx: Tx, engagementId: string, eventId: 
     if (ficha) fichas[fichaId] = ficha.titulo;
   }
 
+  const sesionesPrevias = [...new Set(update.relacionesConPerfilPrevio.flatMap((r) => (r.sesionPrevia ? [r.sesionPrevia] : [])))];
+  const origenes: VistaPropuesta["origenes"] = {};
+  if (sesionesPrevias.length > 0) {
+    const filas = await tx
+      .select({ id: sessions.id, observador: sessions.observador, fecha: sessions.realizadaEn })
+      .from(sessions)
+      .where(and(inArray(sessions.id, sesionesPrevias), eq(sessions.engagementId, engagementId)));
+    for (const { id, observador, fecha } of filas) origenes[id] = { observador, fecha };
+  }
+
   return {
     eventId: evento.id,
     engagementId,
@@ -359,7 +372,8 @@ export async function leerVistaPropuesta(tx: Tx, engagementId: string, eventId: 
     descartados: payload.descartados,
     banderas: payload.banderas,
     indicePlan,
-    sesion: evento.sesionTipo && evento.sesionFecha ? { tipo: evento.sesionTipo, fecha: evento.sesionFecha } : null,
+    sesion: evento.sesionTipo && evento.sesionFecha ? { tipo: evento.sesionTipo, fecha: evento.sesionFecha, observador: evento.sesionObservador } : null,
+    origenes,
     nota: evento.nota,
     avisoPerfil,
     avisoPlan,

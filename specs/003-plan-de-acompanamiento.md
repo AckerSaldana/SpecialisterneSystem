@@ -149,6 +149,7 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 | R-003.58 | Cuando el primer plan del acompañamiento pasa a `aprobado`, la etapa pasa de `plan` a `seguimiento` en la misma transacción. 004 abre las sesiones de seguimiento con esa etapa (R-004.1). | Interpretación del equipo; Propuesta (Claude), decide Acker |
 | R-003.59 | El paso a `cierre` lo hace la acción explícita del coach que define 006, con la función `security definer` `private.app_iniciar_cierre` de 006, y solo desde `seguimiento` (R-006.1). Esta spec no la implementa. | 006; Propuesta (Claude), decide Acker |
 | R-003.60 | Las transiciones solo avanzan. Cada una cambia la etapa solo si la etapa actual es la de origen de esa transición; si no, no hace nada. Descartar un borrador, crear otro snapshot o aprobar otra versión del plan no regresa ni adelanta la etapa. Retirar el consentimiento no cambia la etapa. | Interpretación del equipo |
+| R-003.62 | Además de las citas del snapshot (R-003.46), `textoPersona` se compara con la nota de cada sesión del acompañamiento (`sessions.nota_original`). Un pedazo de 6 o más palabras seguidas de una nota da `cita_en_texto_persona` y bloquea por R-003.30. Vale para la propuesta, la edición, un ítem nuevo, la aprobación y la pantalla del coach, para que las banderas sean las mismas. Las notas se leen con la sesión del coach (RLS de `sessions`) y nunca llegan al modelo del plan. | C-09, D-086 |
 
 ## Criterios de aceptación
 
@@ -192,6 +193,7 @@ R-003.49 a R-003.60 se agregaron en la versión 2 y R-003.61 en la versión 3. V
 | CA-003.36 | Dada la sesión de la persona, cuando intenta un INSERT, UPDATE o DELETE en `app.plans`, `app.plan_items`, `app.persona_plans` o `app.knowledge_cards`, entonces la base lo rechaza. | R-003.52 | RLS |
 | CA-003.37 | Dado un objetivo X en la versión 1, su equivalente Y en la versión 2 (`origen_item_id = X`) y un borrador con Z ligado a Y, cuando el coach aprueba la versión 3, entonces el ítem Z en `persona_plans.contenido` tiene `itemsAnteriores = [Y, X]`, y un punto nuevo de la versión 3 tiene `itemsAnteriores = []`. Dado un apoyo de la versión 1 sin `textoPersona` ligado desde un apoyo con texto de la versión 2, entonces el ítem de la versión 2 lleva el ID del de la versión 1. | R-003.61 | prueba offline + consulta a la base |
 | CA-003.38 | Dado un `textoPersona` con 6 palabras seguidas de una cita del snapshot, o con "TDAH", cuando corre la revisión, entonces hay una bandera que bloquea la aprobación. Con esas palabras en la `descripcion`, los términos clínicos no marcan nada. | R-003.46, R-003.47, R-003.30 | prueba offline |
+| CA-003.39 | Dado un `textoPersona` con 6 palabras seguidas de una nota de sesión que no son cita del snapshot, cuando se revisa con las notas, entonces hay `cita_en_texto_persona` y `banderasQueBloquean` la incluye. Sin las notas no la hay. La `descripcion` de un ítem no cambia. | R-003.62 | prueba offline |
 
 ## Datos
 
@@ -453,6 +455,8 @@ Cada tarea es un commit pequeño que dice sus R-IDs, la herramienta y quién lo 
 - ¿Qué palabras evitan en los textos que ve la persona y en lo que se habla con el líder? Por ejemplo, ¿nombran la condición o las funciones ejecutivas?
 
 ## Cambios
+
+Misma versión, 2 nov: R-003.62 y CA-003.39. Un pedazo de nota que el coach pegue en lo que lee la persona bloquea el plan igual que una cita (D-086, lista A del 2 nov). Las notas se leen en la propuesta, al editar, al agregar, al aprobar y en la pantalla del coach (`notasDelAcompanamiento`, `lib/sessions/copiado.ts`). Verificado: `typecheck`, `lint`, `build`, `eval -- --offline` (CA-003.39) y que el plan del caso de demo no copia sus notas, así que `seed-demo` sigue aprobándolo. Sin probar en el navegador ni con una ruta de plan contra la base: no hay script de ruta del plan.
 
 Versión 9 · 2026-11-01 · huecos del filtro de lo que lee la persona
 

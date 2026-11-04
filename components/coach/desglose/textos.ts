@@ -132,6 +132,11 @@ export const dialogoGuardarPlantilla = (nombre: string) =>
 export const CAMPOS_PLANTILLA = { puesto: "Puesto", titulo: "Título", tarea: "Tarea", accion: "Acción", criterio: "Termina cuando" } as const;
 export const textoPasoPlantilla = (n: number) => `Paso ${n}`;
 // Sin texto en la spec.
+// R-010.56. Sin texto en la spec antes de esta versión.
+export const avisoCopiaPlantilla = (nombre: string, pedazos: readonly string[]) =>
+  `Este texto copia parte de tus notas de ${nombre} o de su perfil: ${pedazos.map((p) => `«${p}»`).join(", ")}. Una plantilla les llega a otras personas. Quítalo, o guárdala de todos modos.`;
+export const GUARDAR_DE_TODOS_MODOS = "Guardar de todos modos";
+export const STATUS_AVISO_COPIA = 422;
 export const ERROR_PLANTILLA_INCOMPLETA = "Revisa lo que escribiste. Llena el puesto, el título, la tarea y cada paso.";
 
 // R-010.40: la spec solo da el texto de bloqueo por un término. Este es el de un paso que no pasa validarPasos. Sin texto
@@ -166,6 +171,9 @@ export const avisoPalabrasConMayuscula = (palabras: readonly string[]) => `La ta
 // Lista
 export const TITULO_PLANTILLAS = "Plantillas de tu organización";
 export const VACIO_PLANTILLAS = "Todavía no hay plantillas.";
+// Spec 012 (R-012.33).
+export const COMO_GUARDAR_PLANTILLA = "Se guardan desde una tarea, con «Guardar como plantilla».";
+export const verPasos = (n: number) => (n === 1 ? "Ver el paso" : `Ver los ${n} pasos`);
 export const textoPlantilla = (puesto: string, titulo: string) => `${sinPuntoFinal(puesto)}: ${sinPuntoFinal(titulo)}.`;
 export const DIALOGO_ARCHIVAR_PLANTILLA = {
   boton: "Archivar",

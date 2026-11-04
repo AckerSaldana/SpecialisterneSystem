@@ -10,6 +10,8 @@ import { withRls } from "@/lib/db/rls";
 import { leerPlantillas } from "@/lib/desglose/lectura";
 import { ArchivarPlantilla } from "@/components/coach/desglose/archivar-plantilla";
 import {
+  COMO_GUARDAR_PLANTILLA,
+  verPasos,
   AYUDA_PLANTILLAS,
   ID_RESULTADO_PLANTILLA,
   PLANTILLA_ARCHIVADA,
@@ -34,37 +36,44 @@ export default async function PlantillasPage({ searchParams }: Props) {
 
   const plantillas = await withRls(user.claims, (tx) => leerPlantillas(tx));
 
+  // Spec 012 (R-012.33): título en serif, estado vacío que dice cómo se guarda una, y cada plantilla en una tarjeta.
   return (
-    <div className="flex flex-col gap-6">
-      <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">{TITULO_PLANTILLAS}</h1>
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-3">
+        <h1 className="text-4xl leading-tight">{TITULO_PLANTILLAS}</h1>
         {resultado ? (
           <ParrafoEnfocable id={ID_RESULTADO_PLANTILLA} className="prose-measure font-medium">
             {resultado}
           </ParrafoEnfocable>
         ) : null}
-        <p className="prose-measure">{AYUDA_PLANTILLAS}</p>
+        <p className="prose-measure text-muted-foreground">{AYUDA_PLANTILLAS}</p>
       </header>
 
       {plantillas.length === 0 ? (
-        <p className="prose-measure">{VACIO_PLANTILLAS}</p>
+        <div className="flex flex-col gap-2 rounded-lg border-(length:--border-w) border-dashed border-input px-6 py-8 text-center">
+          <p className="text-lg font-semibold">{VACIO_PLANTILLAS}</p>
+          <p className="text-muted-foreground">{COMO_GUARDAR_PLANTILLA}</p>
+        </div>
       ) : (
         <ul className="flex flex-col gap-4">
           {plantillas.map((p) => (
-            <li key={p.id} className="flex flex-col gap-3 rounded-lg border border-border p-4">
-              <h2 className="prose-measure text-lg font-semibold">{textoPlantilla(p.puesto, p.titulo)}</h2>
-              <p className="prose-measure">{textoTareaPlantilla(p.tarea)}</p>
-              <ol className="flex flex-col gap-2">
-                {p.pasos.map((paso, i) => (
-                  <li key={paso.id} className="prose-measure">
-                    <p>{textoPaso(i + 1, paso.accion)}</p>
-                    <p className="text-sm">{textoCriterio(paso.criterioTerminado)}</p>
-                  </li>
-                ))}
-              </ol>
-              <div>
+            <li key={p.id} className="flex flex-col gap-4 rounded-lg border-(length:--border-w) border-border bg-card px-6 py-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <h2 className="prose-measure text-2xl">{textoPlantilla(p.puesto, p.titulo)}</h2>
                 <ArchivarPlantilla plantillaId={p.id} nombrePlantilla={textoPlantilla(p.puesto, p.titulo)} />
               </div>
+              <p className="prose-measure">{textoTareaPlantilla(p.tarea)}</p>
+              <details>
+                <summary className="w-fit cursor-pointer font-semibold">{verPasos(p.pasos.length)}</summary>
+                <ol className="mt-3 flex flex-col gap-3 border-l-2 border-border pl-5">
+                  {p.pasos.map((paso, i) => (
+                    <li key={paso.id} className="prose-measure flex flex-col gap-1">
+                      <p>{textoPaso(i + 1, paso.accion)}</p>
+                      <p className="text-muted-foreground">{textoCriterio(paso.criterioTerminado)}</p>
+                    </li>
+                  ))}
+                </ol>
+              </details>
             </li>
           ))}
         </ul>

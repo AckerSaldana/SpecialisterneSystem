@@ -39,8 +39,9 @@ const retirar = conFalloDeRed<RetiroState>(retirarConsentimiento, () => ({
 
 export function ConsentimientoPersona(props: Props) {
   return (
-    <section aria-labelledby="consentimiento-titulo" className="flex flex-col gap-3">
-      <h2 id="consentimiento-titulo" className="text-xl font-semibold">
+    // Spec 012 (R-012.34): al final, en una tarjeta con fondo apagado.
+    <section aria-labelledby="consentimiento-titulo" className="flex flex-col gap-3 rounded-lg border-(length:--border-w) border-border bg-muted px-6 py-6">
+      <h2 id="consentimiento-titulo" className="text-2xl">
         Tus datos y tu consentimiento
       </h2>
       {props.estado === "vigente" ? (

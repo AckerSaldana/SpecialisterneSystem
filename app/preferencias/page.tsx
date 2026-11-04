@@ -17,14 +17,17 @@ export default async function PreferenciasPage() {
 
   return (
     <>
-      <main id="contenido" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-4 py-8">
-        <p>
-          {/* "/" manda a cada quien a su inicio según su rol (o a iniciar sesión). */}
-          <Link href="/">Volver</Link>
-        </p>
-        <header className="flex flex-col gap-2">
-          <h1 className="text-3xl font-bold">Preferencias de presentación</h1>
-          <p className="prose-measure">
+      <main id="contenido" className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-8 px-4 py-10">
+        <header className="flex flex-col gap-3">
+          <p>
+            {/* "/" manda a cada quien a su inicio según su rol (o a iniciar sesión). */}
+            <Link href="/" className="underline underline-offset-4">
+              Volver
+            </Link>
+          </p>
+          {/* Spec 012 (R-012.37): título en serif; en pantallas angostas baja a 30px para que quepa. */}
+          <h1 className="text-3xl leading-tight sm:text-4xl">Preferencias de presentación</h1>
+          <p className="prose-measure text-muted-foreground">
             Elige cómo quieres ver el texto. Los cambios aplican en todas las pantallas de este navegador después de
             presionar Guardar.
           </p>

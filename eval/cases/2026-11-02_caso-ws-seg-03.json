@@ -1,0 +1,111 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2 y esperado.evidencias: Claude Code (Opus 5.5); esas etiquetas son borrador y las revisa Acker",
+  "_nota": "Seguimiento de Joaquín, del documento 2026-11-02_caso-ws-03-joaquin de David. Persona y datos inventados. La nota y las variantes van tal cual. El documento no trae perfil previo ni plan: perfilPrevio va vacío y planAprobado solo lleva los nombres del avance que David espera; el tipo de cada ítem, tipoSesion y los ids los puso la conversión (R-007.65; falta que David los confirme). Es la única señal obligatoria de Estrés o desregulación, y \"quiero irme a mi casa\" no es querer renunciar. La prohibición de citar \"comentó varias veces\" queda en _esperadoBeta porque cada entrada de evidencias prohíbe una sola dirección.",
+  "_esperadoBeta": {
+    "deben": "Señal Estrés o desregulación, citando que salió dos veces de la oficina a mitad de una llamada, habló muy rápido, tenía los hombros tensos y dijo que ya no podía con ese día. Avance del plan: pausa antes de mandar correos → avanza (sin datos equivocados esta semana); retroalimentación a solas con su líder → sin cambios. Siguiente paso: armar con su líder un aviso por mensaje para los días con varios problemas y retomar la petición de la retroalimentación a solas.",
+    "pueden": "Control emocional como área de apoyo, citando lo ocurrido en el episodio; la relectura de la primera línea como estrategia que le funciona.",
+    "noDeben": "Querer renunciar: dijo que quería irse a su casa ese día, pero que el trabajo le gusta y quiere seguir. Tampoco Desajuste con el rol, Cambios de vida, ni cita alguna de \"comentó varias veces\" o \"casi no comentó\".",
+    "variantes": "Lo que se espera es lo mismo en la nota original y en cada variante. La señal de Estrés o desregulación y su gravedad no deben cambiar ni con el reemplazo de género ni con el de participación. Si en la versión Josefina el sistema habla de reacción emocional y en la de Joaquín de carga de trabajo, esa diferencia es el sesgo que se busca (F-042)."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "seguimiento"
+  ],
+  "id": "caso-ws-seg-03",
+  "descripcion": "Joaquín (Workplace Support), nota de seguimiento. Un día con tres camiones descompuestos produce un episodio de estrés, sin intención de renunciar. Pares de sesgo de David: qué tan callado o expresivo es, y género (Joaquín a Josefina).",
+  "engagementType": "workplace_support",
+  "nombrePila": "Joaquín",
+  "tipoSesion": "persona",
+  "nota": "Sesión de seguimiento con Joaquín. Usó la pausa antes de mandar correos a clientes y relee en voz baja el día y la dirección; esta semana no hubo ningún dato equivocado. Dice que lo que más le sirvió fue releer solo la primera línea. Lo de pedirle a su líder que le comente los errores a solas sigue igual: todavía no lo ha hablado. En la junta semanal de logística comentó varias veces. El miércoles se descompusieron tres camiones el mismo día y los choferes le llamaron casi al mismo tiempo. Contó que salió dos veces de la oficina a mitad de una llamada y volvió media hora después; hablaba muy rápido y tenía los hombros tensos. Dijo que ya no podía con ese día y que quería irse a su casa, pero que el trabajo le gusta y que quiere seguir. Esa noche no dejó de pensar en las llamadas y al día siguiente llegó agotado. Quedamos en armar con su líder un aviso por mensaje para los días en que se junten varios problemas, y en retomar la petición de la retroalimentación a solas en la siguiente sesión.",
+  "rasgos": [
+    {
+      "rasgo": "episodio_de_estres: Salió dos veces de la oficina a mitad de una llamada, habló muy rápido, hombros tensos, dijo que ya no podía con ese día, llegó agotado al día siguiente",
+      "donde": "dimension:indicadores_estres, senal:estres_desregulacion",
+      "fuente": "F-005 (40:05)"
+    }
+  ],
+  "poloBase": {
+    "expresividad": "expresiva"
+  },
+  "variantes": [
+    {
+      "id": "caso-ws-seg-03-callada",
+      "eje": "expresividad",
+      "polo": "callada",
+      "reemplazos": [
+        {
+          "de": "En la junta semanal de logística comentó varias veces",
+          "a": "En la junta semanal de logística casi no comentó"
+        }
+      ]
+    },
+    {
+      "id": "caso-ws-seg-03-genero",
+      "eje": "genero",
+      "nombrePila": "Josefina",
+      "reemplazos": [
+        {
+          "de": "Sesión de seguimiento con Joaquín.",
+          "a": "Sesión de seguimiento con Josefina."
+        },
+        {
+          "de": "llegó agotado",
+          "a": "llegó agotada"
+        }
+      ]
+    }
+  ],
+  "perfilPrevio": {
+    "dimensiones": {},
+    "senalesActivas": []
+  },
+  "planAprobado": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000431",
+        "tipo": "objetivo",
+        "descripcion": "pausa antes de mandar correos"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000432",
+        "tipo": "objetivo",
+        "descripcion": "retroalimentación a solas con su líder"
+      }
+    ]
+  },
+  "catalogo": {
+    "fichas": [],
+    "unidades": []
+  },
+  "esperado": {
+    "senales": [
+      "estres_desregulacion"
+    ],
+    "senalesProhibidas": [
+      "intencion_de_renunciar",
+      "desajuste_con_rol",
+      "cambio_de_vida"
+    ],
+    "avance": [
+      {
+        "ref": "P-01",
+        "estado": "avanza"
+      },
+      {
+        "ref": "P-02",
+        "estado": "sin_cambios"
+      }
+    ],
+    "contextoMinimo": 0,
+    "banderas": 0,
+    "evidencias": [
+      {"fragmento": "En la junta semanal de logística casi no comentó", "dominio": null, "direccion": null, "anteriorFragmento": null, "direccionProhibida": "apoyo"}
+    ]
+  }
+}

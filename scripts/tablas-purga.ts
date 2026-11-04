@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Tablas con datos de un acompañamiento, en orden de borrado. Las usan scripts/purge-retirados.ts
 // y scripts/seed-demo.ts (R-007.70). Vive aparte porque purge-retirados corre main al importarse.

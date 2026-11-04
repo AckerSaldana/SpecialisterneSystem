@@ -7,6 +7,7 @@
 // El coach no puede registrar el consentimiento por la persona (R-002.24).
 // Spec 004: antes del campo de la nota va el panel "Antes de esta sesión" (R-004.22). En seguimiento,
 // el formulario pide además el tipo y la fecha (R-004.1).
+// Spec 012 (R-012.28): título en serif con la línea que dice qué pasa después, panel y formulario en tarjetas.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -24,6 +25,9 @@ import { PanelAntesDeSesion } from "@/components/coach/seguimiento/panel-antes";
 import { textoNuevaSesionSinConsentimiento } from "@/components/coach/alta/consentimiento";
 
 export const metadata: Metadata = { title: "Nueva sesión" };
+
+// R-012.28: qué pasa después de enviar, para que el coach sepa que todavía decide.
+const TEXTO_DESPUES = "Después de pedir la propuesta la revisas: nada cambia en el perfil hasta que apruebes.";
 
 export default async function NewSessionPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireRole("coach");
@@ -52,27 +56,39 @@ export default async function NewSessionPage({ params }: { params: Promise<{ id:
   const urlPerfil = `/coach/engagements/${engagement.id}`;
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-sm">
-        <Link href={urlPerfil} className="underline underline-offset-4">
-          Volver al perfil de {nombre}
-        </Link>
-      </p>
-      <h1 className="text-2xl font-semibold">Nueva sesión con {nombre}</h1>
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-3">
+        <p>
+          <Link href={urlPerfil} className="underline underline-offset-4">
+            Volver al perfil de {nombre}
+          </Link>
+        </p>
+        <h1 className="text-4xl leading-tight">Nueva sesión con {nombre}</h1>
+        {vigente ? <p className="prose-measure text-muted-foreground">{TEXTO_DESPUES}</p> : null}
+        {/* El panel puede ser largo: con esto se llega a la nota sin recorrerlo. En pantallas muy anchas van lado a lado. */}
+        {vigente && seguimiento?.ultimaSesion ? (
+          <p className="xl:hidden">
+            <a href="#nota">Ir a la nota de la sesión</a>
+          </p>
+        ) : null}
+      </header>
 
       {/* Sin consentimiento vigente no se guardan notas ni se envían a la IA (C-10). */}
       {vigente ? (
-        <>
+        // El panel va antes que el formulario (R-004.22): arriba, o a la izquierda en pantallas muy anchas, con la nota fija a la vista.
+        <div className={seguimiento?.ultimaSesion ? "grid items-start gap-8 xl:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]" : "flex flex-col"}>
           {/* Sin sesiones anteriores no hay nada que recordar. */}
           {seguimiento?.ultimaSesion ? <PanelAntesDeSesion datos={seguimiento} nombre={nombre} /> : null}
-          <SessionComposer
-            engagementId={engagement.id}
-            nombre={nombre}
-            seguimiento={engagement.stage === "seguimiento"}
-            sinPlan={seguimiento?.hayPlanVigente === false}
-            hoy={hoyEnMonterrey()}
-          />
-        </>
+          <div className="xl:sticky xl:top-6">
+            <SessionComposer
+              engagementId={engagement.id}
+              nombre={nombre}
+              seguimiento={engagement.stage === "seguimiento"}
+              sinPlan={seguimiento?.hayPlanVigente === false}
+              hoy={hoyEnMonterrey()}
+            />
+          </div>
+        </div>
       ) : (
         <Alert>
           <AlertTitle>Falta el consentimiento</AlertTitle>

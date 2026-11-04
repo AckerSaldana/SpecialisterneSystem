@@ -15,6 +15,7 @@ import { knowledgeCards, planItems, plans, profileSnapshots, users } from "@/lib
 import type { DescartadoPlan } from "@/lib/plan/schema";
 import { citasDelPerfil, columnasItem, vistaItem } from "@/lib/plan/server";
 import type { Perfil } from "@/lib/profile/schema";
+import { notasDelAcompanamiento } from "@/lib/sessions/copiado";
 import { formatFecha } from "@/components/coach/labels";
 import type { PlanVigenteDatos } from "./plan-vigente";
 import type { FichaOpcion, ItemLectura } from "./tipos";
@@ -104,7 +105,7 @@ export async function leerPlan(
     // Las banderas se calculan contra las citas del snapshot base del borrador (R-003.18, R-003.46),
     // que puede no ser el último si el perfil cambió después de pedir la propuesta. Mismas citas y
     // misma función que usan las rutas al guardar (citasDelPerfil, vistaItem), así la pantalla y
-    // la respuesta de la ruta muestran las mismas banderas.
+    // la respuesta de la ruta muestran las mismas banderas. Las notas de las sesiones también (R-003.62).
     let perfilBase: Perfil | undefined =
       snapshotActual && snapshotActual.id === borradorFila.profileSnapshotId ? snapshotActual.perfil : undefined;
     if (!perfilBase) {
@@ -116,13 +117,14 @@ export async function leerPlan(
       perfilBase = base?.perfil;
     }
     const citas = perfilBase ? citasDelPerfil(perfilBase) : [];
+    const notas = await notasDelAcompanamiento(tx, engagementId);
 
     borrador = {
       id: borradorFila.id,
       snapshotVersion: borradorFila.snapshotVersion,
       descartados: extra?.propuestaIa?.descartados ?? [],
       // R-003.27: las banderas se recalculan con código cada vez que se muestra el borrador.
-      items: filasDe(borradorFila.id).map((f) => vistaItem(f, citas)),
+      items: filasDe(borradorFila.id).map((f) => vistaItem(f, citas, notas)),
     };
   }
 

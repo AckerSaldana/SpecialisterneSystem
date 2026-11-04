@@ -12,6 +12,8 @@ export function tituloDeAviso(bloques: BloqueAviso[]): string {
 }
 
 export function AvisoTexto({ bloques, version }: { bloques: BloqueAviso[]; version: string }) {
+  // Spec 012 (R-012.42): lo que va antes del título es la marca de borrador; se ve como aviso, no como contenido.
+  const inicioTitulo = bloques.findIndex((b) => b.tipo === "titulo");
   return (
     <article aria-label="Texto del aviso de privacidad" className="flex flex-col gap-4">
       <p className="text-sm text-muted-foreground">Versión del aviso: {version}</p>
@@ -21,7 +23,7 @@ export function AvisoTexto({ bloques, version }: { bloques: BloqueAviso[]; versi
             return null;
           case "subtitulo":
             return (
-              <h2 key={i} className="mt-2 text-xl font-semibold">
+              <h2 key={i} className="mt-6 text-2xl leading-tight">
                 {b.texto}
               </h2>
             );
@@ -34,6 +36,13 @@ export function AvisoTexto({ bloques, version }: { bloques: BloqueAviso[]; versi
               </ul>
             );
           case "parrafo":
+            if (i < inicioTitulo) {
+              return (
+                <p key={i} className="prose-measure rounded-md border-l-4 border-primary bg-accent px-4 py-3 font-medium">
+                  {b.texto}
+                </p>
+              );
+            }
             return (
               <p key={i} className="prose-measure">
                 {b.texto}

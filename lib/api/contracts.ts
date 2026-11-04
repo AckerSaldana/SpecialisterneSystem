@@ -21,6 +21,8 @@ export const ProposeRequest = z.strictObject({
     .max(20000, "La nota puede tener hasta 20,000 caracteres."),
   tipo: TipoSesion.optional(),
   fecha: z.iso.date("Escribe la fecha de la sesión.").optional(),
+  // Solo cuenta fuera de seguimiento (R-011.2).
+  observador: z.string().trim().max(80, "Quién observó puede tener hasta 80 caracteres.").optional(),
 });
 export type ProposeRequest = z.infer<typeof ProposeRequest>;
 
@@ -234,6 +236,8 @@ export const GuardarPlantillaRequest = z.strictObject({
     .array(z.strictObject({ accion: z.string().trim().min(1).max(MAX_ACCION), criterioTerminado: z.string().trim().min(1).max(MAX_CRITERIO) }))
     .min(1)
     .max(MAX_PASOS),
+  // R-010.56: el coach vio el aviso de texto copiado de sus notas y guarda de todos modos.
+  aceptoAviso: z.literal(true).optional(),
 });
 export type GuardarPlantillaRequest = z.infer<typeof GuardarPlantillaRequest>;
 

@@ -4,13 +4,14 @@
 // pone en <html> antes de enviar la página, así no hay parpadeo de estilos.
 // El pie de ayuda (<SiteFooter />) lo pone cada layout de pantalla, no este.
 import type { Metadata } from "next";
-import { Atkinson_Hyperlegible, Inter, Lexend } from "next/font/google";
+import { Atkinson_Hyperlegible, Lexend, Source_Serif_4 } from "next/font/google";
 import "@fontsource/opendyslexic/400.css";
 import "@fontsource/opendyslexic/700.css";
 import "./globals.css";
 import { atributosHtml, getPreferences } from "@/lib/preferences";
 
-// Atkinson es la fuente por defecto: se precarga. Las otras se descargan solo si se eligen.
+// R-012.4. Atkinson es la fuente de cuerpo y Source Serif 4 la de títulos: las dos se precargan. Lexend y
+// OpenDyslexic se descargan solo si se eligen, porque solo [data-font] las nombra en globals.css.
 const atkinson = Atkinson_Hyperlegible({
   weight: ["400", "700"],
   subsets: ["latin", "latin-ext"],
@@ -18,11 +19,11 @@ const atkinson = Atkinson_Hyperlegible({
   display: "swap",
 });
 
-const inter = Inter({
+const sourceSerif = Source_Serif_4({
+  weight: ["500"],
   subsets: ["latin", "latin-ext"],
-  variable: "--font-inter",
+  variable: "--font-source-serif",
   display: "swap",
-  preload: false,
 });
 
 const lexend = Lexend({
@@ -35,7 +36,8 @@ const lexend = Lexend({
 // Cada página pone su propio título; el template agrega el nombre del sitio.
 // Un título distinto por página permite que el anunciador de rutas de Next lea la navegación.
 export const metadata: Metadata = {
-  title: { default: "Caja MEX (nombre provisional)", template: "%s · Caja MEX" },
+  // Nombre del producto: D-091 (spec 012, R-012.23).
+  title: { default: "Shorenote", template: "%s · Shorenote" },
   description: "Coaching para proyectos de inclusión laboral. La IA ordena las notas; el coach decide.",
 };
 
@@ -45,7 +47,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${atkinson.variable} ${inter.variable} ${lexend.variable} h-full antialiased`}
+      className={`${atkinson.variable} ${sourceSerif.variable} ${lexend.variable} h-full antialiased`}
       {...atributosHtml(preferencias)}
     >
       <body className="flex min-h-full flex-col">

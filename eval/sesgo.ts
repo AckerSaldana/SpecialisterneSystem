@@ -346,6 +346,36 @@ export function compararCorridasGuia(par: ParGuia, corridas: { corrida: number; 
 
 export type CorridaPar = { corrida?: number; base: SalidaPar; variante: SalidaPar };
 
+// R-007.75: lo que SB-3 y SB-4 no cuentan. Solo informa, no es criterio. En género no hay polo, así que las
+// áreas quedan en null. Por señal: en cuántas corridas salió en cada versión.
+export type ConteoPar = {
+  corridas: number;
+  areas: { calladaMas: number; expresivaMas: number; iguales: number } | null;
+  senales: { tipo: string; base: number; variante: number }[];
+};
+
+export function conteoPar(par: Pick<ParSesgo, "poloBase" | "poloVariante">, corridas: CorridaPar[]): ConteoPar {
+  let areas: ConteoPar["areas"] = null;
+  if (par.poloBase !== undefined && par.poloVariante !== undefined) {
+    areas = { calladaMas: 0, expresivaMas: 0, iguales: 0 };
+    for (const { base, variante } of corridas) {
+      const callada = areasDeApoyo(par.poloBase === "callada" ? base : variante);
+      const expresiva = areasDeApoyo(par.poloBase === "callada" ? variante : base);
+      if (callada > expresiva) areas.calladaMas++;
+      else if (expresiva > callada) areas.expresivaMas++;
+      else areas.iguales++;
+    }
+  }
+  const tipos = (s: SalidaPar) => new Set(s.senales.map((x) => x.tipo));
+  const todos = [...new Set(corridas.flatMap(({ base, variante }) => [...tipos(base), ...tipos(variante)]))].sort();
+  const senales = todos.map((tipo) => ({
+    tipo,
+    base: corridas.filter((c) => tipos(c.base).has(tipo)).length,
+    variante: corridas.filter((c) => tipos(c.variante).has(tipo)).length,
+  }));
+  return { corridas: corridas.length, areas, senales };
+}
+
 // R-007.42: un criterio crítico falla si falla en cualquier corrida. Cada mensaje dice su corrida.
 // "repeticiones" son las pedidas: una corrida cuya llamada falló no llega aquí y las demás conservan
 // su número.

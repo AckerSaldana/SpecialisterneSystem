@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // fetch a las rutas del desglose de tareas (spec 010) desde el navegador, de la persona y del coach. Las rutas responden
 // { error } con un texto literal de la spec, y ese texto se muestra tal cual. Solo contracts-cliente: este archivo llega

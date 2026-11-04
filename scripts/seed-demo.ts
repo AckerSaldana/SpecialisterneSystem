@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Seed por etapa del caso de demo (spec 007, R-007.59, R-007.60, R-007.70): Renata, con su cuenta y
 // su acompañamiento propios. No llama al modelo: las propuestas son las fijas de

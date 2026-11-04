@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pedir los pasos de una tarea (spec 010, R-010.1, R-010.3, R-010.18). Lo usan la persona y el coach, cada quien con sus
 // textos, que llegan como datos desde su página. Mientras espera muestra un texto fijo, sin contador ni tiempo límite

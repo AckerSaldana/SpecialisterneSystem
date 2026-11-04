@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Carga los datos sintéticos de scripts/seed.sql en la base.
 // Uso: npm run seed  (necesita DATABASE_URL en .env.local y las migraciones de drizzle/ ya aplicadas).

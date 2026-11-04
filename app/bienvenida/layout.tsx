@@ -13,13 +13,14 @@ const links: NavLink[] = [{ href: "/preferencias", label: "Preferencias" }];
 export default async function BienvenidaLayout({ children }: LayoutProps<"/bienvenida">) {
   const user = await requireRole("persona");
 
+  // data-pantalla="persona": texto de al menos 18px (spec 012, R-012.13). "contents" no cambia el acomodo.
   return (
-    <>
+    <div data-pantalla="persona" className="contents">
       <AppHeader nombrePila={user.nombrePila} inicio="/persona" links={links} />
-      <main id="contenido" className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
+      <main id="contenido" className="mx-auto w-full max-w-3xl flex-1 px-4 py-12">
         {children}
       </main>
       <SiteFooter />
-    </>
+    </div>
   );
 }

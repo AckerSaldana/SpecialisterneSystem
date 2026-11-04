@@ -82,8 +82,8 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-semibold">Tu perfil</h1>
-        <p className="prose-measure">Hola, {user.nombrePila}.</p>
+        <h1 className="text-5xl leading-tight">Tu perfil</h1>
+        <p className="prose-measure text-muted-foreground">Hola, {user.nombrePila}.</p>
       </header>
 
       {listo === "1" && vigente ? (
@@ -108,7 +108,7 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
             const dims = dimensionesDeGrupo(perfil, grupo.tipo);
             return (
               <section key={grupo.tipo} aria-labelledby={`grupo-${grupo.tipo}`} className="flex flex-col gap-3">
-                <h2 id={`grupo-${grupo.tipo}`} className="text-xl font-semibold">
+                <h2 id={`grupo-${grupo.tipo}`} className="text-2xl">
                   {grupo.titulo}
                 </h2>
                 {dims.length === 0 ? (
@@ -117,12 +117,13 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
                   <ul className="flex flex-col gap-3">
                     {dims.map((d) => (
                       <li key={d.id}>
+                        {/* Spec 012 (R-012.34): el nombre de la parte como etiqueta apagada; el texto, en grande. */}
                         <Card>
                           <CardHeader>
-                            <h3 className="font-medium">{d.etiqueta}</h3>
+                            <h3 className="font-semibold text-muted-foreground">{d.etiqueta}</h3>
                           </CardHeader>
-                          <CardContent className="flex flex-col gap-3">
-                            <p className="prose-measure">{perfil.dimensiones[d.id]!.resumen}</p>
+                          <CardContent className="flex flex-col gap-4">
+                            <p className="prose-measure text-xl leading-snug">{perfil.dimensiones[d.id]!.resumen}</p>
                             <NotMeButton
                               dimension={d.id}
                               sobre={d.etiqueta}
@@ -139,7 +140,7 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
           })}
 
           <section aria-labelledby="perfil-general" className="flex flex-col gap-3">
-            <h2 id="perfil-general" className="text-xl font-semibold">
+            <h2 id="perfil-general" className="text-2xl">
               Tu perfil en general
             </h2>
             <NotMeButton
@@ -156,7 +157,7 @@ export default async function PersonaPage({ searchParams }: PageProps<"/persona"
       {/* R-005.48: mientras recursos quede fuera de esta fase, sin recursos aprobados no hay sección. */}
       {datos && datos.recursos.length > 0 ? (
         <section aria-labelledby="recursos" className="flex flex-col gap-3">
-          <h2 id="recursos" className="text-xl font-semibold">
+          <h2 id="recursos" className="text-2xl">
             Recursos
           </h2>
           <ul className="flex flex-col gap-3">

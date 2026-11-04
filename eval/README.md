@@ -18,8 +18,11 @@ Revisa que la propuesta de la IA haga lo que esperamos con datos sintéticos (sp
 - `npm run eval`: lo anterior y después cada caso de `eval/cases/` con el modelo, una corrida. Necesita `ANTHROPIC_API_KEY` en `.env.local`. Usa `LLM_MODEL` si está definido.
 - `npm run eval -- --repeticiones <n>`: corre cada caso y variante n veces y antes dice cuántas llamadas va a hacer. Un criterio crítico falla si falla en cualquier corrida, y el mensaje dice en cuál; R-008.48 tiene su propia regla (ver "Pares de sesgo: qué mide"). Se compara la corrida i de la base con la corrida i de la variante.
 - `npm run eval -- --reporte`: además escribe `eval/resultados/AAAA-MM-DD_eval.md`. Sin `--repeticiones` son 3 corridas. Con menos de 3, el reporte dice "Corrida de desarrollo: no se cita en el pitch." Si el archivo ya existe, escribe `_eval_2.md`, y así sucesivamente. El reporte se escribe aunque haya fallas críticas, y el proceso sale con código 1 igual.
+- `npm run eval -- --casos <id,id>`: solo esos casos base, cada uno con sus variantes, en cualquier etapa (R-007.76). Se combina con `--repeticiones` y `--reporte`; la cuenta de llamadas y el reporte usan solo esos casos, y el reporte dice cuáles fueron.
 
-`--repeticiones=<n>` funciona igual. Un valor inválido de `--repeticiones`, un argumento desconocido, o `--reporte` o `--repeticiones` junto con `--offline`, termina con error antes de llamar al modelo.
+`--repeticiones=<n>` y `--casos=<id,id>` funcionan igual. Un valor inválido de `--repeticiones`, `--casos` sin ids o con un id que no es de un caso válido, un argumento desconocido, o `--reporte`, `--repeticiones` o `--casos` junto con `--offline`, termina con error antes de llamar al modelo.
+
+La tabla "Áreas de apoyo y señales por versión" (R-007.75) solo informa: por par de seguimiento, en cuántas corridas la callada tuvo más áreas de apoyo, en cuántas la expresiva y en cuántas empataron, y en cuántas corridas salió cada señal en la base y en la variante. SB-3 y SB-4 siguen siendo los criterios.
 
 Sale con código 1 si algo crítico falla.
 
@@ -67,6 +70,16 @@ Crítico (código 1), según la spec 007:
 - Un patrón de `esperado.plan.patronesProhibidos` con severidad `critica` en la descripción o en el texto para la persona (por ejemplo, pedirle que hable más o participe más en reuniones, C-13).
 
 Advertencia: descartes de `sanitizePlan` (fichas o evidencia inventadas que la limpieza quitó), tipos o fichas esperadas que faltan, un plan sin objetivos y las demás banderas (`termino_interno` que no es un dominio, citas copiadas).
+
+## Casos de concordancia: qué mide
+
+Son los archivos con `"formato": 2` y `"etapas": ["concordancia"]` (spec 011). Cada uno trae `escena`, `observaciones[]` en orden y `esperado`. Cada observación es una llamada: la propuesta se limpia con el perfil acumulado y se aprueba todo, como un coach, antes de pasar a la siguiente. El observador nunca llega al modelo.
+
+Crítico (código 1): la llamada o la validación con Zod falla, una contradicción esperada no sale con las dos frases citadas y validadas, o aparece una señal de `esperado.senalesProhibidas`.
+
+Advertencia (no falla): la contradicción sale en otra dimensión, una coincidencia no quedó con la cita de todos sus observadores, falta una dimensión esperada o aparece una de `esperado.dimensionesProhibidas`.
+
+El reporte trae "x de n" por dimensión y una tabla con cada relación. Si una descripción elige una versión o le da más peso a un cargo no lo revisa el código: lo juzga quien lee esa tabla. Las notas de Mateo y Valeria las escribió un solo modelo.
 
 ## Casos de seguimiento: qué mide
 

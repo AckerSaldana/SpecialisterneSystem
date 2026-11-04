@@ -13,6 +13,7 @@ import { guardarPreferencias, type EstadoGuardado } from "@/app/preferencias/act
 import { conFalloDeRed, enviarSinReiniciar, ERROR_SIN_RESPUESTA } from "@/components/formulario-accion";
 import { Button } from "@/components/ui/button";
 import type { OPCIONES, Preferencias } from "@/lib/preferences";
+import { cn } from "@/lib/utils";
 
 type Campo = keyof Preferencias;
 type Opciones = typeof OPCIONES;
@@ -70,67 +71,79 @@ export function PreferencesForm({ inicial, opciones }: { inicial: Preferencias; 
       // Con action sola, React reinicia el formulario al terminar y cada radio regresa a como se montó,
       // aunque lo guardado sea otra opción.
       onSubmit={enviarSinReiniciar(enviar)}
-      className="flex flex-col gap-8"
+      // Spec 012 (R-012.37): en pantallas anchas la vista previa queda a la vista mientras se eligen las opciones.
+      className="grid gap-10 lg:grid-cols-2 lg:items-start"
     >
-      <div className="grid gap-6 md:grid-cols-2">
-        {GRUPOS.map(({ campo, titulo }) => (
-          <fieldset key={campo} className="flex flex-col gap-2">
-            <legend className="mb-2 text-lg font-bold">{titulo}</legend>
-            {opciones[campo].map((opcion) => {
-              const id = `${campo}-${opcion.valor}`;
-              const ayuda = "ayuda" in opcion ? opcion.ayuda : null;
-              return (
-                <label
-                  key={id}
-                  htmlFor={id}
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-input p-3 has-checked:border-2 has-checked:border-primary has-checked:bg-accent"
-                >
-                  <input
-                    id={id}
-                    type="radio"
-                    name={campo}
-                    value={String(opcion.valor)}
-                    checked={borrador[campo] === opcion.valor}
-                    onChange={(e) => elegir(campo, e.target.value)}
-                    className="mt-1 size-5 shrink-0 accent-primary"
-                  />
-                  <span className="flex flex-col">
-                    <span className="font-bold">{opcion.etiqueta}</span>
-                    {ayuda && <span className="text-muted-foreground">{ayuda}</span>}
-                  </span>
-                </label>
-              );
-            })}
-          </fieldset>
-        ))}
+      <div className="flex flex-col gap-8">
+        {GRUPOS.map(({ campo, titulo }) => {
+          // Las opciones con descripción van apiladas; las de una palabra, en fila.
+          const enFila = !opciones[campo].some((opcion) => "ayuda" in opcion);
+          return (
+            <fieldset key={campo} className="flex flex-col gap-3">
+              <legend className="mb-3 text-lg font-semibold">{titulo}</legend>
+              <div className={enFila ? "flex flex-wrap gap-2" : "flex flex-col gap-2"}>
+                {opciones[campo].map((opcion) => {
+                  const id = `${campo}-${opcion.valor}`;
+                  const ayuda = "ayuda" in opcion ? opcion.ayuda : null;
+                  return (
+                    <label
+                      key={id}
+                      htmlFor={id}
+                      className={cn(
+                        "flex cursor-pointer gap-3 rounded-md border-(length:--border-w) border-border bg-card transition-colors has-checked:border-primary has-checked:bg-accent",
+                        enFila ? "min-h-12 items-center px-4" : "items-start px-4 py-3",
+                      )}
+                    >
+                      <input
+                        id={id}
+                        type="radio"
+                        name={campo}
+                        value={String(opcion.valor)}
+                        checked={borrador[campo] === opcion.valor}
+                        onChange={(e) => elegir(campo, e.target.value)}
+                        className={cn("size-5 shrink-0 accent-primary", enFila ? "" : "mt-1")}
+                      />
+                      <span className="flex flex-col">
+                        <span className="font-semibold">{opcion.etiqueta}</span>
+                        {ayuda && <span className="text-muted-foreground">{ayuda}</span>}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          );
+        })}
       </div>
 
-      <section aria-labelledby="vista-previa-titulo" className="flex flex-col gap-2">
-        <h2 id="vista-previa-titulo" className="text-xl font-bold">
-          Vista previa
-        </h2>
-        <div
-          data-mode={borrador.modo}
-          data-font={borrador.fuente}
-          style={estiloVistaPrevia}
-          className="rounded-lg border-2 border-border bg-background p-4 font-sans text-foreground"
-        >
-          <p className="prose-measure font-bold">Notas de la sesión del martes</p>
-          <p className="prose-measure">
-            Prefiero recibir las instrucciones por escrito y con un ejemplo. Me ayuda saber cuánto tiempo dura cada
-            reunión antes de empezar.
-          </p>
-          <p className="prose-measure text-muted-foreground">Actualizado por tu coach.</p>
-        </div>
-      </section>
+      <div className="flex flex-col gap-6 lg:sticky lg:top-8">
+        <section aria-labelledby="vista-previa-titulo" className="flex flex-col gap-3">
+          <h2 id="vista-previa-titulo" className="text-2xl leading-tight">
+            Vista previa
+          </h2>
+          <div
+            data-mode={borrador.modo}
+            data-font={borrador.fuente}
+            style={estiloVistaPrevia}
+            className="flex flex-col gap-2 rounded-lg border-(length:--border-w) border-border bg-background px-6 py-5 font-sans text-foreground"
+          >
+            <p className="prose-measure font-semibold">Notas de la sesión del martes</p>
+            <p className="prose-measure">
+              Prefiero recibir las instrucciones por escrito y con un ejemplo. Me ayuda saber cuánto tiempo dura cada
+              reunión antes de empezar.
+            </p>
+            <p className="prose-measure text-muted-foreground">Actualizado por tu coach.</p>
+          </div>
+        </section>
 
-      <div className="flex flex-col items-start gap-3">
-        <Button type="submit" size="lg" disabled={guardando} className="h-11 px-6 text-base">
-          Guardar
-        </Button>
-        <p role="status" aria-live="polite" className="font-bold">
-          {mensaje}
-        </p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <Button type="submit" size="lg" disabled={guardando}>
+            Guardar
+          </Button>
+          <p role="status" aria-live="polite" className={hayCambios || estado.estado === "error" ? "font-semibold" : "text-muted-foreground"}>
+            {mensaje}
+          </p>
+        </div>
       </div>
     </form>
   );

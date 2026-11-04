@@ -1,6 +1,6 @@
-<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente -->
+<!-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado -->
 
-# Caja MEX (working name)
+# Shorenote
 
 A coaching platform for Specialisterne LATAM, used in its inclusion projects and in Workplace Support.
 
@@ -222,18 +222,21 @@ Measured contrast for the main text and background pairs (WCAG formula):
 
 | Pair | Estándar | Calma | Alto contraste |
 | --- | --- | --- | --- |
-| Body text on background | 17.01:1 | 10.44:1 | 21.00:1 |
-| Secondary text on background | 7.73:1 | 6.41:1 | 17.40:1 |
-| Secondary text on muted surface | 7.02:1 | 5.86:1 | 15.27:1 |
-| Primary button text | 6.70:1 | 6.04:1 | 21.00:1 |
-| Primary button text on hover | 8.72:1 | 8.60:1 | 12.63:1 |
-| Links | 6.70:1 | 7.85:1 | 11.22:1 |
-| Error text | 6.57:1 | 6.63:1 | 10.01:1 |
-| Input border (non-text, 3:1 minimum) | 4.83:1 | 3.40:1 | 21.00:1 |
+| Body text on background | 15.08:1 | 10.41:1 | 21.00:1 |
+| Secondary text on background | 5.15:1 | 4.90:1 | 12.63:1 |
+| Secondary text on muted surface | 4.80:1 | 4.57:1 | 11.29:1 |
+| Primary button text | 4.77:1 | 4.88:1 | 8.45:1 |
+| Primary button text on hover | 5.25:1 | 5.37:1 | 9.10:1 |
+| Accent as text (engagement type) | 4.50:1 | 4.51:1 | 8.45:1 |
+| Links (body color, underlined) | 15.08:1 | 10.41:1 | 21.00:1 |
+| Error text | 5.90:1 | 6.52:1 | 10.01:1 |
+| Input border (non-text, 3:1 minimum) | 3.26:1 | 3.14:1 | 21.00:1 |
+
+The palette comes from `docs/DISENO.md` (spec 012): paper background, one terracotta accent, serif headings. Three values were darkened slightly to meet AA: the Estándar accent (`#AD5641` instead of `#B85C45`), the Calma accent (`#886659` instead of `#8F6B5E`) and Calma secondary text (`#6D6762` instead of `#7A746E`). Form fields use a darker border token than cards.
 
 ### Fonts and spacing
 
-The default font is Atkinson Hyperlegible. Inter, Lexend and OpenDyslexic are available as options. The sources listed below (pending verification) suggest that fonts designed for dyslexia do not improve reading, while extra spacing may help. For that reason the preferences screen also offers text size (16 to 22 px), letter spacing, line spacing and line length, each with three or four named options instead of a slider.
+The body font is Atkinson Hyperlegible and headings use Source Serif 4. Lexend and OpenDyslexic are available as options; with either one chosen, headings use it too. The sources listed below (pending verification) suggest that fonts designed for dyslexia do not improve reading, while extra spacing may help. For that reason the preferences screen also offers text size (16 to 24 px), letter spacing, line spacing and line length, each with three to five named options instead of a slider.
 
 ### Evidence behind these decisions (pending verification)
 
@@ -287,7 +290,7 @@ Versions as installed; licenses read from each package's `package.json`.
 | typescript | 5.9.3 | Apache-2.0 |
 | eslint | 9.39.5 | MIT |
 
-Atkinson Hyperlegible, Inter and Lexend are loaded from Google Fonts through `next/font` and are published under the SIL Open Font License 1.1.
+Atkinson Hyperlegible, Source Serif 4 and Lexend are loaded from Google Fonts through `next/font` and are published under the SIL Open Font License 1.1.
 
 ## Out of scope for sprint 1
 

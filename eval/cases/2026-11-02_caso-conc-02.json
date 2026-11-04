@@ -1,0 +1,201 @@
+{
+  "_atribucion": "AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente · texto: David Betancourth con Claude (sesión de David); conversión a formato 2: Claude Code (Opus 5.5); esa conversión es borrador y la revisa Acker",
+  "_nota": "Valeria, del documento 2026-11-02_metodo-datos-sinteticos de David. Persona y datos inventados. Las notas van tal cual. El documento da la capa de cada rasgo y no su minuto: la fuente la puso la conversión según su §2. Las tres notas las escribió un solo modelo (§7), así que no son personas distintas como pide R-007.35; el reporte lo dice (R-011.18). Decir de quién viene cada frase sin darle más peso a la líder lo juzga quien lee la tabla de relaciones.",
+  "_esperadoBeta": {
+    "contradiccion": "En A, Valeria dice que en home office rinde más porque no hay ruido. En C, la líder opina que se concentra mejor en la oficina y que en casa se distrae. Se espera que el sistema la marque, cite las dos y diga de quién viene cada una, sin darle más peso a la líder.",
+    "noDeben": "Querer renunciar ni Desajuste con el rol; callada como rasgo de personalidad o como problema de comunicación; cualquier frase que juzgue el tono de los correos.",
+    "pueden": "Estrés o desregulación, si cita las llamadas."
+  },
+  "formato": 2,
+  "autor": "David Betancourth con Claude",
+  "revision": {
+    "estado": "borrador",
+    "por": null,
+    "fecha": null
+  },
+  "etapas": [
+    "concordancia"
+  ],
+  "id": "caso-conc-02",
+  "descripcion": "Valeria (Workplace Support). Analista de compras; su líder pidió el acompañamiento por el tono de sus correos. Tres observadores y una contradicción a propósito en la concentración.",
+  "engagementType": "workplace_support",
+  "nombrePila": "Valeria",
+  "escena": "Analista de compras en una empresa de alimentos, dos años en el puesto. Su líder pidió el acompañamiento porque algunos proveedores se quejaron del tono de sus correos. Tres observadores: la coach titular en la evaluación inicial, el coach que cubrió una sesión y la nota de la sesión con la red de apoyo, donde hablan la líder y la mentora.",
+  "observaciones": [
+    {
+      "observador": "coach titular",
+      "nota": "Sesión de evaluación inicial con Valeria. Trabaja hace dos años como analista de compras en una empresa de alimentos. Su líder pidió el acompañamiento porque algunos proveedores se quejaron del tono de sus correos. Valeria me enseñó varios: son de una o dos líneas, sin saludo, y van directo a la cifra. Ella dice que así no se pierde la información. Es muy buena negociando precios: conoce el catálogo de memoria y detecta cuando un proveedor sube un precio sin avisar. Las llamadas de proveedores molestos la estresan; después de una, se queda callada un rato y cierra la puerta de la sala si está libre. Me dijo que los días de home office rinde más porque no hay ruido y nadie la interrumpe. Prefiere que la retroalimentación sea directa y con un ejemplo de correo. Aprende mejor con plantillas: si tiene un ejemplo de cómo debe quedar algo, lo replica bien. Para la siguiente sesión acordamos armar dos plantillas de correo para proveedores."
+    },
+    {
+      "observador": "coach que cubrió una sesión",
+      "nota": "Cubrí la sesión de esta semana con Valeria porque su coach estaba de vacaciones. Revisamos las plantillas de correo que armaron: ya las usa con los proveedores nuevos y dice que le ahorran tiempo. Con los de siempre sigue escribiendo corto. Me contó con orgullo que detectó un aumento de precio escondido en una factura y recuperó el descuento. Comentó que lo que más le pesa son las llamadas de proveedores enojados, sobre todo cuando le llegan sin aviso; ese día le cuesta concentrarse en lo demás. En la oficina se pone audífonos porque el área de compras es ruidosa. Le pregunté cómo prefiere que le digan las cosas y respondió que de frente y con el ejemplo concreto."
+    },
+    {
+      "observador": "sesión con la red de apoyo",
+      "nota": "Sesión con la red de apoyo de Valeria (su líder y su mentora). La líder dice que Valeria es la que mejor negocia del equipo y que conoce los precios de memoria. Sobre los correos, notó que con los proveedores nuevos ya escribe más completo, y que con los de siempre sigue siendo muy breve. La mentora contó que las llamadas difíciles las prefiere pasar a otra compañera y que después de una se queda callada un rato. La líder opina que Valeria se concentra mejor en la oficina y que en home office se distrae y tarda más en contestar. Acordamos que la líder le avise por chat antes de pasarle una llamada complicada."
+    }
+  ],
+  "rasgos": [
+    {
+      "rasgo": "antecedentes",
+      "donde": "dimension:antecedentes_experiencia",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "activacion_por_comunicacion",
+      "donde": "contexto:Disparador de Workplace Support",
+      "fuente": "F-005 (00:00)"
+    },
+    {
+      "rasgo": "negocia_precios",
+      "donde": "dimension:motivacion_intereses",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "detecta_aumentos",
+      "donde": "dominioFE:monitoreo_de_tareas",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "correos_cortos",
+      "donde": "dimension:comunicacion_escrita",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "tono_de_correos",
+      "donde": "dominioFE:automonitoreo",
+      "fuente": "F-017"
+    },
+    {
+      "rasgo": "llamadas_de_proveedores",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "callada_despues_de_llamada",
+      "donde": "dimension:indicadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "ruido_y_audifonos",
+      "donde": "dimension:aspectos_sensoriales",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "home_office_u_oficina",
+      "donde": "dimension:concentracion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "retro_directa",
+      "donde": "dimension:retroalimentacion",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "plantillas",
+      "donde": "dimension:forma_aprender",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "pasa_las_llamadas",
+      "donde": "dimension:disparadores_estres",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "aviso_por_chat",
+      "donde": "dimension:ajustes_razonables",
+      "fuente": "F-005 (40:05)"
+    },
+    {
+      "rasgo": "red_de_apoyo",
+      "donde": "contexto:Líder y mentora",
+      "fuente": "F-005 (00:00)"
+    }
+  ],
+  "esperado": {
+    "dimensiones": [
+      "antecedentes_experiencia",
+      "motivacion_intereses",
+      "comunicacion_escrita",
+      "disparadores_estres",
+      "indicadores_estres",
+      "aspectos_sensoriales",
+      "concentracion",
+      "retroalimentacion",
+      "forma_aprender",
+      "ajustes_razonables"
+    ],
+    "dimensionesProhibidas": [],
+    "senalesProhibidas": [
+      "intencion_de_renunciar",
+      "desajuste_con_rol"
+    ],
+    "coincidencias": [
+      {
+        "dimension": "motivacion_intereses",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión",
+          "sesión con la red de apoyo"
+        ]
+      },
+      {
+        "dimension": "comunicacion_escrita",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión",
+          "sesión con la red de apoyo"
+        ]
+      },
+      {
+        "dimension": "disparadores_estres",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión",
+          "sesión con la red de apoyo"
+        ]
+      },
+      {
+        "dimension": "indicadores_estres",
+        "observadores": [
+          "coach titular",
+          "sesión con la red de apoyo"
+        ]
+      },
+      {
+        "dimension": "aspectos_sensoriales",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión"
+        ]
+      },
+      {
+        "dimension": "retroalimentacion",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión"
+        ]
+      },
+      {
+        "dimension": "forma_aprender",
+        "observadores": [
+          "coach titular",
+          "coach que cubrió una sesión"
+        ]
+      }
+    ],
+    "contradicciones": [
+      {
+        "dimension": "concentracion",
+        "nueva": {
+          "observador": "sesión con la red de apoyo",
+          "fragmento": "se concentra mejor en la oficina"
+        },
+        "previa": {
+          "observador": "coach titular",
+          "fragmento": "rinde más porque no hay ruido"
+        }
+      }
+    ]
+  }
+}
