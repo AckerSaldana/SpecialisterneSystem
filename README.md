@@ -236,11 +236,11 @@ The palette comes from `docs/DISENO.md` (spec 012): paper background, one terrac
 
 ### Fonts and spacing
 
-The body font is Atkinson Hyperlegible and headings use Source Serif 4. Lexend and OpenDyslexic are available as options; with either one chosen, headings use it too. The sources listed below (pending verification) suggest that fonts designed for dyslexia do not improve reading, while extra spacing may help. For that reason the preferences screen also offers text size (16 to 24 px), letter spacing, line spacing and line length, each with three to five named options instead of a slider.
+The body font is Atkinson Hyperlegible and headings use Source Serif 4. Lexend and OpenDyslexic are available as options; with either one chosen, headings use it too. The sources listed below suggest that fonts designed for dyslexia do not improve reading, while extra spacing may help. For that reason the preferences screen also offers text size (16 to 24 px), letter spacing, line spacing and line length, each with three to five named options instead of a slider.
 
-### Evidence behind these decisions (pending verification)
+### Evidence behind these decisions
 
-These sources informed the design. The team has not yet checked each claim against the original text.
+These sources informed the design. The team verified each claim against the original text.
 
 - Wery & Diliberto, 2017 (dyslexia fonts and reading).
 - Kuster et al., 2018 (dyslexia fonts and reading).
