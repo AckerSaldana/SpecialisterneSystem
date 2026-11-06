@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Un solo pipeline, configurado por tipo de engagement.
 // Inclusión: proceso completo de los proyectos de inclusión (CONTEXTO §4).

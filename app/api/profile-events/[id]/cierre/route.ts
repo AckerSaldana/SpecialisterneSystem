@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/profile-events/[id]/cierre
 // El coach cierra un "Esto no me representa" (spec 005, R-005.26, R-005.34). La ruta de decisión

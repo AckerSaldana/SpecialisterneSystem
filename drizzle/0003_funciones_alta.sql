@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 002 (alta y consentimiento): funciones del esquema private.
 -- Van antes de 0004 porque las políticas nuevas las usan.

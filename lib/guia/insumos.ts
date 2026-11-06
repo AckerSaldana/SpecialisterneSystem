@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lee lo que hace falta para escribir una guía, con la única función que lo sabe leer (R-009.10). La persona
 // no puede leer plans, plan_items ni profile_snapshots, y así sigue: esta función trae textos del coach y

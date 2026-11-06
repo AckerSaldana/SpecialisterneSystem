@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lecturas de seguimiento que comparten rutas y páginas (spec 004). Todo recibe la transacción de
 // withRls: con el consentimiento retirado, RLS no devuelve filas (R-004.48).

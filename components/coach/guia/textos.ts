@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales de la pantalla del coach de "Cómo trabajar conmigo" (spec 009, "Coach"). Los errores al pedir
 // llegan en la respuesta de la ruta (MENSAJES_GUIA en lib/guia/generar.ts).

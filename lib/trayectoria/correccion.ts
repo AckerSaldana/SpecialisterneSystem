@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // El coach corrige el dominio o la dirección de una línea (spec 008, R-008.28 a R-008.30, R-008.32).
 // Cada corrección es una fila nueva de fe_corrections: la propuesta de la IA sigue en payload y las

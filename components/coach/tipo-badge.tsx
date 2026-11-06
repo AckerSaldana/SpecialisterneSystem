@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Etiqueta del tipo de hallazgo: texto ("Fortaleza", "Área de apoyo", "Contexto") más color.
 import { Badge } from "@/components/ui/badge";

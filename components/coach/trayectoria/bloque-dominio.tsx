@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Un bloque de la pantalla "Función ejecutiva": un dominio o "Citas sin dominio" (spec 008, R-008.22 a
 // R-008.25). Sin totales, barras ni números junto al título (R-008.26). Las líneas ya vienen en el

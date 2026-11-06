@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/task-breakdowns/[id]
 // "Ya no la uso": la persona o el coach quitan un desglose de la lista de la persona (spec 010, R-010.29). La lógica

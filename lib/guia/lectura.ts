@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que leen las pantallas de "Cómo trabajar conmigo" (spec 009). Todo con RLS: la persona lee sus filas y el
 // coach solo las listas (R-009.34). Las columnas se eligen a propósito, porque RLS filtra filas, no columnas:

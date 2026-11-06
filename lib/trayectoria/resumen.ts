@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Resumen por dominio (spec 008, R-008.33, R-008.36 a R-008.39). Lo pide el coach y lo aprueba o descarta.
 //   1. tx1 (con RLS): acompañamiento (404), consentimiento (409, sin auditoría), bloque vacío o propuesta

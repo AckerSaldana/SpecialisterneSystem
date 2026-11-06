@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action de /coach/engagements/nuevo (spec 002, R-002.1 a R-002.5, tarea 9).
 // 1. Valida tipo, nombre de pila y correo .test con Zod.

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Formulario de /invitacion. Client Component por useActionState; la revisión del código pasa
 // en el servidor (./actions.ts). Mismo manejo de errores que app/login/page.tsx: el error queda

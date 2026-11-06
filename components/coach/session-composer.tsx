@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Formulario de la nota de sesión. Envía la nota a POST /api/engagements/[id]/sessions y, con la
 // respuesta, manda a la página de revisión: hay una sola forma de revisar (R-004.26).

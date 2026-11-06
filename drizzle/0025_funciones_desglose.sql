@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 010 (desglose de tareas): funciones del esquema private. Van antes de 0026 porque las políticas nuevas
 -- las usan. Mismas reglas que 0007, 0011 y 0020 (R-002.48): security definer, search_path vacío, nombres

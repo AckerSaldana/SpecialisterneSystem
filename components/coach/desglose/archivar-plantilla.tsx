@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Archivar" una plantilla (spec 010, R-010.41): con confirmación. Ya no se puede aplicar y no se puede deshacer. Al
 // archivarla, sale de la lista y el foco va al párrafo que dice que se archivó.

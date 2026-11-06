@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Guardar como plantilla" (spec 010, R-010.39, R-010.40): el coach revisa puesto, título, tarea y cada paso, y confirma.
 // Las notas de apoyo, porQue, origen, minutos y contexto ni siquiera llegan a este componente: la página le pasa solo el

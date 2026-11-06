@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Validaciones del alta (spec 002). Los mensajes son los textos literales de la spec.
 import { z } from "zod";

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Revisión determinista de lo que escribió el modelo para una guía (spec 009). Función pura, sin red ni
 // base. Ningún coach revisa estas líneas antes que la persona, así que lo que no pasa se descarta (D-070):

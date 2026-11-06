@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Modelo de datos mínimo con Row Level Security definida aquí mismo.
 // drizzle-kit genera las tablas y las políticas en drizzle/*.sql.

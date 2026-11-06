@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Texto del aviso de privacidad en HTML semántico (spec 002, R-002.20, R-002.21, CA-002.18).
 // Recibe los bloques de lib/legal/aviso.ts (bloquesDeAviso) y no cambia ni una palabra.

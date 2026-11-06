@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Concordancia entre observadores (spec 011, R-007.36). Funciones puras, sin red ni base, sobre las salidas
 // ya limpias de cada observación. Si una descripción elige una versión o le da más peso a un cargo no lo

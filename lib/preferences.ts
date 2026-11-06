@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Preferencias de presentación: modo de color, fuente y espaciado.
 // Se guardan en una cookie (no en la base) para que funcionen con o sin sesión

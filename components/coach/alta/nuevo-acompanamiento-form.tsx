@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Formulario de /coach/engagements/nuevo (spec 002, R-002.1, R-002.35). Radios nativos con
 // fieldset y legend, como /preferencias. Cada error se muestra en texto junto a su campo y el

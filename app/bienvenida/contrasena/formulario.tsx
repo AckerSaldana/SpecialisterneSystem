@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Formulario de /bienvenida/contrasena. Client Component por useActionState; la contraseña se
 // guarda en el servidor (./actions.ts). El error queda en texto y recibe el foco, como en

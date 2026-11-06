@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Esquemas del plan de acompañamiento (spec 003). Única fuente de verdad del plan:
 //   - lo que propone el modelo (PlanProposal),

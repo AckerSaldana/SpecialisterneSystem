@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Generado por drizzle-kit desde lib/db/schema.ts (spec 003).
 CREATE TYPE "app"."plan_item_origen" AS ENUM('ia', 'ia_editado', 'coach');--> statement-breakpoint
 ALTER TYPE "app"."plan_item_type" ADD VALUE 'objetivo_equipo';--> statement-breakpoint

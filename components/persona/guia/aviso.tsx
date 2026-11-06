@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // El resultado de una acción de la página, en una sola región role="status" (R-009.59, CA-009.52). Vive arriba
 // de lo que cambia, porque al marcar "Listo" o descartar, el borrador desaparece y su región se perdería con él.

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Panel "Antes de esta sesión" (R-004.22), arriba del campo de la nota: lo que el coach aprobó en
 // sesiones anteriores para no perder el hilo. Solo lo ve el coach. Después de "Señales activas" y aparte de ellas

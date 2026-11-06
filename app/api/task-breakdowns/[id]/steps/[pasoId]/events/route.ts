@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/task-breakdowns/[id]/steps/[pasoId]/events
 // La persona marca un paso: "Ya lo hice", "Me atoré aquí" o "Deshacer" (spec 010, R-010.26 a R-010.28). Si guarda, responde

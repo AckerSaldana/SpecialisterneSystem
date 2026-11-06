@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Helpers de servidor que comparten las rutas del plan (spec 003, tareas 15 a 17):
 //   - textos de error literales de la spec,

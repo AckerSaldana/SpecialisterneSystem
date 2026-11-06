@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/followup-context/[id]   (sin body)
 // "Ya no aplica" (R-004.23). Lo quitado queda en el historial con quién y cuándo.

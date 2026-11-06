@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action de /persona: retirar el consentimiento (spec 002, R-002.27, R-002.28).
 // Inserta un evento 'retirado' con la versión del aviso vigente; la fecha la pone la base. Nada se

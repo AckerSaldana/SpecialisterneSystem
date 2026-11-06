@@ -1,6 +1,6 @@
 "use client"
 
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Generado con shadcn y ajustado a docs/DISENO.md (spec 012): solo tokens, sin desenfoque ni zoom. Entra y sale con un
 // fundido de opacidad que dura --motion-duration; en Calma y con movimiento reducido es instantáneo (C-14).

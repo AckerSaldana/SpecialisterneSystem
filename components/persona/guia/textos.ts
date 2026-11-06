@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales e ids de las pantallas de la persona de "Cómo trabajar conmigo" (spec 009, "Pantallas y
 // textos"). Corre en el navegador de la persona: solo importa lib/guia/schema-cliente, sin lib/profile/schema ni

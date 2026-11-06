@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Diálogo "Corregir esta línea" (spec 008, R-008.28 a R-008.31). Llama a la ruta y refresca la página.
 // Las reglas y sus textos de error los decide el servidor, con las líneas de ese momento (R-008.30).

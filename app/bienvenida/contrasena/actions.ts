@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action de /bienvenida/contrasena (spec 002, R-002.18). La persona entró con el código y
 // crea su contraseña. Al guardarla, su invitación pendiente queda usada (usada_en = now()) y el

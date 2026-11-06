@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Avance de los puntos del plan a través de sus versiones (spec 004, R-004.40 y R-004.41).
 // Funciones puras: reciben las filas ya leídas con RLS. plan_items.origen_item_id apunta al ítem

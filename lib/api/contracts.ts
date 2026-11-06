@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Contratos de los Route Handlers. El servidor valida el body con estos esquemas
 // y la UI usa los mismos tipos para leer la respuesta.

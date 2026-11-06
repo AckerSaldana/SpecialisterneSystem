@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Decisión del coach sobre una propuesta de la IA, de 001 o de seguimiento (spec 004, tarea 17).
 // Todo pasa en una sola transacción con RLS:

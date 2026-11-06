@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Por atender" y "En esta página" (spec 012, R-012.25, R-012.26). Solo apuntan a secciones que ya existen en la página
 // del acompañamiento: no deciden ni cambian nada. El estado va en texto, con su número (C-14).

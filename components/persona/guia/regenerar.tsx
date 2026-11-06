@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // El aviso de que su perfil o su plan cambiaron y el botón para ver qué cambiaría (spec 009, R-009.46, R-009.47).
 // La página lo muestra cuando ella entra: no aparece solo, y nada se genera sin que lo pida (C-14). Mientras

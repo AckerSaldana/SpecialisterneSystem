@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pedir un borrador de "Cómo trabajar conmigo" (spec 009, R-009.2, R-009.3). Sirve a las dos rutas de generación,
 // con el mismo orden que lib/sessions/proponer.ts:

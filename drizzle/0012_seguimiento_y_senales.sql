@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 CREATE TYPE "app"."alert_status" AS ENUM('abierta', 'escalada', 'atendida');--> statement-breakpoint
 CREATE TYPE "app"."followup_context_tipo" AS ENUM('pregunta', 'contexto', 'siguiente_paso');--> statement-breakpoint
 CREATE TYPE "app"."plan_item_estado" AS ENUM('avanza', 'sin_cambios', 'necesita_ajuste', 'cumplido');--> statement-breakpoint

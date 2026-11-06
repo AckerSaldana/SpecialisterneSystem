@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Secciones de seguimiento de la página del acompañamiento (spec 004): propuestas sin revisar,
 // sesiones sin propuesta, acciones sobre una señal, alertas fuertes e historiales. Todo es del coach.

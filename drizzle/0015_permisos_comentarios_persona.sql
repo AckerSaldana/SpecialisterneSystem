@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 005 (cierre de "Esto no me representa", R-005.26, R-005.34): permiso por columna de lo que
 -- resuelve un comentario. RLS (profile_events_update_coach) decide qué filas. Los grants no

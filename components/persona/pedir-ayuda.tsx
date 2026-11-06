@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Pedir ayuda a una persona", al pie del contenido en toda pantalla de la persona (spec 012, R-012.12; C-14). Es el
 // mismo correo del pie de ayuda: el dominio .test no recibe mensajes reales.

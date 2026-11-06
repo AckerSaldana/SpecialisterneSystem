@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lectura del plan para /coach/engagements/[id] (spec 003, tareas 18 y 19). Corre dentro del
 // withRls de la página, con la sesión del coach: si el consentimiento no está vigente, RLS

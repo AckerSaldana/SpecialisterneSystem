@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Plantillas de tareas por organización (spec 010, R-010.39 a R-010.42, R-010.45). Solo el coach, y todo con RLS.
 //   - guardarPlantilla: el coach revisa el texto y aquí se revisa otra vez, sin excepción, porque una plantilla les llega

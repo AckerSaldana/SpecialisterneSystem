@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Puerta de entrada de la persona (spec 002, tarea 14: R-002.18, R-002.19, R-002.39).
 // La usan el layout y las páginas de /persona y las páginas de /bienvenida. Decide en qué paso

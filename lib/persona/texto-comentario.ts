@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos de "Esto no me representa" que también corren en el navegador (spec 005, R-005.24, R-005.28).
 // Este archivo llega al JavaScript de /persona: no importa lib/profile/schema, ni siquiera a través de

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales e ids de las pantallas de la persona en el desglose de tareas (spec 010, "Pantallas y textos"). Corre
 // en su navegador: solo importa lib/desglose/schema-cliente, sin lib/profile/schema ni lib/trayectoria (C-09). Los que

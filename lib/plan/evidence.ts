@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Índice de evidencia del plan (spec 003, R-003.4 y R-003.14; decisión 6).
 // El modelo no copia citas: recibe cada cita del perfil aprobado con un ID corto ("E-01",

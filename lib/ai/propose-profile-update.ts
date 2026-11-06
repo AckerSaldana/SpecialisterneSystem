@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con la nota del coach y devuelve un ProfileUpdate validado con Zod.
 // No toca la base de datos: la ruta POST /api/engagements/[id]/sessions guarda el resultado

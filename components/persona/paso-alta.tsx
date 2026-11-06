@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Un paso del alta de la persona (spec 012, R-012.11, R-012.12, R-012.15; docs/onboarding-persona.jpeg): "Paso n de 3"
 // arriba, una tarjeta con el título y su contenido, el doodle quieto en la esquina y "Pedir ayuda a una persona" al pie.

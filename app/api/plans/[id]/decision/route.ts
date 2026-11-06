@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/plans/[id]/decision
 // El coach aprueba o descarta el borrador del plan (spec 003, tarea 17). La lógica vive en

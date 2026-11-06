@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Perfil actual visto por el coach: dimensiones agrupadas por sección, con su
 // evidencia, y las señales activas aparte. Recibe el perfil del último snapshot.

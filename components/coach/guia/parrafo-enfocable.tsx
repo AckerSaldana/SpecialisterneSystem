@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Párrafo que puede recibir el foco por código cuando una acción lo pide con enfocarDespues(id). La página lo pinta en
 // lugar del botón de pedir: al refrescar, el botón y el foco ya no existen, y sin esto el foco caería en <body>

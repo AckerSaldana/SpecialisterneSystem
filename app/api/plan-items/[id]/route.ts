@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH  /api/plan-items/[id]   edita un punto del borrador
 // DELETE /api/plan-items/[id]   quita un punto del borrador

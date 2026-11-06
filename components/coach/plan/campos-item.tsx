@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Campos del formulario de un punto del borrador: texto para el coach, lo que verá la persona
 // (solo objetivo y apoyo_fe, R-003.11), ficha y "Sigue al punto de la versión {v}:" (R-003.50).

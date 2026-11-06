@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Modelo de lenguaje que usa la app. La key se lee de ANTHROPIC_API_KEY al momento de
 // cada llamada (la lee @ai-sdk/anthropic); aquí no hay credenciales.

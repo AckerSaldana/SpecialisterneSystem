@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos del consentimiento que ve el coach (spec 002, "Pantallas y textos"). Los usan el paso 3
 // de la sección "Alta", la línea "Consentimiento:" del encabezado y la página de nueva sesión.

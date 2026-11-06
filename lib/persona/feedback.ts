@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Esto no me representa" del lado de la persona (spec 005): guardar el comentario y leer lo que
 // muestra /persona. El comentario no cambia el perfil ni el plan y no llega al modelo: lo lee el coach

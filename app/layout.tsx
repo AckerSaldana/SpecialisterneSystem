@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Layout raíz. Lee las preferencias de presentación (cookie) en el servidor y las
 // pone en <html> antes de enviar la página, así no hay parpadeo de estilos.

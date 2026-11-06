@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo único que la persona lee de su acompañamiento (spec 002, R-002.40, decisión e).
 // La persona no tiene SELECT sobre app.engagements; esta función devuelve id, tipo y etapa,

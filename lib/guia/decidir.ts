@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Cómo queda una línea después de una decisión de la persona (spec 009, R-009.20 a R-009.22, R-009.49, R-009.50).
 // Función pura, sin red ni base, para que la pruebe eval/compare.ts. lib/guia/acciones.ts la llama con la fila

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Botón "Esto no me representa". Abre un Dialog con un comentario opcional y lo envía a
 // POST /api/persona/feedback. Sirve para el perfil y para el plan (spec 005, R-005.22, R-005.32).

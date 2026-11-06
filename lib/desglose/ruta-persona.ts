@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // R-010.2: una invitación pendiente o vencida responde 403 en las rutas de la persona, porque la puerta protege
 // páginas y no rutas. Importa lib/persona/puerta.ts, que trae lib/auth en tiempo de ejecución: solo lo usan los

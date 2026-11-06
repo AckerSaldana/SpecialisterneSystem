@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /bienvenida/contrasena: la persona entró con su código y crea su contraseña antes de ver
 // cualquier otra pantalla (spec 002, R-002.18). La puerta la deja aquí solo si tiene una

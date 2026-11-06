@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/persona/shared-guides/[id]/lineas
 // La persona agrega una línea propia (spec 009, R-009.23, R-009.24). La lógica vive en lib/guia/acciones.ts.

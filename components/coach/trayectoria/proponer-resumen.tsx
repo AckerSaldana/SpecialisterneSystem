@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Botón para pedir la propuesta de resumen de un dominio (spec 008, R-008.33). Mientras espera muestra
 // un texto fijo, sin contador ni tiempo límite (C-14). Un 409 quiere decir que la página ya no está al

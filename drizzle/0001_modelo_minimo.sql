@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 CREATE SCHEMA "app";
 --> statement-breakpoint
 CREATE TYPE "app"."app_role" AS ENUM('coach', 'persona');--> statement-breakpoint

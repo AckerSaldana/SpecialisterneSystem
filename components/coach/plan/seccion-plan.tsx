@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Sección "Plan de acompañamiento" de /coach/engagements/[id] (spec 003, tareas 18 y 19).
 // Decide qué estado mostrar con lo que leyó la página:

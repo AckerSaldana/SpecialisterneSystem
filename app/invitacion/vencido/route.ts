@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // GET /invitacion/vencido: cierra la sesión de una persona cuyo código venció (R-002.39) y la
 // manda a /invitacion con el aviso de código vencido. Existe porque la puerta

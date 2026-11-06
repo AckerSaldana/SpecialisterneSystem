@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Revisión determinista de lo que el modelo le escribe a la persona en un desglose de tareas (spec 010). Funciones
 // puras, sin red ni base. Nadie revisa estos pasos antes que ella (D-070), y son revisiones por lista y por patrón:

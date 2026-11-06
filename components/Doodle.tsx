@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Doodles de una sola línea en tinta (spec 012, R-012.9; docs/DISENO.md). Decorativos: aria-hidden y sin foco.
 // Estáticos por omisión. Con "animate", cada trazo se dibuja una vez con stroke-dasharray durante

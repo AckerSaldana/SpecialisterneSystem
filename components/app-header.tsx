@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Encabezado de las pantallas con sesión (coach y persona).
 // Es Client Component solo para saber la ruta activa (usePathname) y marcarla con aria-current.

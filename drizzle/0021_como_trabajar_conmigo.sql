@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Spec 009 (R-009.14, R-009.34, R-009.51, R-009.56, R-009.63). Generado con npm run db:generate desde lib/db/schema.ts.
 CREATE TYPE "app"."shared_guide_estado" AS ENUM('borrador', 'lista', 'retirada', 'descartada');--> statement-breakpoint
 CREATE TABLE "app"."shared_guides" (

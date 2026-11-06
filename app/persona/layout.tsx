@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente (cambió el 29 oct, spec 002)
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Layout de todas las pantallas de la persona participante. La puerta (lib/persona/puerta.ts)
 // verifica sesión y rol en el servidor (proxy.ts solo hace una revisión optimista) y además

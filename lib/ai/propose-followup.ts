@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con la nota de una sesión de seguimiento y devuelve un FollowupUpdate validado
 // con Zod (spec 004, decisión 4: una sola llamada con un esquema extendido). No toca la base de

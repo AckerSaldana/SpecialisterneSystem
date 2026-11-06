@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Funciones auxiliares para las políticas RLS de lib/db/schema.ts.
 -- security definer: corren con permisos del dueño y no pasan por RLS, así una política

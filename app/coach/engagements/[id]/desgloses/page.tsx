@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/desgloses, "Tareas de {nombre}": el coach prepara los pasos de una tarea y ve las que hay (spec
 // 010, R-010.1, R-010.2, R-010.11). Lo que prepara le llega a la persona sin revisión previa, y lo que escribe pasa la

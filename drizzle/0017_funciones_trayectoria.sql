@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 008 (trayectoria de función ejecutiva): función del esquema private. Va antes de 0018 porque la
 -- política fe_corrections_insert_coach la usa. Mismas reglas que 0011 (R-002.48): security definer,

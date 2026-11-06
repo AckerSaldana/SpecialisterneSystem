@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Qué tipo de falla trajo Supabase Auth (R-002.17). signInWithPassword no lanza: sin red, con un 5xx o con el límite de
 // intentos también llega como { error }, y ahí decirle "no coinciden" a la persona sería falso. Solo se separan estos casos:

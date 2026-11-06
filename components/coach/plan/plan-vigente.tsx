@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Plan vigente (spec 003, tarea 19): el aprobado con la versión más alta (R-003.33). No se edita
 // (R-003.32). Si hay un snapshot más nuevo que el del plan, muestra el aviso de perfil nuevo con

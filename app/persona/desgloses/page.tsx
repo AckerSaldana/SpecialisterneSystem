@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/desgloses, "Mis tareas": la persona pide los pasos de una tarea y ve las que tiene (spec 010, R-010.1, R-010.11,
 // R-010.29). El acompañamiento sale de la puerta (R-002.40), que también garantiza el consentimiento vigente.

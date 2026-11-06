@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Ya no la uso", del lado del coach (spec 010, R-010.29): con confirmación. La quita de la lista de la persona, no se
 // borra y aquí se sigue viendo. Al refrescar, el botón ya no existe: el foco va al párrafo que la página pinta en su lugar.

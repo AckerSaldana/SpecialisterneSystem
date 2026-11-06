@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Los pasos de una tarea, en la pantalla de la persona (spec 010, R-010.23, R-010.25 a R-010.28). Recibe PasoDesgloseVista,
 // sin origen, y las fechas ya como texto: nada más sale al navegador (R-010.24). Sin citas, señales ni nombres de dominios

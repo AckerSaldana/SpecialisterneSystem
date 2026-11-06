@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Filtros de la pantalla "Función ejecutiva" (spec 008, R-008.24). Funciones puras. Llegan por la URL,
 // con un formulario que funciona sin JavaScript. Las fechas son AAAA-MM-DD en Monterrey, así que se

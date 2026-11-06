@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Filtros de la pantalla "Función ejecutiva" (spec 008, R-008.24). Dos formularios GET sin JavaScript:
 // los filtros viven en la URL. La página se vuelve a cargar y el "#filtros" del action lleva el foco al

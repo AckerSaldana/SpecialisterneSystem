@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/persona/shared-guides/[id]/lineas/[lineaId]: la persona decide una línea (spec 009, R-009.20 a
 // R-009.22).

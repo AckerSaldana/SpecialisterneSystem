@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Generado con shadcn y ajustado a docs/DISENO.md (spec 012): igual que Input.
 import * as React from "react"

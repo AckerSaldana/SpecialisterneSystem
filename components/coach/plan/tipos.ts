@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Tipos y utilidades que comparten las piezas de la sección "Plan de acompañamiento" del coach
 // (spec 003, tareas 18 y 19). Sin hooks ni "server-only": lo usan Server y Client Components.

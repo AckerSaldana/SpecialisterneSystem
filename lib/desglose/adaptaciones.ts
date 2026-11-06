@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // De lo que dice el perfil a la lista de apoyos del desglose de tareas (spec 010, R-010.5, R-010.6). Funciones
 // puras, sin red ni base. Corren solo en el servidor: esta tabla nombra los dominios, y la persona no los ve

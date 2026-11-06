@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/task-breakdowns/[id]/duplicate
 // La persona repite una tarea suya (spec 010, R-010.35 a R-010.37). Solo ella: el coach no repite desgloses. Si guarda,

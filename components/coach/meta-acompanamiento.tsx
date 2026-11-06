@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Tipo" y "Etapa" de un acompañamiento (spec 012, R-012.17; DISENO.md, Tipografía): el tipo identifica el
 // acompañamiento y va en el acento; la etapa es metadato y su valor va en texto apagado.

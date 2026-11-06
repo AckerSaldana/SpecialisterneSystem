@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/como-trabajar-conmigo/vista-previa/[id]: lo que recibiría el líder con las decisiones de ahora (spec
 // 009, R-009.27). Mismo componente y misma función armarDocumento que la hoja final. No se puede imprimir: en la

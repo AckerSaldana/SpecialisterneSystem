@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Una línea de la trayectoria (spec 008, R-008.22, R-008.26, R-008.29). La insignia usa la misma clase
 // en todas las direcciones: sin rojo ni verde y sin decir "mejora" ni "retroceso". Nada aquí es un

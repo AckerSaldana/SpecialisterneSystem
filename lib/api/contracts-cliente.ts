@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // La parte de los contratos que corre en el navegador de la persona. No importa lib/profile/schema,
 // ni siquiera a través de otro archivo: ese módulo trae los nombres de los dominios y de las señales,

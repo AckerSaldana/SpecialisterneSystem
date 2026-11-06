@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // D-086: lo que el coach escribe para la persona no copia sus notas ni las citas del perfil (R-003.62, R-010.55,
 // R-010.56). Las notas se leen con la sesión del coach: la RLS de sessions ya exige que sea su acompañamiento y que el

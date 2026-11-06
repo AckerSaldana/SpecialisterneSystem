@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/como-trabajar-conmigo: lo que el coach ve de la hoja (spec 009, R-009.34 a R-009.38,
 // R-009.47). Solo las versiones listas, con su historial y su fecha, sin el número: la numeración es global y

@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 004 (seguimiento y señales): funciones del esquema private. Van antes de 0012 porque las
 -- políticas nuevas las usan. Mismas reglas que 0003 y 0007 (R-002.48): security definer,

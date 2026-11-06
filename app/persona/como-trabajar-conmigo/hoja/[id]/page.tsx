@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/como-trabajar-conmigo/hoja/[id]: la hoja de una versión lista (spec 009, R-009.41 a R-009.45). Solo
 // lee documento y estado. Con otro estado, o sin fila visible, responde 404. Pasa por la puerta de la persona:

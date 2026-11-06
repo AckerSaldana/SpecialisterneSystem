@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Agregar ..." al final de cada grupo del borrador (spec 003, tarea 18). El coach escribe un punto
 // propio: nace con origen "coach", sin evidencia y sin propuesta_ref (R-003.23, R-003.25).

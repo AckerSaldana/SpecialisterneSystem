@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Paso 1 del alta: formulario de verificación del diagnóstico (spec 002, R-002.6 y R-002.7).
 // Solo tiene dos casillas, el campo de cédula, el enlace a la SEP y el aviso destacado.

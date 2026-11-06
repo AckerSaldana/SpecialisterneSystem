@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Resumen al pie de un bloque con líneas (spec 008, R-008.37, R-008.38). Una propuesta se ve marcada y no
 // es parte del registro del coach hasta que la aprueba. Recibe el bloque completo, sin filtros: el

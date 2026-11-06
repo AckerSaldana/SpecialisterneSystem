@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Código de invitación de un solo uso (spec 002, decisión a, R-002.14).
 // 8 caracteres de un alfabeto sin caracteres que se confunden (sin 0/O, 1/I/L), generados con

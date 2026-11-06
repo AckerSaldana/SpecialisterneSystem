@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/funcion-ejecutiva/correcciones
 // El coach corrige el dominio o la dirección de una línea (spec 008, R-008.28 a R-008.30). Sin

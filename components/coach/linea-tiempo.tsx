@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Línea de tiempo de sesiones" (spec 012, R-012.18, R-012.27; docs/panel-coach.jpeg): de la más reciente a la más vieja,
 // con el tipo y la fecha, quién observó si se anotó, el principio de la nota del coach y "Ver detalle" hacia su propuesta.

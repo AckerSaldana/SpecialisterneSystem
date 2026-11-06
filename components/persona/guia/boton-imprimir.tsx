@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // El PDF se hace con la impresión del navegador, sin librería nueva (spec 009, R-009.44).
 "use client";

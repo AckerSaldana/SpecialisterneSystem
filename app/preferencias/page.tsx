@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /preferencias: pública, con o sin sesión. Las preferencias viven en una cookie
 // de este navegador, no en la cuenta.

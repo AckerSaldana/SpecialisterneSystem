@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Me atoré aquí" (spec 010, R-010.28): un diálogo con un campo opcional y el aviso literal. Nada se guarda hasta
 // confirmar, y al cancelar no hay fila. Si falla, el diálogo se queda abierto con el error y con lo que escribió, también si

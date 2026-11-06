@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Paso 2 del alta: invitación con código de un solo uso (spec 002, R-002.13 a R-002.15, R-002.38).
 // El código solo llega en la respuesta de la Server Action y vive en la memoria de esta pantalla:

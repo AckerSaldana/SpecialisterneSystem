@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // El coach cierra un "Esto no me representa" (spec 005, R-005.26, R-005.27, R-005.34, R-005.49) y lee
 // las opciones para hacerlo. Cerrar solo marca el evento: no crea snapshot, versión del perfil ni

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Qué cambió respecto a la plantilla" (spec 010, R-010.43, R-010.44). Lo calcula el código, no el modelo. Solo la ve el
 // coach: la persona no ve la plantilla ni la diferencia. Si la plantilla ya no se puede leer, lo dice y el desglose sigue

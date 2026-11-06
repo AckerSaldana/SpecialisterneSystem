@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Pedir un borrador" (spec 009, R-009.2). Mientras espera muestra un texto fijo, sin contador ni tiempo límite
 // (C-14). Los errores son los textos de la ruta. Al llegar el borrador, el botón ya no existe: el foco va a su

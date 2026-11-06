@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Consentimiento vigente (spec 002, R-002.28 y R-002.31). Es el único chequeo del sistema:
 // rutas y páginas usan estas funciones, y las políticas RLS usan private.app_has_consent,

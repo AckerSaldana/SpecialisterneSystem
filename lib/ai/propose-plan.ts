@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con el perfil aprobado y las fichas verificadas, y devuelve un PlanProposal
 // validado con Zod (spec 003, R-003.6 y R-003.7). No toca la base de datos: la ruta

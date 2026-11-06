@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Conexión a Postgres (Supabase, transaction pooler). Este cliente entra como el rol
 // "postgres" y por lo tanto IGNORA RLS. En la app nunca se usa directo: todo pasa por
