@@ -8,7 +8,7 @@ A coach writes session notes in plain language. The AI reads the note and propos
 
 The AI structures and proposes. The coach decides, with one exception: in "Cómo trabajar conmigo" and in task breakdowns the model writes to the participant without prior coach review, behind mandatory code filters, and the participant decides (constitution C-04, D-070, which David and Rodrigo have not confirmed yet). The system does not diagnose, and it does not infer types or levels of anything.
 
-This is a sprint 1 prototype. All data is synthetic.
+This is a prototype built for the AI Challenge 2026. All data is synthetic.
 
 ## Principles
 
@@ -256,7 +256,7 @@ These sources informed the design. The team has not yet checked each claim again
 
 ## AI use
 
-The code was written with Claude Code (Opus 5.5). Acker Saldaña's review is still pending. Each AI-assisted file starts with an attribution header that records its review status. Acker Saldaña reviews the code and is responsible for it.
+The code was written by Acker Saldaña in pair programming with Claude Code (Opus 5.5). Acker reviewed all of the code and is responsible for it. Each AI-assisted file starts with an attribution header that records its review status.
 
 The product uses an LLM in six places: profile updates from coach notes, support plans, follow-up proposals, one-sentence executive function summaries, "Cómo trabajar conmigo" drafts, and task breakdowns with their adjustments (`lib/ai/propose-*`). In the first four, a coach approves what the model proposes before it counts. In the last two, the participant receives the output without prior coach review, behind mandatory code filters, and decides what to use (constitution C-04, D-070, which David and Rodrigo have not confirmed yet). Those two never write to the profile or the plan.
 
@@ -292,7 +292,14 @@ Versions as installed; licenses read from each package's `package.json`.
 
 Atkinson Hyperlegible, Source Serif 4 and Lexend are loaded from Google Fonts through `next/font` and are published under the SIL Open Font License 1.1.
 
-## Out of scope for sprint 1
+## Not built yet
+
+- Closing an engagement (spec 006).
+- Resource recommendations for the participant (spec 005). The "Recursos" section stays hidden until it has content.
+- Notifications of any kind. Strong alerts are escalated by the coach outside the app on purpose (C-12).
+- Scheduled data purge 6 months after consent is withdrawn. Today `npm run purge-retirados` is run by hand.
+
+## Out of scope
 
 - Microservices
 - External job queues
