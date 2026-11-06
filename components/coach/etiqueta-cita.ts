@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Spec 008 (R-008.10): lo que se dice de una cita de cambios o de avance al revisar una propuesta.
 // Vive aparte de labels.ts porque ese archivo también llega al navegador de la persona, y este importa

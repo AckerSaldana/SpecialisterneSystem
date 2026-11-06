@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que le llega al modelo para escribir una guía (spec 009, R-009.6 a R-009.9). Función pura, sin red
 // ni base. El modelo ve un ID corto O-nn y el texto; el índice con los IDs reales se queda en el servidor.

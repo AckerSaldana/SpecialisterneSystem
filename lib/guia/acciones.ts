@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que decide la persona sobre su guía (spec 009, R-009.20 a R-009.32, R-009.38): decisiones por línea,
 // líneas propias, nombre, "Listo", retirar, descartar y "Hacer cambios". Cada acción abre una transacción con

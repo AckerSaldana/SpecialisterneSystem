@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pedir un desglose de tareas (spec 010, R-010.1 a R-010.11, R-010.18, R-010.46 a R-010.48). Con el mismo orden que
 // lib/sessions/proponer.ts y lib/guia/generar.ts:

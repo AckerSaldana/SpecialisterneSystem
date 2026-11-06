@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/sessions
 // El coach envía su nota. La sesión se guarda, la IA propone y la propuesta queda como evento

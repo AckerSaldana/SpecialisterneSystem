@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/alerts
 // El coach marca una señal activa como alerta fuerte (R-004.15, R-004.16). La app no avisa a nadie.

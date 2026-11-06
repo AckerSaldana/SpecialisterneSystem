@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Marcar pasos, "Ya no la uso", "Ya lo revisé" y decidir ajustes (spec 010, R-010.26 a R-010.29, R-010.33, R-010.38). Solo la persona marca: cada
 // marca es una fila nueva, y la base rechaza cualquier otra escritura (R-010.51). Una marca, también "Me atoré aquí", no

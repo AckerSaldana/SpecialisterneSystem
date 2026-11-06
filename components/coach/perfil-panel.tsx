@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Panel lateral "Perfil de {nombre}" (spec 012, R-012.19; docs/panel-coach.jpeg): tres secciones con su resumen y una
 // cita de la nota en itálica, seguida de "Nota de sesión, {fecha}". Es un resumen para el coach: el perfil completo

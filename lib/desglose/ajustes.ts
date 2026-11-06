@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Repetir una tarea con ajustes propuestos (spec 010, R-010.35 a R-010.38). Funciones puras, sin red ni base. Corren solo
 // en el servidor: traen lib/desglose/validate.ts y este archivo no llega al JavaScript de la persona (C-09).

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lista de citas de la nota del coach. Cada cita es un <blockquote> con la fecha
 // de la sesión cuando se conoce. Sin hooks: sirve en Server y Client Components.

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Flujo de una sesión y de su propuesta (spec 001 y spec 004). Lo usan POST /sessions y el reintento.
 //   1. tx1 (con RLS): engagement (404), consentimiento (409, R-004.2) y lo que va al modelo, con las

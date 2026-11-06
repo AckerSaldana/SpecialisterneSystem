@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que no puede ir en "Cómo trabajar conmigo" (spec 009). Funciones puras, sin red ni base, que
 // reutilizan lib/profile/terminos.ts. Corren solo en el servidor: ese archivo trae lib/profile/schema, con

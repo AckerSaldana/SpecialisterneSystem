@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/persona/shared-guides
 // La persona pide un borrador de "Cómo trabajar conmigo" (spec 009, R-009.2). El acompañamiento sale de

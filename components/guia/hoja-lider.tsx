@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // La hoja "Cómo trabajar conmigo" (spec 009, R-009.27, R-009.41). La usan la vista previa, la hoja para imprimir
 // y la pantalla del coach, así que los tres ven lo mismo. Su único dato es DocumentoGuia: no tiene lugar para

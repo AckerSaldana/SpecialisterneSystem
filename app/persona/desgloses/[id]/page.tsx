@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/desgloses/[id]: una tarea y sus pasos, con sus marcas, y repetirla con ajustes (spec 010, R-010.11, R-010.23,
 // R-010.25 a R-010.29, R-010.35 a R-010.38). La

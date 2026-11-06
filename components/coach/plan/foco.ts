@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Foco después de una acción del plan. Cada acción termina con router.refresh(): el Server
 // Component vuelve a leer la base y a veces el elemento que tenía el foco desaparece (un punto

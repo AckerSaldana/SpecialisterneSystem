@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Ejecuta consultas de Drizzle con las políticas RLS activas.
 // Abre una transacción, guarda los claims del JWT (ya verificados por supabase.auth.getClaims())

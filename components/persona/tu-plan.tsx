@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Sección "Tu plan" de /persona (spec 005, R-005.6). Esta spec es la única dueña de la sección y de
 // sus textos. Lee solo persona_plans: el texto para la persona, sin citas, fichas ni dominios (C-09).

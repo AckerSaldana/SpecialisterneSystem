@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Botón para pedir la propuesta de plan a la IA: POST /api/engagements/[id]/plans (sin body).
 // Mientras espera muestra un texto fijo, sin contador ni barra de tiempo (C-14). Si la ruta

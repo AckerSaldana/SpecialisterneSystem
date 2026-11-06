@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // fetch a las rutas del plan (frente de rutas, spec 003 tareas 15 a 17) desde el navegador.
 // Las rutas responden { error } con un texto literal de la spec cuando algo no se puede hacer

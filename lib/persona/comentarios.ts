@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Ciclo de "Esto no me representa" (spec 005), en funciones puras, sin red ni base:
 //   - el estado de cada parte del perfil y del plan, y su texto para la persona (R-005.24, R-005.28,

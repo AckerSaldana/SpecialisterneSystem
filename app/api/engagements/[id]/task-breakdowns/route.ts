@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/task-breakdowns
 // La persona o su coach piden un desglose de tareas (spec 010, R-010.1 a R-010.3). Si se guarda, responde 201 con su id.

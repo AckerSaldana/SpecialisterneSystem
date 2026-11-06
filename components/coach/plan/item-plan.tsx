@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Un punto del borrador del plan (spec 003, tarea 18). Se ve con su origen, texto, lo que verá la
 // persona, ficha, evidencia, a qué punto del plan vigente sigue y sus avisos. "Editar" abre el

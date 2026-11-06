@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales e ids de la pantalla "Función ejecutiva" (spec 008, "Pantallas y textos"). Sin hooks
 // ni "server-only": lo usan Server y Client Components. Solo para el coach: importa los nombres de los

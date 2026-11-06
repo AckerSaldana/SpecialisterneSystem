@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Aviso de privacidad versionado (spec 002, R-002.21). La versión es la fecha del archivo en
 // legal/. Un cambio de texto crea un archivo nuevo y cambia AVISO_VERSION; el anterior se queda

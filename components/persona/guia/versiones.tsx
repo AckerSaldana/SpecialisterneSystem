@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Las versiones de la hoja en la pantalla de la persona (spec 009, R-009.32, R-009.38 a R-009.40). Ella ve las
 // listas y las retiradas, con su número. "Hacer cambios" solo sale en la versión más alta y sin borrador abierto,

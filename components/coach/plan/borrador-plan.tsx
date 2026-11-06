@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Borrador del plan (spec 003, tarea 18): encabezado, avisos de lo que quitó la validación, los
 // seis grupos en orden con sus puntos y "Agregar ...", y al final "Aprobar plan" y "Descartar

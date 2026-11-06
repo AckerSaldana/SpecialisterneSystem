@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Layout de /bienvenida: los pasos de la persona antes de su página (contraseña y aviso).
 // requireRole revisa sesión y rol; el paso en el que está la persona lo decide cada página con

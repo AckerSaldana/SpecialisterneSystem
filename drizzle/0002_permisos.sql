@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Permisos de tabla y columna del esquema "app" (drizzle-kit no los genera).
 -- RLS decide qué FILAS ve cada quien; estos grants deciden qué TABLAS y COLUMNAS puede

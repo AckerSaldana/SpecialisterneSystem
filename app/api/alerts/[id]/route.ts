@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/alerts/[id]
 // "Ya la pasé" y "Atendida" (R-004.42).

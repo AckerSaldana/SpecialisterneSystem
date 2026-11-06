@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/sessions/[sessionId]/proposal   (sin body)
 // Pide otra vez la propuesta de una sesión ya guardada, sin duplicar la nota (R-004.29, R-004.30).

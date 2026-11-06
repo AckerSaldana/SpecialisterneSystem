@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 import type { NextConfig } from "next";
 
 // cacheComponents queda apagado: toda la app depende de la sesión (cookies) y es dinámica.

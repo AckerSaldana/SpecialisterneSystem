@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Spec 010 (R-010.26, R-010.27, R-010.33, R-010.41, R-010.45, R-010.51; decisión abierta 5, opción B). Generado con npm run db:generate desde lib/db/schema.ts.
 CREATE TYPE "app"."task_step_estado" AS ENUM('hecho', 'atorado', 'pendiente');--> statement-breakpoint
 CREATE TABLE "app"."task_breakdowns" (

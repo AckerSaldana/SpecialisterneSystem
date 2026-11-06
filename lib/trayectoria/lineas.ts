@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Las líneas de la trayectoria de función ejecutiva (spec 008). Funciones puras: reciben las filas ya
 // leídas con RLS (lib/trayectoria/lectura.ts). No hay tabla de líneas ni vista: la lógica depende de

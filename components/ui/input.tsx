@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Generado con shadcn y ajustado a docs/DISENO.md (spec 012): borde --border-input (3:1, R-012.2), radio --radius-md,
 // texto de al menos 16px y el foco de globals.css.

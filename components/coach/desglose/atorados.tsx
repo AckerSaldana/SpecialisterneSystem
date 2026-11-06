@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Lo que escribió {nombre} en sus tareas", dentro de "Antes de esta sesión" (spec 010, R-010.30 a R-010.33). El texto va
 // literal, con la etiqueta de quién lo escribió, sin resumen, clasificación ni interpretación de la IA. Va aparte de las

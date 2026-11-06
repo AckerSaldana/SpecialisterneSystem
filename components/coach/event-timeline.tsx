@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Historial de eventos del perfil (profile_events), del más reciente al más antiguo.
 // Cada estado se escribe en texto. Los "no me representa" de la persona muestran

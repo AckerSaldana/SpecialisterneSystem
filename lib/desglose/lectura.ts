@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que lee el desglose de tareas para armar la lista de apoyos (spec 010, R-010.4, R-010.5) y las lecturas de sus
 // pantallas. Todo con RLS. La persona no lee profile_snapshots, así que el perfil sale de la única función que se lo

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/persona/shared-guides/[id]
 // La persona cambia el nombre que se muestra en la hoja (spec 009, R-009.24, R-009.26). La lógica vive en

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/desgloses/[breakdownId]: una tarea, con cada paso y todas sus marcas en orden, con su fecha y su
 // texto literal, y los ajustes que propuso la IA al repetirla (spec 010, R-010.2, R-010.11, R-010.34, R-010.38). Sin resumen, clasificación ni interpretación de la IA, y sin

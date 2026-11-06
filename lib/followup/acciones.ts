@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que el coach hace sobre señales, alertas y contexto guardado (spec 004, tarea 18).
 // Nada de esto crea snapshots ni cambia la versión del perfil (R-004.13). La app no avisa a nadie:

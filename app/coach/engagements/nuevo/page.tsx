@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/nuevo: el coach crea un acompañamiento (spec 002, R-002.1, tarea 9).
 // Solo pide tipo, nombre de pila y correo. El layout de /coach ya verifica el rol; aquí se

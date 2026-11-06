@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Formulario de /preferencias. Radios nativos (fieldset + legend) con pocas opciones.
 // La vista previa cambia al elegir; nada se guarda hasta presionar "Guardar".

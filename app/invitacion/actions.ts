@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action de /invitacion (spec 002, R-002.17, R-002.39, CA-002.13, CA-002.15).
 // La persona entra con su correo y el código que le dio su coach. El código es la contraseña

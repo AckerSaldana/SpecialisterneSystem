@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Generado por drizzle-kit desde lib/db/schema.ts (spec 002). Editado a mano: conversión de consentimiento_en antes del drop.
 CREATE TYPE "app"."consent_event_type" AS ENUM('otorgado', 'retirado');--> statement-breakpoint
 CREATE TABLE "app"."consent_events" (

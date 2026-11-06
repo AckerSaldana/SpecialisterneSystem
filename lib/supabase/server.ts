@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Cliente de Supabase para Server Components, Server Actions y Route Handlers.
 // Solo se usa para Auth (sesión en cookies). Los datos se leen con Drizzle + withRls.

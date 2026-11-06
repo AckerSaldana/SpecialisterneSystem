@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Criterios de los pares de sesgo de la spec 007 (R-007.15 a R-007.19, R-007.48, R-007.67).
 // Funciones puras sobre las salidas ya limpias de perfil y de seguimiento; las calcula el código,

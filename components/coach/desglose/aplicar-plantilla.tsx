@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Aplicar una plantilla" (spec 010, R-010.42): el coach elige una plantilla de su organización y puede dar contexto. La IA
 // la adapta al perfil de la persona, que ve los pasos en cuanto se guardan. Mientras espera muestra un texto fijo, sin

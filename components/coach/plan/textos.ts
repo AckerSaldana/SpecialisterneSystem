@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales de la spec 003, "Pantallas y textos" → "Coach: sección Plan de acompañamiento".
 // Están juntos para revisarlos contra la spec de un vistazo. Solo los ve el coach.

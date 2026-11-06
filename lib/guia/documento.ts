@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // La hoja para el líder y el historial del coach (spec 009, R-009.27, R-009.29, R-009.36, R-009.42).
 // Funciones puras, sin red ni base. Importa solo de schema-cliente, sin lib/profile/schema (C-09).

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Aplica al perfil lo que el coach aprobó de una propuesta (función pura, sin red ni base).
 // - Cada cambio aprobado reemplaza resumen, tipo y dominiosFE de su dimensión y suma su

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Inserts con lista de columnas explícita para las tablas con permisos por columna
 // (drizzle/0006_triggers_y_permisos_alta.sql). Drizzle arma el INSERT con TODAS las columnas y

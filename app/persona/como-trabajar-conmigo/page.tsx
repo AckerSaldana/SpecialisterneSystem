@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/como-trabajar-conmigo: la hoja que la persona escribe para su líder (spec 009, R-009.1, R-009.20 a
 // R-009.33, R-009.38 a R-009.40, R-009.59). El acompañamiento sale de la puerta (R-002.40), que también garantiza

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Esquemas de "Cómo trabajar conmigo" (spec 009). Única fuente de verdad de la guía:
 //   - lo que propone el modelo (GuiaPropuesta),

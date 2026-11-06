@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/persona/feedback: botón "Esto no me representa" de la persona, sobre su perfil o su plan.
 // Guarda un profile_event tipo "no_me_representa" en estado "proposed" para que el coach lo revise

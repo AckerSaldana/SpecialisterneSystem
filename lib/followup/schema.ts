@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lo que devuelve el modelo en una sesión de seguimiento (spec 004) y lo que se guarda en
 // profile_events.payload. FollowupUpdate es ProfileUpdate más avance, contexto y siguiente paso.

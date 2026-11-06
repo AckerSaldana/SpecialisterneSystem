@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Arma los textos que se envían al modelo.
 // Cada system prompt vive en prompts/<version>.md (versionado por fecha).

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona/aviso: el aviso de privacidad de solo lectura, para el enlace "Leer el aviso de
 // privacidad" de la sección "Tus datos y tu consentimiento" (spec 002, R-002.27). Solo se llega

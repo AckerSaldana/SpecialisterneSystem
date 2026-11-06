@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos literales del coach en el desglose de tareas (spec 010, "Pantallas y textos"). La persona no descarga este
 // archivo. Los que dicen "sin texto en la spec" siguen el mismo tono.

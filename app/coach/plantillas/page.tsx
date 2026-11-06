@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/plantillas, "Plantillas de tu organización" (spec 010, R-010.41, R-010.45). Cualquier coach de la organización las
 // lee y las archiva, mientras el consentimiento de su origen esté vigente: RLS oculta las demás, sin decir por qué, porque

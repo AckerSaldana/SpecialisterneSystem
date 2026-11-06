@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 003 (plan de acompañamiento): funciones del esquema private. Van antes de 0008 porque
 -- las políticas nuevas las usan. Mismas reglas que 0003 (R-002.48): security definer,

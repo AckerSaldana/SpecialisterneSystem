@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Cierre de un "Esto no me representa" por el coach (spec 005, R-005.26, R-005.27, R-005.34). Llama a
 // POST /api/profile-events/[id]/cierre y refresca la página. "Hubo cambios" solo se puede elegir si

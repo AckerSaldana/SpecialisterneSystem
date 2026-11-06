@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/funcion-ejecutiva/resumenes
 // El coach pide la propuesta de resumen de un dominio (spec 008, R-008.33, R-008.36 a R-008.39). La

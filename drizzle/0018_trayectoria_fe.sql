@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Spec 008 (R-008.28, R-008.29, R-008.37, R-008.40, R-008.42). Generado con npm run db:generate desde lib/db/schema.ts.
 CREATE TYPE "app"."fe_direccion" AS ENUM('apoyo', 'fortaleza', 'cambio');--> statement-breakpoint
 CREATE TYPE "app"."fe_dominio" AS ENUM('inhibicion', 'automonitoreo', 'flexibilidad', 'control_emocional', 'iniciacion', 'memoria_de_trabajo', 'planeacion_organizacion', 'monitoreo_de_tareas', 'organizacion_de_materiales');--> statement-breakpoint

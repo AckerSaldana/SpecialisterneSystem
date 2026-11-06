@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con las líneas de un bloque y devuelve un ResumenDominioIA validado con Zod (spec 008,
 // R-008.34 y R-008.35). No toca la base de datos: lib/trayectoria/resumen.ts guarda el resultado.

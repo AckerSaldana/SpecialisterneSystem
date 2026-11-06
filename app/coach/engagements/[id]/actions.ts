@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Actions de la sección "Alta" del acompañamiento (spec 002, tareas 10 y 11).
 // - guardarVerificacion: paso 1. Solo envía diagnostico_verificado y cedula_profesional; quién y

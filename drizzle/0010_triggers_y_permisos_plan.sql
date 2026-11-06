@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 003 (plan de acompañamiento): triggers de las transiciones de etapa y permisos por columna.
 -- RLS (lib/db/schema.ts) decide qué filas; estos grants deciden qué columnas puede escribir

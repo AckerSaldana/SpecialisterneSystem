@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/plan/historial (spec 003, tarea 19; R-003.33, R-003.34, R-003.35).
 // Una fila por versión aprobada y por borrador descartado (sin número de versión). Dentro de cada

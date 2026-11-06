@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Traza un doodle escaneado a contornos SVG, en la Mac, con Vision (VNDetectContoursRequest): la imagen no sale del equipo.
 // Así se hizo DoodleLibreta (components/Doodle.tsx) desde docs/notebookscribble.jpeg, con epsilon 0.0004 y área mínima

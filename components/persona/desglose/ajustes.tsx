@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Ajustes propuestos" (spec 010, R-010.38): cada ajuste se muestra como propuesta, sin seleccionar, y sus pasos no cambian
 // hasta que guarde su elección, una sola vez y con confirmación. Guardar sin elegir ninguno también vale, y es lo que la

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action del formulario de /preferencias. Valida con Zod y guarda la cookie.
 // Al poner una cookie dentro de una Server Action, Next vuelve a renderizar la ruta

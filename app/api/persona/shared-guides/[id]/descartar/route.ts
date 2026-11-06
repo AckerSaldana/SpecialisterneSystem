@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/persona/shared-guides/[id]/descartar
 // La persona descarta un borrador (spec 009, R-009.31). La lógica vive en lib/guia/acciones.ts.

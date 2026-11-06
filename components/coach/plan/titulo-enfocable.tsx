@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Título que puede recibir el foco por código (tabIndex -1) cuando una acción del plan lo pide
 // con enfocarDespues(id). Ver foco.ts.

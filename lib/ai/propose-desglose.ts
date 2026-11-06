@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con una tarea y sus apoyos y devuelve un DesgloseProposal validado con Zod (spec 010,
 // R-010.8, R-010.49), o con una tarea repetida y sus marcas y devuelve un AjustesProposal (R-010.36). No toca la base de

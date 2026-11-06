@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 009 ("Cómo trabajar conmigo"): funciones del esquema private. Van antes de 0021 porque las
 -- políticas nuevas las usan. Mismas reglas que 0007 y 0011 (R-002.48): security definer, search_path

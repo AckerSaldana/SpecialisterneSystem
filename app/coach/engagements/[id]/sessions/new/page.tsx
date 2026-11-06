@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/sessions/new: valida que el coach pueda ver el
 // engagement y muestra el formulario de la nota (cliente).

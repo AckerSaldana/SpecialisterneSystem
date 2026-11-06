@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Página para errores inesperados en cualquier pantalla (no en el layout raíz: eso lo
 // cubre global-error.tsx). Reemplaza también al layout del coach o de la persona,

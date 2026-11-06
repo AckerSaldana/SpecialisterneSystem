@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Repetir esta tarea" (spec 010, R-010.35, R-010.36): con confirmación. Si el modelo falla, el diálogo se queda abierto
 // con el error, no se creó nada y su tarea sigue igual. Si sale bien va a la copia, y el foco al título de la copia: su id

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Límite diario de llamadas al modelo pedidas por una cuenta (decisión 8 del plan, R-009.17). Se cuentan sus
 // filas de audit_log, también las fallidas: la política audit_log_select_self deja leer solo las propias.

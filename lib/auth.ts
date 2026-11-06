@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Quién es el usuario y qué rol tiene. getClaims() verifica la firma del JWT;
 // el rol sale de public.users (no del JWT), leído con RLS activa.

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /invitacion: pública. La persona entra por primera vez con su correo y el código de su coach
 // (spec 002, R-002.17). El formulario manda el código por POST a la Server Action; el código

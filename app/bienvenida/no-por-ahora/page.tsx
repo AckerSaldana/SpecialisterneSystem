@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /bienvenida/no-por-ahora: la persona eligió no dar su consentimiento por ahora (spec 002,
 // R-002.26, CA-002.21). No se registra ningún evento: esta página solo lee.

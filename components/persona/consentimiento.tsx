@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Sección "Tus datos y tu consentimiento" (spec 002, R-002.27 a R-002.29, R-002.35).
 // - Vigente (en /persona): la fecha, el enlace al aviso y "Retirar mi consentimiento", que abre un

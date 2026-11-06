@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Registra cada llamada al modelo en audit_log (éxito o error, tokens y latencia).
 // Se llama dentro de un withRls(...): la política audit_log_insert_self exige que

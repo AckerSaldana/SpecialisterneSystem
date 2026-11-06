@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/task-templates/[id]
 // Un coach de la organización archiva una plantilla (spec 010, R-010.41). Una plantilla no se edita. La lógica vive en

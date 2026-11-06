@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Llama al modelo con los orígenes de una guía y devuelve una GuiaPropuesta validada con Zod (spec 009,
 // R-009.15 y R-009.16). No toca la base de datos: lib/guia/generar.ts guarda el resultado.

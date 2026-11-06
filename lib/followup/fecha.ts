@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Fecha de la sesión (spec 004, R-004.58). El servidor corre en UTC y el equipo y el partner están
 // en Monterrey: "hoy" se calcula en esa zona y la sesión se guarda a las 12:00 de ese día, para que

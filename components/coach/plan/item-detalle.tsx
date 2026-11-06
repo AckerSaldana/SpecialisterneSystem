@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Partes de solo lectura de un punto del plan: dominio, ficha, lo que verá la persona y evidencia.
 // Sin hooks: las usan el plan vigente (Server Component) y el borrador (Client Component).

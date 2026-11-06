@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Reglas fijas sobre las etiquetas de la spec 008, fuera del LLM (funciones puras, sin red ni base).
 // limpiarEtiquetas corre después de sanitizeUpdate o sanitizeFollowup y no quita elementos ni citas:

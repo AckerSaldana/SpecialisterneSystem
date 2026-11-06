@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/task-templates
 // El coach guarda un desglose como plantilla de un puesto (spec 010, R-010.39, R-010.40). Si se guarda, responde 201 con su

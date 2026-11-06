@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Un paso de la sección "Alta" del coach (spec 012, R-012.39; textos de la spec 002): tarjeta con el número en un
 // círculo y el título. El paso terminado dice "Hecho"; el primero sin terminar lleva la barra de acento. El número

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Página para notFound() y rutas que no existen. Se muestra dentro del layout raíz,
 // que no pone <main> ni pie de página: por eso los pone esta página.

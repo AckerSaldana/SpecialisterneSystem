@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Cliente admin de Supabase Auth (spec 002, R-002.16). Usa la clave secreta, que solo vive
 // en la variable de entorno del servidor SUPABASE_SECRET_KEY (nunca NEXT_PUBLIC_, nunca en el repo).

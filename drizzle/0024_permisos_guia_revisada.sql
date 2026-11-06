@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 --
 -- Spec 009 ("Cómo trabajar conmigo"), R-009.46: una versión lista o retirada guarda la huella de lo que el modelo ya
 -- revisó sin proponer nada, para que el aviso de cambios tenga salida. Es lo único que cambia en una versión: el trigger

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/signals/[tipo]/close
 // "Ya no está activa" (R-004.13). No crea snapshot ni cambia la versión del perfil.

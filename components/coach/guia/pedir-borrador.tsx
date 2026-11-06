@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Pedir un borrador para {nombre}" (spec 009, R-009.2, R-009.13, R-009.47). La respuesta viene vacía: sin
 // líneas, conteos ni id, porque el coach no lee borradores (R-009.34). Mientras espera muestra un texto fijo, sin

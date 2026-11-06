@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /bienvenida/aviso: aviso de privacidad y consentimiento (spec 002, R-002.19 a R-002.23,
 // R-002.25, R-002.26). Es la única pantalla privada que la persona puede ver sin consentimiento

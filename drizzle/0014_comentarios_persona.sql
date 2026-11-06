@@ -1,4 +1,4 @@
--- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+-- AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 -- Spec 005 (R-005.26, R-005.27, R-005.34, R-005.46). Generado con npm run db:generate desde lib/db/schema.ts.
 ALTER TABLE "app"."profile_events" ADD COLUMN "resuelto_por_evento" uuid;--> statement-breakpoint
 ALTER TABLE "app"."profile_events" ADD COLUMN "resuelto_por_plan" uuid;--> statement-breakpoint

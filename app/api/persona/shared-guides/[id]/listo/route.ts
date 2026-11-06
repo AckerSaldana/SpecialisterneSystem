@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/persona/shared-guides/[id]/listo
 // La persona marca la hoja como lista para compartir (spec 009, R-009.28, R-009.29). La lógica vive en lib/guia/acciones.ts.

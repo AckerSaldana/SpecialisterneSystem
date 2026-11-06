@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // La raíz no tiene contenido propio: manda a cada quien a su inicio, o a /login.
 import { redirect } from "next/navigation";

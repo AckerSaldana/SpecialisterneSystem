@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // fetch a las rutas de "Cómo trabajar conmigo" desde el navegador de la persona. Las rutas responden { error }
 // con un texto literal de la spec, y ese texto se muestra tal cual: el bloqueo de R-009.24 corre solo en el

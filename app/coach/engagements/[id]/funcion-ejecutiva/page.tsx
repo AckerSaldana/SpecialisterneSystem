@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]/funcion-ejecutiva: las conductas que anotó el coach, por dominio (spec 008,
 // R-008.21 a R-008.27). Siempre los 9 dominios en el orden de DOMINIOS_FE, sin puntajes, totales ni

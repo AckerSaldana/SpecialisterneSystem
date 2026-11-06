@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Búsqueda de texto que no debe llegar a la persona (funciones puras, sin red ni base; también
 // corre en el navegador del coach, nunca en el de la persona: trae los nombres de dominios y señales, C-09).

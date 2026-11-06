@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Reglas de una aprobación que comparten la pantalla de revisión y la ruta de decisión (funciones
 // puras, también corren en el navegador). Así la pantalla deshabilita aprobar con la misma revisión

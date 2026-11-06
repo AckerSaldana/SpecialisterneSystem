@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Forma de las funciones de lib/ que hacen el trabajo de una ruta (spec 004, "Pruebas de ruta"):
 // cada route.ts autentica, valida el id, lee el body y delega. Esas funciones no importan lib/auth,

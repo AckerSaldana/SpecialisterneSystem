@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // PATCH /api/task-step-events/[id]
 // "Ya lo revisé": el coach marca que leyó un "Me atoré aquí" (spec 010, R-010.33). El id es entero, no UUID. Si guarda,

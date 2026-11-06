@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Qué cambiaría una regeneración de "Cómo trabajar conmigo" (spec 009, R-009.47, R-009.48, R-009.50). Funciones
 // puras, sin red ni base. El modelo no declara qué cambió: lo calcula este archivo, con las reglas de "Reglas

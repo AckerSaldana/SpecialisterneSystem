@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Diálogo de confirmación de las acciones que no se pueden deshacer (R-009.59). Sin confirmar no se envía nada.
 // Si la acción falla, el diálogo se queda abierto con el error. Si sale bien, el botón puede ya no existir: el

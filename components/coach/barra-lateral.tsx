@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Navegación del coach en una columna izquierda de 260px (spec 012, R-012.16, R-012.24; docs/panel-coach.jpeg): el nombre
 // del producto en serif, ítems en sans, el activo en peso 600 con una marca de 2px en el acento a su izquierda (sin fondo)

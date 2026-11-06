@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/shared-guides
 // El coach pide el primer borrador de "Cómo trabajar conmigo" (spec 009, R-009.2, R-009.13, R-009.47). Si

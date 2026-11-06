@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Qué cambió entre una plantilla y lo que quedó para una persona (spec 010, R-010.43, R-010.44, R-010.53). Funciones
 // puras, sin red, base ni modelo: dan lo mismo en cada corrida. Son revisiones por palabras: el umbral es interpretación

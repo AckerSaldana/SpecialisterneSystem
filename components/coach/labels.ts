@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Textos y formatos que comparten las pantallas del coach.
 // El tipo de hallazgo siempre se muestra como texto; el color solo acompaña.

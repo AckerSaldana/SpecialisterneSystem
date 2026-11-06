@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/plans/[id]/items
 // El coach agrega un punto propio al borrador (spec 003, tarea 16; R-003.22 a R-003.25, R-003.50,

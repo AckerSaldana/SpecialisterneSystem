@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Server Action de /bienvenida/aviso: la persona da su consentimiento (spec 002, R-002.22,
 // R-002.23, R-002.25, R-002.37). También es el camino para darlo otra vez después de retirarlo

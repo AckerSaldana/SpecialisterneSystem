@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Qué dimensiones del perfil ve la persona y con qué etiqueta (spec 005, R-005.4, R-005.45).
 // Es la única constante de visibilidad: una dimensión fuera de esta lista no aparece en /persona,

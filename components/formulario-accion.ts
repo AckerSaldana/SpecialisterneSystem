@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Dos cosas de los formularios con useActionState. Solo vive en el navegador (lo importan Client Components).
 //   - conFalloDeRed: si la Server Action se rechaza (sin red, o una excepción en el servidor), useActionState lanza el error y

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /coach/engagements/[id]: encabezado del acompañamiento, sección "Alta" (solo en etapa alta),
 // perfil actual, plan de acompañamiento (spec 003), señales activas e historial de eventos.

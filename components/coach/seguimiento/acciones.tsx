@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Botones de seguimiento que llaman a una ruta y refrescan la página (spec 004). Cuando el botón
 // desaparece al refrescar, el foco va a un título de la sección ("idFoco"): sin eso quedaría en <body>.

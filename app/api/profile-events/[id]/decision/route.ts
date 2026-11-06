@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/profile-events/[id]/decision
 // El coach aprueba una parte (o todo) de una propuesta de la IA, o la rechaza. La lógica vive en

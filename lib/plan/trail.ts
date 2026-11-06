@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Rastro de una versión del plan (spec 003, R-003.35): qué propuso la IA y qué cambió el coach.
 // Función pura. Todo se calcula desde plans.propuesta_ia (que no cambia) y plan_items:

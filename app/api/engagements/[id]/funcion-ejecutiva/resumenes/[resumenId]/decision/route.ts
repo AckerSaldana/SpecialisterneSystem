@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/funcion-ejecutiva/resumenes/[resumenId]/decision
 // El coach aprueba o descarta la propuesta de resumen (spec 008, R-008.37, R-008.38). La lógica vive en

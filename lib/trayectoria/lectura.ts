@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Lectura de la trayectoria (spec 008). Recibe la transacción de withRls: con el consentimiento
 // retirado, RLS no devuelve filas (R-008.42). Las líneas las arma lib/trayectoria/lineas.ts.

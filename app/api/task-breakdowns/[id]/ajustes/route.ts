@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/task-breakdowns/[id]/ajustes
 // La persona guarda qué ajustes usa, una sola vez (spec 010, R-010.38). Si un ajuste elegido ya no sirve, responde 400 con

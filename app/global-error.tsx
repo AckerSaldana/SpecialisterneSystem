@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Página para errores en el layout raíz. Reemplaza al layout completo, así que pone su
 // propio <html> y <body>, sin las preferencias de presentación ni los estilos globales:

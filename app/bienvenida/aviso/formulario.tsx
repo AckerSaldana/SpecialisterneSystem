@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Casilla y botón del consentimiento (spec 002, R-002.22, R-002.26). La casilla viene desmarcada
 // y el servidor la vuelve a revisar (./actions.ts). El error queda en texto junto a la casilla y

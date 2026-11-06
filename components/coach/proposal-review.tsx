@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Revisión de la propuesta de la IA, de 001 y de seguimiento. Se arma con lo guardado en
 // profile_events, sin llamar otra vez al modelo (R-004.26). El coach elige qué aprobar (todo marcado

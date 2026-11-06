@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Refresco de la sesión de Supabase en cada petición (lo llama proxy.ts).
 // Patrón de @supabase/ssr: el cliente lee las cookies de la petición y, si renueva el token,

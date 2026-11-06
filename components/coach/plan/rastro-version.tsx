@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Rastro de una versión del plan en el historial (spec 003, R-003.35, tarea 19): por cada punto,
 // si es de la IA sin cambios, editado (con el texto original de la IA) o escrito por el coach, a qué

@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Eval del pipeline de propuesta de perfil, del plan, del seguimiento, de "Cómo trabajar conmigo" y del desglose de tareas (spec 007).
 //   npm run eval                    → pruebas sin red + todos los casos de eval/cases con el modelo

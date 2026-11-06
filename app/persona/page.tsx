@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente (cambió el 29 oct, spec 002)
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // /persona: el perfil de la persona en lenguaje claro, su plan (spec 005, R-005.6), sus recursos
 // aprobados y la sección "Tus datos y tu consentimiento" (spec 002, R-002.27).

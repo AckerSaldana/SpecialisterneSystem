@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // POST /api/engagements/[id]/task-breakdowns/from-template
 // El coach del acompañamiento aplica una plantilla de su organización (spec 010, R-010.42). Si se guarda, responde 201 con

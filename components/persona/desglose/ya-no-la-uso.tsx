@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // "Ya no la uso" (spec 010, R-010.29): con confirmación. No se borra y su coach la sigue viendo. Al quitarla, esta pantalla
 // ya no aplica: va a su lista, y el foco al título de la lista.

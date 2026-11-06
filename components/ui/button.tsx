@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Generado con shadcn y ajustado a docs/DISENO.md (spec 012, R-012.3): solo tokens. El foco lo pinta
 // :focus-visible de globals.css (anillo de 3px del acento); sin anillos extra, sin sombras y sin moverse al presionar.

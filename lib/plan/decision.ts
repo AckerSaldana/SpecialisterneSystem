@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Decisión del coach sobre el borrador del plan (spec 003, tarea 17). Vive aquí con la forma de
 // lib/api/ruta.ts para que el seed del demo apruebe por el mismo camino que la app (spec 007,

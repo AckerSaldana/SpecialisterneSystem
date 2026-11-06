@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Pie de página con ayuda humana. Va en cada layout de pantalla (no en el layout raíz),
 // debajo de <main>. El correo usa el dominio sintético .test: no recibe mensajes reales.

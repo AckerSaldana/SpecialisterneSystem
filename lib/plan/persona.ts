@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Copia del plan aprobado para la persona (spec 003, R-003.37, R-003.48, R-003.61).
 // Función pura: la ruta de aprobación la llama dentro de la transacción y guarda el resultado en

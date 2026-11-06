@@ -1,4 +1,4 @@
-// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: pendiente
+// AI-assisted (Claude Code, Opus 5.5) · revisión de Acker: revisado
 //
 // Señales activas de un acompañamiento (R-004.52): las del último snapshot menos las que
 // signal_states marca como cerradas. Es el único lugar con esta regla. Ningún lector toma
